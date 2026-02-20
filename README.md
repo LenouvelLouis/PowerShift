@@ -1,20 +1,97 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# ISEP Project API
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+Clean FastAPI skeleton — ready to extend with future features.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+---
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## Stack
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+| Technology | Role |
+|---|---|
+| Python 3.11+ | Runtime |
+| FastAPI | Web framework |
+| Uvicorn | ASGI server |
+| Pydantic-settings | Environment variable management |
+| Pytest + httpx | Testing |
+
+---
+
+## Local setup
+
+### Requirements
+
+- Python 3.11+
+- `pip`
+
+### Steps
+
+```bash
+# 1. Clone the repo
+git clone <repo-url>
+cd <repo-name>
+
+# 2. Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate        # Linux / macOS
+# .venv\Scripts\activate         # Windows
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Configure environment variables
+cp .env.example .env
+# Edit .env as needed
+
+# 5. Start the development server
+uvicorn app.main:app --reload
+```
+
+The API will be available at [http://localhost:8000](http://localhost:8000).
+Swagger docs at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+---
+
+## Tests
+
+```bash
+pytest
+pytest -v   # verbose
+```
+
+---
+
+## Available endpoints
+
+| Method | Route | Description |
+|---|---|---|
+| GET | `/health` | API health check |
+| GET | `/docs` | Swagger UI |
+| GET | `/redoc` | ReDoc |
+
+---
+
+## Project structure
+
+```
+.
+├── app/
+│   ├── __init__.py
+│   ├── main.py          # FastAPI app + health check
+│   ├── config.py        # Settings (pydantic-settings)
+│   ├── routers/         # Future FastAPI routers
+│   ├── models/          # Future ORM / data models
+│   ├── schemas/         # Future Pydantic schemas (I/O)
+│   └── services/        # Future services / business logic
+├── tests/
+│   └── test_health.py
+├── .env.example
+├── .gitignore
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## Coming soon
+
+<!-- Features will be documented here as they are added -->
