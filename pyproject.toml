@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "energy-grid-api"
+version = "0.1.0"
+description = "Energy Grid Optimization API — Clean Architecture with PyPSA"
+requires-python = ">=3.11"
+
+dependencies = [
+    # Web framework
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.34.0",
+
+    # Settings / env
+    "pydantic-settings==2.7.1",
+    "python-dotenv==1.0.1",
+
+    # Database (async)
+    "sqlalchemy[asyncio]==2.0.36",
+    "asyncpg>=0.31.0",          # async PostgreSQL driver (NeonDB)
+
+    # Azure Key Vault
+    "azure-keyvault-secrets==4.9.0",
+    "azure-identity==1.19.0",
+
+    # Energy simulation
+    "pypsa>=0.32.0",
+    "pandas>=2.2.3",
+    "numpy>=2.2.1",
+
+    # Utilities
+    "httpx==0.28.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "pytest-asyncio==0.25.2",
+    "pytest-cov==6.0.0",
+    "httpx==0.28.1",
+    "ruff==0.9.2",
+    "mypy==1.14.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "UP"]

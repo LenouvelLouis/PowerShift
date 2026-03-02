@@ -1,11 +1,11 @@
+"""FastAPI application factory — registers the v1 router and the /health check."""
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+from app.api.v1.router import router as v1_router
 from app.config import settings
 
-# --------------------------------------------------
-# Application setup
-# --------------------------------------------------
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
@@ -14,20 +14,10 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Global prefix for all future routers
 API_V1_PREFIX = "/api/v1"
-
-# --------------------------------------------------
-# Router registration (uncomment as features are added)
-# --------------------------------------------------
-# from app.routers import network, supply
-# app.include_router(network.router, prefix=API_V1_PREFIX)
-# app.include_router(supply.router, prefix=API_V1_PREFIX)
+app.include_router(v1_router, prefix=API_V1_PREFIX)
 
 
-# --------------------------------------------------
-# Health check
-# --------------------------------------------------
 @app.get("/health", tags=["Health"])
 async def health_check() -> JSONResponse:
     """Returns the API status and metadata."""
