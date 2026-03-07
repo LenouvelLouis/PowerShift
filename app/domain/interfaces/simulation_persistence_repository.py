@@ -1,0 +1,22 @@
+"""Abstract interface for simulation persistence (DB)."""
+
+from __future__ import annotations
+
+import uuid
+from abc import ABC, abstractmethod
+
+from app.domain.interfaces.simulation_repository import SimulationRunInput, SimulationRunOutput
+
+
+class ISimulationPersistenceRepository(ABC):
+    @abstractmethod
+    async def save_request(self, run_input: SimulationRunInput) -> uuid.UUID: ...
+
+    @abstractmethod
+    async def save_result(self, request_id: uuid.UUID, output: SimulationRunOutput) -> object: ...
+
+    @abstractmethod
+    async def get_result_by_id(self, result_id: uuid.UUID) -> object | None: ...
+
+    @abstractmethod
+    async def list_results(self) -> list: ...

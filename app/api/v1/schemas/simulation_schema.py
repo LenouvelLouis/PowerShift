@@ -2,15 +2,38 @@
 
 from __future__ import annotations
 
+import uuid
+from datetime import datetime
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
-class SimulationRequest(BaseModel):
-    snapshot_hours: int = Field(default=24, ge=1, le=8760)
+class SimulationRunRequest(BaseModel):
+    snapshot_hours: int = Field(default=8760, ge=1, le=8760)
+    solver: str = "highs"
+    supply_ids: list[str] = Field(default_factory=list)
+    demand_ids: list[str] = Field(default_factory=list)
+    network_ids: list[str] = Field(default_factory=list)
+    pypsa_params: Optional[dict] = None
 
 
-class SimulationResponse(BaseModel):
-    total_supply_mwh: float
-    total_demand_mwh: float
-    balance_mwh: float
+class SimulationRunResponse(BaseModel):
+    id: uuid.UUID
+    request_id: uuid.UUID
     status: str
+    total_supply_mwh: Optional[float]
+    total_demand_mwh: Optional[float]
+    balance_mwh: Optional[float]
+    objective_value: Optional[float]
+    result_json: Optional[dict]
+    created_at: datetime
+
+
+class SimulationListItem(BaseModel):
+    id: uuid.UUID
+    request_id: uuid.UUID
+    status: str
+    total_supply_mwh: Optional[float]
+    total_demand_mwh: Optional[float]
+    created_at: datetime
