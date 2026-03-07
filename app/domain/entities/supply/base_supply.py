@@ -28,5 +28,5 @@ class BaseSupply(BaseComponent):
             "bus": "main_bus",
             "carrier": self.get_carrier(),
             "p_nom": self.capacity_mw,
-            "marginal_cost": 0.0,
+            "marginal_cost": 1.0,
         }

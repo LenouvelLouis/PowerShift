@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 
 from app.domain.entities.demand.base_demand import BaseDemand
@@ -32,9 +31,7 @@ class GetReferentialUseCase:
         self._network_repo = network_repo
 
     async def execute(self) -> ReferentialResult:
-        supplies, demands, network = await asyncio.gather(
-            self._supply_repo.get_all(),
-            self._demand_repo.get_all(),
-            self._network_repo.get_all(),
-        )
+        supplies = await self._supply_repo.get_all()
+        demands = await self._demand_repo.get_all()
+        network = await self._network_repo.get_all()
         return ReferentialResult(supplies=supplies, demands=demands, network=network)
