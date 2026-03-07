@@ -1,0 +1,13 @@
+{
+  "version": "0.2",
+  "words": [
+    "asyncpg",
+    "fastapi",
+    "httpx",
+    "Meteo",
+    "pydantic",
+    "pypsa",
+    "sqlmodel",
+    "uvicorn"
+  ]
+}
