@@ -5,8 +5,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from app.domain.entities.base_component import ComponentStatus
 from app.domain.entities.supply.base_supply import BaseSupply

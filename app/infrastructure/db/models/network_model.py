@@ -1,60 +1,46 @@
-"""SQLAlchemy ORM model for network components (transformers and cables)."""
+"""SQLModel ORM model for network components (transformers and cables)."""
 
 from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
+from uuid import uuid4
 
-from sqlalchemy import DateTime, Enum, Float, String, Text
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
-
-from app.domain.entities.base_component import ComponentStatus
-from app.infrastructure.db.connection import Base
+from sqlalchemy import Column, DateTime
+from sqlmodel import Field, SQLModel
 
 
-class NetworkModel(Base):
+class NetworkModel(SQLModel, table=True):
     __tablename__ = "network_components"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        server_default="gen_random_uuid()",
-        default=uuid.uuid4,
-    )
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    type: Mapped[str] = mapped_column(String(64), nullable=False)  # "transformer" | "cable"
+    id: uuid.UUID = Field(default_factory=uuid4, primary_key=True)
+    name: str
+    type: str  # "transformer" | "cable"
 
     # ── Common fields ────────────────────────────────────────────────────────
-    voltage_kv: Mapped[float] = mapped_column(Float, nullable=False)
-    capacity_mva: Mapped[float | None] = mapped_column(Float, nullable=True)
-    losses_kw: Mapped[float | None] = mapped_column(Float, nullable=True)
+    voltage_kv: float
+    capacity_mva: Optional[float] = None
+    losses_kw: Optional[float] = None
 
     # ── Transformer-specific (nullable for cables) ───────────────────────────
-    voltage_hv_kv: Mapped[float | None] = mapped_column(Float, nullable=True)
-    voltage_lv_kv: Mapped[float | None] = mapped_column(Float, nullable=True)
+    voltage_hv_kv: Optional[float] = None
+    voltage_lv_kv: Optional[float] = None
 
     # ── Cable-specific (nullable for transformers) ───────────────────────────
-    length_km: Mapped[float | None] = mapped_column(Float, nullable=True)
-    resistance_ohm_per_km: Mapped[float | None] = mapped_column(Float, nullable=True)
-    reactance_ohm_per_km: Mapped[float | None] = mapped_column(Float, nullable=True)
+    length_km: Optional[float] = None
+    resistance_ohm_per_km: Optional[float] = None
+    reactance_ohm_per_km: Optional[float] = None
 
     # ── Metadata ─────────────────────────────────────────────────────────────
-    status: Mapped[ComponentStatus] = mapped_column(
-        Enum(ComponentStatus, name="component_status"),
-        nullable=False,
-        default=ComponentStatus.ACTIVE,
+    status: str = "active"
+    unit: str = "MVA"
+    description: Optional[str] = None
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True)),
     )
-    unit: Mapped[str] = mapped_column(String(32), nullable=False, default="MVA")
-    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True)),
     )
