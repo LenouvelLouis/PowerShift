@@ -57,7 +57,6 @@ def get_referential_use_case(
 
 
 def get_simulation_use_case(
-    db: DbSession,
     supply_repo: Annotated[SupplyRepositoryImpl, Depends(get_supply_repository)],
     demand_repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
     network_repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],

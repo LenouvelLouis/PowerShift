@@ -52,8 +52,12 @@ class SimulationRepositoryImpl(ISimulationPersistenceRepository):
         )
         return result.scalar_one_or_none()
 
-    async def list_results(self) -> list[SimulationResultModel]:
-        result = await self._session.execute(
-            select(SimulationResultModel).order_by(SimulationResultModel.created_at.desc())
+    async def list_results(self) -> list:
+        stmt = (
+            select(SimulationResultModel, SimulationRequestModel)
+            .join(SimulationRequestModel,
+                  SimulationResultModel.request_id == SimulationRequestModel.id)
+            .order_by(SimulationResultModel.created_at.desc())
         )
-        return list(result.scalars().all())
+        result = await self._session.execute(stmt)
+        return [(row[0], row[1]) for row in result.all()]

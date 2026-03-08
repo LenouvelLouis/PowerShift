@@ -12,6 +12,7 @@ from app.api.v1.schemas.simulation_schema import (
 from app.domain.interfaces.simulation_persistence_repository import ISimulationPersistenceRepository
 from app.domain.interfaces.simulation_repository import SimulationRunInput
 from app.domain.use_cases.run_simulation import RunSimulationUseCase
+from app.infrastructure.db.models.simulation_request_model import SimulationRequestModel
 from app.infrastructure.db.models.simulation_result_model import SimulationResultModel
 
 
@@ -39,8 +40,8 @@ class SimulationService:
         return self._to_response(row)
 
     async def list(self) -> list[SimulationListItem]:
-        rows = await self._persistence.list_results()
-        return [self._to_list_item(row) for row in rows]
+        pairs = await self._persistence.list_results()
+        return [self._to_list_item(result, request) for result, request in pairs]
 
     async def get_by_id(self, simulation_id: uuid.UUID) -> SimulationRunResponse | None:
         row = await self._persistence.get_result_by_id(simulation_id)
@@ -63,11 +64,14 @@ class SimulationService:
         )
 
     @staticmethod
-    def _to_list_item(row: SimulationResultModel) -> SimulationListItem:
+    def _to_list_item(row: SimulationResultModel, req: SimulationRequestModel) -> SimulationListItem:
         return SimulationListItem(
             id=row.id,
             request_id=row.request_id,
             status=row.status,
+            supply_ids=req.supply_ids or [],
+            demand_ids=req.demand_ids or [],
+            network_ids=req.network_ids or [],
             total_supply_mwh=row.total_supply_mwh,
             total_demand_mwh=row.total_demand_mwh,
             created_at=row.created_at,

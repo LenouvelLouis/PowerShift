@@ -23,6 +23,7 @@ class SimulationConfig:
     demands: list = field(default_factory=list)             # list[BaseDemand]
     network_components: list = field(default_factory=list)  # list[BaseNetwork]
     load_profiles: dict = field(default_factory=dict)       # demand.name -> list[float]
+    pypsa_params: dict = field(default_factory=dict)        # asset.name -> param overrides
 
 
 @dataclass

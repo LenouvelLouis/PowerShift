@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
+import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, JSON
 from sqlmodel import Field, SQLModel
 
@@ -15,7 +16,13 @@ class SimulationResultModel(SQLModel, table=True):
     __tablename__ = "simulation_results"
 
     id: uuid.UUID = Field(default_factory=uuid4, primary_key=True)
-    request_id: uuid.UUID = Field(foreign_key="simulation_requests.id")
+    request_id: uuid.UUID = Field(
+        sa_column=Column(
+            sa.UUID(as_uuid=True),
+            sa.ForeignKey("simulation_requests.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
     status: str
     total_supply_mwh: Optional[float] = None
     total_demand_mwh: Optional[float] = None
