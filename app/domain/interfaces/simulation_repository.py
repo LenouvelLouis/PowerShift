@@ -3,23 +3,36 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
-class SimulationRequest:
-    snapshot_hours: int = 24
+class SimulationRunInput:
+    snapshot_hours: int = 8760
+    solver: str = "highs"
+    supply_ids: list[str] = field(default_factory=list)
+    demand_ids: list[str] = field(default_factory=list)
+    network_ids: list[str] = field(default_factory=list)
+    pypsa_params: dict = field(default_factory=dict)
 
 
 @dataclass
-class SimulationResult:
+class SimulationRunOutput:
     total_supply_mwh: float
     total_demand_mwh: float
     balance_mwh: float
     status: str
+    objective_value: float = 0.0
+    result_json: dict = field(default_factory=dict)
 
 
 class ISimulationRepository(ABC):
     @abstractmethod
-    async def run(self, request: SimulationRequest) -> SimulationResult:
+    async def run(
+        self,
+        run_input: SimulationRunInput,
+        supplies: list,
+        demands: list,
+        network_components: list,
+    ) -> SimulationRunOutput:
         """Execute a grid simulation and return the result."""

@@ -5,21 +5,38 @@ from __future__ import annotations
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
+from sqlmodel import SQLModel  # noqa: F401 — re-exported so seed.py can use SQLModel.metadata
 
 from app.infrastructure.secrets.settings import get_settings
 
 
-class Base(DeclarativeBase):
-    pass
-
-
 def _make_engine():
+    from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
+
     url = get_settings().DATABASE_URL
     if not url:
         raise RuntimeError(
             "DATABASE_URL is not set. Copy .env.example to .env and fill it in."
         )
+
+    # asyncpg doesn't accept libpq params (sslmode, channel_binding).
+    # Convert sslmode=require → ssl=require and drop unsupported params.
+    parsed = urlparse(url)
+    scheme = parsed.scheme
+    if scheme in ("postgresql", "postgres"):
+        scheme = "postgresql+asyncpg"
+    params = parse_qs(parsed.query, keep_blank_values=True)
+    ssl_val = None
+    if "sslmode" in params:
+        sslmode = params.pop("sslmode")[0]
+        if sslmode in ("require", "verify-ca", "verify-full"):
+            ssl_val = "require"
+    params.pop("channel_binding", None)
+    if ssl_val:
+        params["ssl"] = [ssl_val]
+    new_query = urlencode({k: v[0] for k, v in params.items()})
+    url = urlunparse((scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment))
+
     return create_async_engine(
         url,
         pool_pre_ping=True,   # handles NeonDB idle connection drops

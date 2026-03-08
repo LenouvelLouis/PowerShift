@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 
 from app.api.v1.dependencies import get_network_repository
 from app.api.v1.schemas.network_schema import NetworkCreate, NetworkResponse, NetworkUpdate
@@ -153,12 +154,13 @@ async def update_network_component(
     return _to_response(saved)  # type: ignore[arg-type]
 
 
-@router.delete("/{component_id}", status_code=204)
+@router.delete("/{component_id}", status_code=204, response_class=Response)
 async def delete_network_component(
     component_id: str,
     repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
-) -> None:
+) -> Response:
     """Delete a network component by UUID."""
     deleted = await repo.delete(component_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Network component not found")
+    return Response(status_code=204)

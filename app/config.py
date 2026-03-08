@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # Database (NeonDB / PostgreSQL)
-    DATABASE_URL: str = ""
+    DATABASE_URL: str = "postgresql://neondb_owner:npg_OUMdt0gS5vkD@ep-silent-dream-albpp1df-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
     # Azure Key Vault (optional)
     AZURE_KEY_VAULT_URL: str = ""

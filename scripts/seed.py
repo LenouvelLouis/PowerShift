@@ -15,11 +15,15 @@ from datetime import datetime, timezone
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlmodel import SQLModel
 
 from app.domain.entities.base_component import ComponentStatus
-from app.infrastructure.db.connection import Base, get_engine
+from app.infrastructure.db.connection import get_engine
+from app.infrastructure.db.models.asset_parameters_model import AssetParametersModel  # noqa: F401
 from app.infrastructure.db.models.demand_model import DemandModel  # noqa: F401 — registers table
 from app.infrastructure.db.models.network_model import NetworkModel  # noqa: F401 — registers table
+from app.infrastructure.db.models.simulation_request_model import SimulationRequestModel  # noqa: F401
+from app.infrastructure.db.models.simulation_result_model import SimulationResultModel  # noqa: F401
 from app.infrastructure.db.models.supply_model import SupplyModel  # noqa: F401 — registers table
 from app.infrastructure.secrets.settings import get_settings
 
@@ -50,7 +54,7 @@ async def seed() -> None:
     # Create tables (and the pgcrypto extension for server-side UUID generation).
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pgcrypto"))
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(SQLModel.metadata.create_all)
 
     now = datetime.now(timezone.utc)
 
@@ -69,13 +73,13 @@ async def seed() -> None:
         ),
         SupplyModel(
             id=_SUPPLY_SOLAR_ID,
-            name="Provence Solar Park",
+            name="Groningen Solar Park",
             type="solar_panel",
             capacity_mw=200.0,
             efficiency=0.22,
             status=ComponentStatus.ACTIVE,
             unit="MW",
-            description="Ground-mounted PV, 800 ha, south-facing",
+            description="Ground-mounted PV near Delfzijl, 800 ha",
             created_at=now,
             updated_at=now,
         ),
@@ -84,18 +88,18 @@ async def seed() -> None:
     demands: list[DemandModel] = [
         DemandModel(
             id=_DEMAND_HOUSE_ID,
-            name="Paris Residential Zone A",
+            name="Groningen Residential Zone A",
             type="house",
             load_mw=120.0,
             status=ComponentStatus.ACTIVE,
             unit="MW",
-            description="~40 000 residential households",
+            description="~40 000 residential households in Groningen",
             created_at=now,
             updated_at=now,
         ),
         DemandModel(
             id=_DEMAND_EV_ID,
-            name="EV Fleet — Paris Region",
+            name="EV Fleet — Groningen Region",
             type="electric_vehicle",
             load_mw=45.0,
             status=ComponentStatus.ACTIVE,
