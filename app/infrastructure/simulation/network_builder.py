@@ -55,7 +55,7 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
             n.add(pypsa_type, component.name, **component.to_pypsa_params())
 
         try:
-            n.optimize(solver_name=config.solver, include_objective_constant=False)
+            n.optimize(solver_name=config.solver)
             status = "optimal"
             objective_value = float(n.objective) if hasattr(n, "objective") else 0.0
             generators_t = (
