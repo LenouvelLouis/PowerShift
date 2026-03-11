@@ -34,6 +34,9 @@ class SimulationListItem(BaseModel):
     id: uuid.UUID
     request_id: uuid.UUID
     status: str
+    supply_ids: list[str]
+    demand_ids: list[str]
+    network_ids: list[str]
     total_supply_mwh: Optional[float]
     total_demand_mwh: Optional[float]
     created_at: datetime

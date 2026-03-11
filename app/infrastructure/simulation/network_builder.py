@@ -39,7 +39,9 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
 
         # Generic — each group controls their own PyPSA params via to_pypsa_params()
         for supply in config.supplies:
-            n.add("Generator", supply.name, **supply.to_pypsa_params())
+            params = supply.to_pypsa_params()
+            params.update(config.pypsa_params.get(supply.name, {}))
+            n.add("Generator", supply.name, **params)
 
         for demand in config.demands:
             profile = config.load_profiles.get(demand.name)
@@ -52,43 +54,51 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
 
         for component in config.network_components:
             pypsa_type = "Transformer" if component.get_network_type() == "transformer" else "Line"
-            n.add(pypsa_type, component.name, **component.to_pypsa_params())
+            comp_params = component.to_pypsa_params()
+            comp_params.update(config.pypsa_params.get(component.name, {}))
+            n.add(pypsa_type, component.name, **comp_params)
 
         try:
-            n.optimize(solver_name=config.solver)
-            status = "optimal"
-            objective_value = float(n.objective) if hasattr(n, "objective") else 0.0
-            generators_t = (
-                {gen: {"p": n.generators_t.p[gen].tolist()} for gen in n.generators_t.p.columns}
-                if not n.generators_t.p.empty
-                else {}
-            )
-            loads_t = (
-                {load: {"p": n.loads_t.p_set[load].tolist()} for load in n.loads_t.p_set.columns}
-                if not n.loads_t.p_set.empty
-                else {}
-            )
-            capacity_factors = {
-                gen: float(
-                    n.generators_t.p[gen].sum()
-                    / (n.generators.at[gen, "p_nom"] * config.snapshot_hours)
-                )
-                for gen in n.generators.index
-                if gen in n.generators_t.p.columns and n.generators.at[gen, "p_nom"] > 0
-            }
-            total_supply = float(n.generators_t.p.sum().sum()) if not n.generators_t.p.empty else 0.0
-            # p_set scalar → stored in n.loads (static), not n.loads_t (time-series)
-            if not n.loads_t.p_set.empty:
-                total_demand = float(n.loads_t.p_set.sum().sum())
+            optimize_result = n.optimize(solver_name=config.solver)
+            if isinstance(optimize_result, tuple) and optimize_result[1] == "infeasible":
+                status = "infeasible"
+                objective_value = 0.0
+                total_supply = total_demand = 0.0
+                result_json = {"error": "Optimization infeasible — supply cannot meet demand"}
             else:
-                total_demand = float(n.loads.p_set.sum()) * config.snapshot_hours
-            result_json = {
-                "generators_t": generators_t,
-                "loads_t": loads_t,
-                "capacity_factors": capacity_factors,
-                "violations": {"overloads": [], "overvoltages": []},
-                "objective_value": objective_value,
-            }
+                status = "optimal"
+                objective_value = float(n.objective) if hasattr(n, "objective") else 0.0
+                generators_t = (
+                    {gen: {"p": n.generators_t.p[gen].tolist()} for gen in n.generators_t.p.columns}
+                    if not n.generators_t.p.empty
+                    else {}
+                )
+                loads_t = (
+                    {load: {"p": n.loads_t.p_set[load].tolist()} for load in n.loads_t.p_set.columns}
+                    if not n.loads_t.p_set.empty
+                    else {}
+                )
+                capacity_factors = {
+                    gen: float(
+                        n.generators_t.p[gen].sum()
+                        / (n.generators.at[gen, "p_nom"] * config.snapshot_hours)
+                    )
+                    for gen in n.generators.index
+                    if gen in n.generators_t.p.columns and n.generators.at[gen, "p_nom"] > 0
+                }
+                total_supply = float(n.generators_t.p.sum().sum()) if not n.generators_t.p.empty else 0.0
+                # p_set scalar → stored in n.loads (static), not n.loads_t (time-series)
+                if not n.loads_t.p_set.empty:
+                    total_demand = float(n.loads_t.p_set.sum().sum())
+                else:
+                    total_demand = float(n.loads.p_set.sum()) * config.snapshot_hours
+                result_json = {
+                    "generators_t": generators_t,
+                    "loads_t": loads_t,
+                    "capacity_factors": capacity_factors,
+                    "violations": {"overloads": [], "overvoltages": []},
+                    "objective_value": objective_value,
+                }
         except Exception as e:
             status = "error"
             objective_value = 0.0
@@ -143,6 +153,7 @@ class PyPSANetworkBuilder(ISimulationRepository):
             demands=demands,
             network_components=network_components,
             load_profiles=load_profiles,
+            pypsa_params=run_input.pypsa_params or {},
         )
         loop = asyncio.get_running_loop()
         result: AdapterOutput = await loop.run_in_executor(
