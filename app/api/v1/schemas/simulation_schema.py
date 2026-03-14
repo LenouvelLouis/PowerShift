@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -12,6 +12,8 @@ from pydantic import BaseModel, Field
 class SimulationRunRequest(BaseModel):
     snapshot_hours: int = Field(default=8760, ge=1, le=8760)
     solver: str = "highs"
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
     supply_ids: list[str] = Field(default_factory=list)
     demand_ids: list[str] = Field(default_factory=list)
     network_ids: list[str] = Field(default_factory=list)

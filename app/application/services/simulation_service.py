@@ -29,6 +29,8 @@ class SimulationService:
         run_input = SimulationRunInput(
             snapshot_hours=body.snapshot_hours,
             solver=body.solver,
+            start_date=body.start_date,
+            end_date=body.end_date,
             supply_ids=body.supply_ids,
             demand_ids=body.demand_ids,
             network_ids=body.network_ids,

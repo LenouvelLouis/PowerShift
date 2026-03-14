@@ -14,6 +14,7 @@ from app.domain.use_cases.run_simulation import RunSimulationUseCase
 from app.infrastructure.db.connection import get_db
 from app.infrastructure.db.repositories.demand_repository_impl import DemandRepositoryImpl
 from app.infrastructure.db.repositories.network_repository_impl import NetworkRepositoryImpl
+from app.infrastructure.db.repositories.pv_hourly_repository_impl import PVHourlyRepositoryImpl
 from app.infrastructure.db.repositories.simulation_repository_impl import SimulationRepositoryImpl
 from app.infrastructure.db.repositories.supply_repository_impl import SupplyRepositoryImpl
 from app.infrastructure.external.open_meteo_provider import OpenMeteoLoadProfileProvider
@@ -42,6 +43,10 @@ def get_simulation_persistence_repository(db: DbSession) -> SimulationRepository
     return SimulationRepositoryImpl(db)
 
 
+def get_pv_profile_repository(db: DbSession) -> PVHourlyRepositoryImpl:
+    return PVHourlyRepositoryImpl(db)
+
+
 # ── Use cases ────────────────────────────────────────────────────────────────
 
 def get_referential_use_case(
@@ -61,9 +66,13 @@ def get_simulation_use_case(
     demand_repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
     network_repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
     persistence: Annotated[SimulationRepositoryImpl, Depends(get_simulation_persistence_repository)],
+    pv_repo: Annotated[PVHourlyRepositoryImpl, Depends(get_pv_profile_repository)],
 ) -> RunSimulationUseCase:
     return RunSimulationUseCase(
-        grid_simulation=PyPSANetworkBuilder(load_profile_provider=OpenMeteoLoadProfileProvider()),
+        grid_simulation=PyPSANetworkBuilder(
+            load_profile_provider=OpenMeteoLoadProfileProvider(),
+            pv_profile_repo=pv_repo,
+        ),
         persistence=persistence,
         supply_repo=supply_repo,
         demand_repo=demand_repo,

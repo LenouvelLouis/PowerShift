@@ -6,6 +6,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from app.domain.interfaces.load_profile_provider import ILoadProfileProvider
+from app.domain.interfaces.pv_profile_repository import IPVProfileRepository
 from app.domain.interfaces.simulation_repository import (
     ISimulationRepository,
     SimulationRunInput,
@@ -40,6 +41,11 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
         # Generic — each group controls their own PyPSA params via to_pypsa_params()
         for supply in config.supplies:
             params = supply.to_pypsa_params()
+            solar_profile = config.solar_profiles.get(supply.name)
+            if solar_profile is not None:
+                import pandas as pd  # noqa: PLC0415
+                params["p_max_pu"] = pd.Series(solar_profile, index=n.snapshots)
+                params["marginal_cost"] = 0.001  # near-zero to keep solar cheapest but LP objective non-trivial
             params.update(config.pypsa_params.get(supply.name, {}))
             n.add("Generator", supply.name, **params)
 
@@ -127,9 +133,11 @@ class PyPSANetworkBuilder(ISimulationRepository):
         self,
         simulation: AbstractGridSimulation | None = None,
         load_profile_provider: ILoadProfileProvider | None = None,
+        pv_profile_repo: IPVProfileRepository | None = None,
     ) -> None:
         self._simulation = simulation or _DefaultPyPSASimulation()
         self._load_profile_provider = load_profile_provider
+        self._pv_profile_repo = pv_profile_repo
 
     async def run(
         self,
@@ -143,8 +151,21 @@ class PyPSANetworkBuilder(ISimulationRepository):
         if self._load_profile_provider is not None:
             for demand in demands:
                 load_profiles[demand.name] = await self._load_profile_provider.get_profile(
-                    demand.get_type(), run_input.snapshot_hours
+                    demand.get_type(), run_input.snapshot_hours, run_input.start_date
                 )
+
+        # Fetch solar irradiance profiles from pv_hourly table
+        solar_profiles: dict[str, list[float]] = {}
+        if (
+            self._pv_profile_repo is not None
+            and run_input.start_date is not None
+            and run_input.end_date is not None
+        ):
+            for supply in supplies:
+                if supply.get_carrier() == "solar":
+                    solar_profiles[supply.name] = await self._pv_profile_repo.get_solar_profile(
+                        run_input.start_date, run_input.end_date
+                    )
 
         config = SimulationConfig(
             snapshot_hours=run_input.snapshot_hours,
@@ -153,6 +174,7 @@ class PyPSANetworkBuilder(ISimulationRepository):
             demands=demands,
             network_components=network_components,
             load_profiles=load_profiles,
+            solar_profiles=solar_profiles,
             pypsa_params=run_input.pypsa_params or {},
         )
         loop = asyncio.get_running_loop()

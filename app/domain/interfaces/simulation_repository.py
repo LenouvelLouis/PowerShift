@@ -4,12 +4,16 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import date
+from typing import Optional
 
 
 @dataclass
 class SimulationRunInput:
     snapshot_hours: int = 8760
     solver: str = "highs"
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
     supply_ids: list[str] = field(default_factory=list)
     demand_ids: list[str] = field(default_factory=list)
     network_ids: list[str] = field(default_factory=list)
