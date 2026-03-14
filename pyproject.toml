@@ -42,10 +42,7 @@ dev = [
     "pytest-cov==6.0.0",
     "httpx==0.28.1",
     "ruff==0.9.2",
-    "mypy==1.14.1",
-    "streamlit>=1.32.0",
-    "plotly>=5.22.0", 
-    "requests>=2.31.0"
+    "mypy==1.14.1"
 ]
 
 [tool.setuptools.packages.find]
