@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Dashboard 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 20px 30px;
+            background: rgba(15,23,42,0.95);
+            backdrop-filter: blur(10px);
+            height: 80px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .title { font-size: 28px; font-weight: 700; margin-right: auto; }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        select, button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        select {
+            background: #334155;
+            color: white;
+        }
+        
+        .play { background: linear-gradient(45deg, #10b981, #059669); color: white; }
+        .stop { background: linear-gradient(45deg, #ef4444, #dc2626); color: white; }
+        
+        .status {
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .running { background: rgba(16,185,129,0.2); color: #10b981; }
+        .stopped { background: rgba(239,68,68,0.2); color: #ef4444; }
+        
+        .main {
+            height: calc(100vh - 80px);
+            display: flex;
+            padding: 30px;
+            gap: 30px;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: rgba(30,41,59,0.8);
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .content {
+            flex: 1;
+            background: rgba(30,41,59,0.4);
+            border-radius: 15px;
+            padding: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">⚡ Energy Dashboard 2026</div>
+        <div class="controls">
+            <select>
+                <option>1 Base</option>
+                <option>2 Optimisé</option>
+                <option>3 Peak</option>
+            </select>
+            <button class="play">▶️ PLAY</button>
+            <button class="stop">⏹️ STOP</button>
+            <div class="status stopped">○ STOPPED</div>
+        </div>
+    </div>
+    
+    <div class="main">
+        <div class="sidebar">
+            <h3>⚙️ Contrôles</h3>
+            <label>Puissance MW</label>
+            <input type="range" min="0" max="200" value="100">
+        </div>
+        <div class="content">
+            <h2>📊 Visualisation PyPSA</h2>
+            <p>Votre schéma réseau ici...</p>
+        </div>
+    </div>
+
+    <script>
+        // PLAY/STOP fonctionnel
+        document.querySelector('.play').onclick = () => {
+            document.querySelector('.status').className = 'status running';
+            document.querySelector('.status').innerHTML = '● RUNNING';
+        }
+        document.querySelector('.stop').onclick = () => {
+            document.querySelector('.status').className = 'status stopped';
+            document.querySelector('.status').innerHTML = '○ STOPPED';
+        }
+    </script>
+</body>
+</html>
