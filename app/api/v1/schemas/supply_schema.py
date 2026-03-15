@@ -24,3 +24,26 @@ class SupplyResponse(BaseModel):
     carrier: str
     created_at: datetime
     updated_at: datetime
+
+
+class SupplyCreate(BaseModel):
+    """Request body for POST /api/v1/supplies."""
+
+    name: str
+    type: str                          # "wind_turbine" | "solar_panel" | "nuclear_plant"
+    capacity_mw: float
+    efficiency: float = 1.0
+    status: ComponentStatus = ComponentStatus.ACTIVE
+    unit: str = "MW"
+    description: str = ""
+
+
+class SupplyUpdate(BaseModel):
+    """Request body for PUT /api/v1/supplies/{id} — all fields optional."""
+
+    name: str | None = None
+    capacity_mw: float | None = None
+    efficiency: float | None = None
+    status: ComponentStatus | None = None
+    unit: str | None = None
+    description: str | None = None

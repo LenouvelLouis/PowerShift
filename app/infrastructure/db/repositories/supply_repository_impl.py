@@ -47,12 +47,55 @@ class SupplyRepositoryImpl(ISupplyRepository):
         await self._session.flush()
         return self._to_domain(row)
 
+    async def create(self, supply: BaseSupply) -> BaseSupply:
+        row = self._to_orm(supply)
+        self._session.add(row)
+        await self._session.flush()
+        return self._to_domain(row)
+
+    async def update(self, supply_id: str, supply: BaseSupply) -> BaseSupply | None:
+        result = await self._session.execute(
+            select(SupplyModel).where(SupplyModel.id == uuid.UUID(supply_id))
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            return None
+
+        row.name = supply.name
+        row.type = supply.get_type()
+        row.capacity_mw = supply.capacity_mw
+        row.efficiency = supply.efficiency
+        row.status = supply.status
+        row.unit = supply.unit
+        row.description = supply.description
+        row.updated_at = datetime.now(timezone.utc)
+
+        await self._session.flush()
+        return self._to_domain(row)
+
+    async def delete(self, supply_id: str) -> bool:
+        result = await self._session.execute(
+            select(SupplyModel).where(SupplyModel.id == uuid.UUID(supply_id))
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            return False
+        await self._session.delete(row)
+        await self._session.flush()
+        return True
+
     # ── Mapping helpers ──────────────────────────────────────────────────────
 
     @staticmethod
+    def build_entity(type_str: str, **kwargs: object) -> BaseSupply:
+        """Instantiate the correct BaseSupply subclass from a type string."""
+        cls = _TYPE_MAP.get(type_str, WindTurbine)
+        return cls(**kwargs)  # type: ignore[arg-type]
+
+    @staticmethod
     def _to_domain(row: SupplyModel) -> BaseSupply:
-        cls = _TYPE_MAP.get(row.type, WindTurbine)
-        return cls(
+        return SupplyRepositoryImpl.build_entity(
+            row.type,
             id=row.id,
             name=row.name,
             capacity_mw=row.capacity_mw,
