@@ -1,6 +1,4 @@
-"""Application settings — loaded from .env, optionally overridden by Azure Key Vault."""
-
-from functools import lru_cache
+"""Application settings — loaded from .env."""
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -20,10 +18,6 @@ class Settings(BaseSettings):
 
     # Database (NeonDB / PostgreSQL)
     DATABASE_URL: str = "postgresql://neondb_owner:npg_OUMdt0gS5vkD@ep-silent-dream-albpp1df-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-
-    # Azure Key Vault (optional)
-    AZURE_KEY_VAULT_URL: str = ""
-    AKV_SECRET_DATABASE_URL: str = "energy-grid-database-url"
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -22,10 +22,6 @@ dependencies = [
     "sqlalchemy[asyncio]==2.0.36",
     "asyncpg>=0.31.0",          # async PostgreSQL driver (NeonDB)
 
-    # Azure Key Vault
-    "azure-keyvault-secrets==4.9.0",
-    "azure-identity==1.19.0",
-
     # Energy simulation
     "pypsa>=0.32.0",
     "pandas>=2.2.3",
