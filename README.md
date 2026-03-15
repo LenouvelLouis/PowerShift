@@ -15,7 +15,6 @@ REST API for grid simulation and energy component management — Clean Architect
 | asyncpg | Async PostgreSQL driver |
 | NeonDB | Serverless PostgreSQL database |
 | PyPSA | Power grid simulation |
-| Azure Key Vault | Secret management (optional) |
 | pydantic-settings | Environment variable loading |
 | Pytest + httpx | Testing |
 
@@ -40,10 +39,7 @@ pip install -e ".[dev]"
 cp .env.example .env
 # Edit .env and set DATABASE_URL to your NeonDB connection string
 
-# 5. Create tables and seed sample data
-python scripts/seed.py
-
-# 6. Start the server
+# 5. Start the server
 uvicorn main:app --reload
 ```
 
@@ -60,13 +56,6 @@ Copy `.env.example` to `.env` and fill in the values:
 |---|---|---|
 | `DATABASE_URL` | **Yes** | NeonDB connection string — `postgresql+asyncpg://user:pass@host/db?sslmode=require` |
 | `DEBUG` | No | Set to `true` to enable SQLAlchemy query logging |
-| `AZURE_KEY_VAULT_URL` | No | AKV vault URL — leave blank to skip and use `.env` only |
-| `AZURE_CLIENT_ID` | No | Service-principal client ID (only when running outside Azure) |
-| `AZURE_CLIENT_SECRET` | No | Service-principal secret |
-| `AZURE_TENANT_ID` | No | Azure tenant ID |
-
-> **Azure Key Vault is fully optional.** When `AZURE_KEY_VAULT_URL` is blank (the default),
-> the app reads all settings from `.env`. AKV overrides take effect only when the URL is set.
 
 ---
 
@@ -87,8 +76,19 @@ pytest -v   # verbose
 | GET | `/api/v1/referential` | All components (supplies + demands) |
 | GET | `/api/v1/supplies` | List all supply sources |
 | GET | `/api/v1/supplies/{id}` | Get a single supply source |
+| POST | `/api/v1/supplies` | Create a supply source |
+| PUT | `/api/v1/supplies/{id}` | Update a supply source (partial) |
+| DELETE | `/api/v1/supplies/{id}` | Delete a supply source |
 | GET | `/api/v1/demands` | List all demand nodes |
 | GET | `/api/v1/demands/{id}` | Get a single demand node |
+| POST | `/api/v1/demands` | Create a demand node |
+| PUT | `/api/v1/demands/{id}` | Update a demand node (partial) |
+| DELETE | `/api/v1/demands/{id}` | Delete a demand node |
+| GET | `/api/v1/network` | List all network components |
+| GET | `/api/v1/network/{id}` | Get a single network component |
+| POST | `/api/v1/network` | Create a network component |
+| PUT | `/api/v1/network/{id}` | Update a network component (partial) |
+| DELETE | `/api/v1/network/{id}` | Delete a network component |
 | POST | `/api/v1/simulation/run` | Run a PyPSA grid simulation |
 | GET | `/docs` | Swagger UI |
 | GET | `/redoc` | ReDoc |
@@ -116,8 +116,8 @@ app/                             # Main Python package
 │
 ├── infrastructure/              # Infrastructure layer
 │   ├── secrets/
-│   │   ├── azure_key_vault.py   # Thin AKV SDK wrapper
-│   │   └── settings.py          # get_settings() — resolves AKV overrides on top of .env
+│   │   └── settings.py          # get_settings() — cached settings from .env
+
 │   ├── db/
 │   │   ├── connection.py        # Async engine + get_db() FastAPI dependency
 │   │   ├── models/              # SupplyModel, DemandModel (SQLAlchemy ORM)
@@ -133,7 +133,6 @@ app/                             # Main Python package
     └── router.py                # Aggregates all endpoint routers
 
 main.py                          # Root entry point — re-exports app for uvicorn
-scripts/seed.py                  # Idempotent DB seed (2 supplies + 2 demands)
 pyproject.toml                   # Project metadata and dependencies
 .env.example                     # Environment variable template — copy to .env
 ```
