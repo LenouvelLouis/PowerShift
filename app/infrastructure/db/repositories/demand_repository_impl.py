@@ -45,12 +45,54 @@ class DemandRepositoryImpl(IDemandRepository):
         await self._session.flush()
         return self._to_domain(row)
 
+    async def create(self, demand: BaseDemand) -> BaseDemand:
+        row = self._to_orm(demand)
+        self._session.add(row)
+        await self._session.flush()
+        return self._to_domain(row)
+
+    async def update(self, demand_id: str, demand: BaseDemand) -> BaseDemand | None:
+        result = await self._session.execute(
+            select(DemandModel).where(DemandModel.id == uuid.UUID(demand_id))
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            return None
+
+        row.name = demand.name
+        row.type = demand.get_type()
+        row.load_mw = demand.load_mw
+        row.status = demand.status
+        row.unit = demand.unit
+        row.description = demand.description
+        row.updated_at = datetime.now(timezone.utc)
+
+        await self._session.flush()
+        return self._to_domain(row)
+
+    async def delete(self, demand_id: str) -> bool:
+        result = await self._session.execute(
+            select(DemandModel).where(DemandModel.id == uuid.UUID(demand_id))
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            return False
+        await self._session.delete(row)
+        await self._session.flush()
+        return True
+
     # ── Mapping helpers ──────────────────────────────────────────────────────
 
     @staticmethod
+    def build_entity(type_str: str, **kwargs: object) -> BaseDemand:
+        """Instantiate the correct BaseDemand subclass from a type string."""
+        cls = _TYPE_MAP.get(type_str, House)
+        return cls(**kwargs)  # type: ignore[arg-type]
+
+    @staticmethod
     def _to_domain(row: DemandModel) -> BaseDemand:
-        cls = _TYPE_MAP.get(row.type, House)
-        return cls(
+        return DemandRepositoryImpl.build_entity(
+            row.type,
             id=row.id,
             name=row.name,
             load_mw=row.load_mw,

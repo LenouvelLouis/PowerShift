@@ -22,3 +22,24 @@ class DemandResponse(BaseModel):
     description: str
     created_at: datetime
     updated_at: datetime
+
+
+class DemandCreate(BaseModel):
+    """Request body for POST /api/v1/demands."""
+
+    name: str
+    type: str                          # "house" | "electric_vehicle"
+    load_mw: float
+    status: ComponentStatus = ComponentStatus.ACTIVE
+    unit: str = "MW"
+    description: str = ""
+
+
+class DemandUpdate(BaseModel):
+    """Request body for PUT /api/v1/demands/{id} — all fields optional."""
+
+    name: str | None = None
+    load_mw: float | None = None
+    status: ComponentStatus | None = None
+    unit: str | None = None
+    description: str | None = None
