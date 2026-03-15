@@ -70,11 +70,19 @@ def _network_dto_to_response(dto: NetworkDTO) -> NetworkResponse:
     )
 
 
-@router.get("", response_model=ReferentialResponse)
+@router.get(
+    "",
+    response_model=ReferentialResponse,
+    summary="Get full referential",
+    response_description="All supplies, demands, and network components in one response.",
+)
 async def get_referential(
     service: Annotated[ReferentialService, Depends(get_referential_service)],
 ) -> ReferentialResponse:
-    """Return all supply, demand, and network components from the referential."""
+    """Return all supply, demand, and network components in a single call.
+
+    Useful to populate a simulation request with available asset IDs.
+    """
     dto = await service.get_referential()
     return ReferentialResponse(
         supplies=[_supply_dto_to_response(s) for s in dto.supplies],

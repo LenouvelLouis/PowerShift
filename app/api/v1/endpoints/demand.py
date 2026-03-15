@@ -16,6 +16,8 @@ from app.infrastructure.db.repositories.demand_repository_impl import DemandRepo
 
 router = APIRouter(prefix="/demands", tags=["Demands"])
 
+_404 = {404: {"description": "Demand not found."}}
+
 
 def _to_response(demand: BaseDemand) -> DemandResponse:
     return DemandResponse(
@@ -33,30 +35,52 @@ def _to_response(demand: BaseDemand) -> DemandResponse:
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
-@router.get("", response_model=list[DemandResponse])
+@router.get(
+    "",
+    response_model=list[DemandResponse],
+    summary="List all demand nodes",
+    response_description="Array of all demand components.",
+)
 async def list_demands(
     repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
 ) -> list[DemandResponse]:
+    """Return every demand component stored in the database."""
     return [_to_response(d) for d in await repo.get_all()]
 
 
-@router.get("/{demand_id}", response_model=DemandResponse)
+@router.get(
+    "/{demand_id}",
+    response_model=DemandResponse,
+    summary="Get a demand node by ID",
+    response_description="The requested demand component.",
+    responses=_404,
+)
 async def get_demand(
     demand_id: str,
     repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
 ) -> DemandResponse:
+    """Return a single demand component identified by its UUID."""
     demand = await repo.get_by_id(demand_id)
     if demand is None:
         raise HTTPException(status_code=404, detail="Demand not found")
     return _to_response(demand)
 
 
-@router.post("", response_model=DemandResponse, status_code=201)
+@router.post(
+    "",
+    response_model=DemandResponse,
+    status_code=201,
+    summary="Create a demand node",
+    response_description="The newly created demand component.",
+)
 async def create_demand(
     body: DemandCreate,
     repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
 ) -> DemandResponse:
-    """Create a new demand component."""
+    """Create a new demand component.
+
+    Valid `type` values: `house`, `electric_vehicle`.
+    """
     now = datetime.now(timezone.utc)
     entity = DemandRepositoryImpl.build_entity(
         body.type,
@@ -73,13 +97,19 @@ async def create_demand(
     return _to_response(saved)
 
 
-@router.put("/{demand_id}", response_model=DemandResponse)
+@router.put(
+    "/{demand_id}",
+    response_model=DemandResponse,
+    summary="Update a demand node",
+    response_description="The updated demand component.",
+    responses=_404,
+)
 async def update_demand(
     demand_id: str,
     body: DemandUpdate,
     repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
 ) -> DemandResponse:
-    """Update an existing demand component (partial update — only provided fields change)."""
+    """Partially update a demand component — only the fields you provide are changed."""
     existing = await repo.get_by_id(demand_id)
     if existing is None:
         raise HTTPException(status_code=404, detail="Demand not found")
@@ -101,12 +131,19 @@ async def update_demand(
     return _to_response(saved)  # type: ignore[arg-type]
 
 
-@router.delete("/{demand_id}", status_code=204, response_class=Response)
+@router.delete(
+    "/{demand_id}",
+    status_code=204,
+    response_class=Response,
+    summary="Delete a demand node",
+    response_description="No content — the component was deleted.",
+    responses=_404,
+)
 async def delete_demand(
     demand_id: str,
     repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
 ) -> Response:
-    """Delete a demand component by UUID."""
+    """Permanently delete a demand component by its UUID."""
     deleted = await repo.delete(demand_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Demand not found")

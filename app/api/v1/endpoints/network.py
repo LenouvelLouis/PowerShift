@@ -19,6 +19,8 @@ from app.infrastructure.db.repositories.network_repository_impl import NetworkRe
 
 router = APIRouter(prefix="/network", tags=["Network"])
 
+_404 = {404: {"description": "Network component not found."}}
+
 
 def _to_response(component: BaseNetwork) -> NetworkResponse:
     voltage_hv_kv = component.voltage_hv_kv if isinstance(component, Transformer) else None
@@ -78,44 +80,73 @@ def _create_body_to_entity(body: NetworkCreate) -> BaseNetwork:
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
-@router.get("", response_model=list[NetworkResponse])
+@router.get(
+    "",
+    response_model=list[NetworkResponse],
+    summary="List all network components",
+    response_description="Array of all network components (transformers and cables).",
+)
 async def list_network(
     repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
 ) -> list[NetworkResponse]:
-    """Return all network components."""
+    """Return every network component stored in the database."""
     return [_to_response(c) for c in await repo.get_all()]
 
 
-@router.get("/{component_id}", response_model=NetworkResponse)
+@router.get(
+    "/{component_id}",
+    response_model=NetworkResponse,
+    summary="Get a network component by ID",
+    response_description="The requested network component.",
+    responses=_404,
+)
 async def get_network_component(
     component_id: str,
     repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
 ) -> NetworkResponse:
-    """Return a single network component by UUID."""
+    """Return a single network component identified by its UUID."""
     component = await repo.get_by_id(component_id)
     if component is None:
         raise HTTPException(status_code=404, detail="Network component not found")
     return _to_response(component)
 
 
-@router.post("", response_model=NetworkResponse, status_code=201)
+@router.post(
+    "",
+    response_model=NetworkResponse,
+    status_code=201,
+    summary="Create a network component",
+    response_description="The newly created network component.",
+)
 async def create_network_component(
     body: NetworkCreate,
     repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
 ) -> NetworkResponse:
-    """Create a new network component."""
+    """Create a new network component.
+
+    Valid `type` values: `transformer`, `cable`.
+
+    - **transformer** — requires `voltage_hv_kv`, `voltage_lv_kv`, `capacity_mva`.
+    - **cable** — requires `length_km`, `resistance_ohm_per_km`, `reactance_ohm_per_km`.
+    """
     entity = _create_body_to_entity(body)
     saved = await repo.create(entity)
     return _to_response(saved)
 
 
-@router.put("/{component_id}", response_model=NetworkResponse)
+@router.put(
+    "/{component_id}",
+    response_model=NetworkResponse,
+    summary="Update a network component",
+    response_description="The updated network component.",
+    responses=_404,
+)
 async def update_network_component(
     component_id: str,
     body: NetworkUpdate,
     repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
 ) -> NetworkResponse:
-    """Update an existing network component (partial update — only provided fields change)."""
+    """Partially update a network component — only the fields you provide are changed."""
     existing = await repo.get_by_id(component_id)
     if existing is None:
         raise HTTPException(status_code=404, detail="Network component not found")
@@ -154,12 +185,19 @@ async def update_network_component(
     return _to_response(saved)  # type: ignore[arg-type]
 
 
-@router.delete("/{component_id}", status_code=204, response_class=Response)
+@router.delete(
+    "/{component_id}",
+    status_code=204,
+    response_class=Response,
+    summary="Delete a network component",
+    response_description="No content — the component was deleted.",
+    responses=_404,
+)
 async def delete_network_component(
     component_id: str,
     repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
 ) -> Response:
-    """Delete a network component by UUID."""
+    """Permanently delete a network component by its UUID."""
     deleted = await repo.delete(component_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Network component not found")
