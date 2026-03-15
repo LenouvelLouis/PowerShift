@@ -163,20 +163,6 @@ created_at                 result_json (JSON)
 
 ---
 
-## Préparer la DB (seed)
-
-```bash
-# Depuis la racine du projet
-python scripts/seed.py
-```
-
-Crée (de façon idempotente) :
-- 2 supplies : `North Sea Wind Farm` (UUID ...001), `Provence Solar Park` (UUID ...002)
-- 2 demands  : `Paris Residential Zone A` (UUID ...003), `EV Fleet` (UUID ...004)
-- 2 network  : `MV/LV Transformer` (UUID ...005), `LV Cable` (UUID ...006)
-
----
-
 ## Curl complet
 
 ```bash
@@ -185,23 +171,15 @@ BASE="http://localhost:8000/api/v1"
 # 1. Vérifier les assets disponibles
 curl -s "$BASE/referential" | python3 -m json.tool
 
-# 2. Lancer une simulation (avec les UUIDs du seed)
+# 2. Lancer une simulation (remplacer les UUIDs par ceux de vos assets)
 curl -s -X POST "$BASE/simulation/run" \
   -H "Content-Type: application/json" \
   -d '{
     "snapshot_hours": 24,
     "solver": "highs",
-    "supply_ids": [
-      "00000000-0000-0000-0000-000000000001",
-      "00000000-0000-0000-0000-000000000002"
-    ],
-    "demand_ids": [
-      "00000000-0000-0000-0000-000000000003",
-      "00000000-0000-0000-0000-000000000004"
-    ],
-    "network_ids": [
-      "00000000-0000-0000-0000-000000000005"
-    ]
+    "supply_ids": ["<supply-uuid-1>", "<supply-uuid-2>"],
+    "demand_ids": ["<demand-uuid-1>", "<demand-uuid-2>"],
+    "network_ids": ["<network-uuid-1>"]
   }' | python3 -m json.tool
 
 # 3. Lister toutes les simulations
@@ -218,4 +196,4 @@ curl -s "$BASE/simulation/<id>" | python3 -m json.tool
 1. Créer l'entité dans `app/domain/entities/supply/` (hériter de `BaseSupply`)
 2. Implémenter `get_carrier()` et optionnellement surcharger `to_pypsa_params()`
 3. Ajouter le mapping dans le repository (`supply_repository_impl.py`)
-4. Mettre à jour le seed si nécessaire
+4. Ajouter le mapping dans l'endpoint (`supply.py` `_TYPE_MAP`)
