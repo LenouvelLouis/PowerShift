@@ -90,6 +90,8 @@ pytest -v   # verbose
 | PUT | `/api/v1/network/{id}` | Update a network component (partial) |
 | DELETE | `/api/v1/network/{id}` | Delete a network component |
 | POST | `/api/v1/simulation/run` | Run a PyPSA grid simulation |
+| GET | `/api/v1/simulation` | List past simulations |
+| GET | `/api/v1/simulation/{id}` | Get a simulation result |
 | GET | `/docs` | Swagger UI |
 | GET | `/redoc` | ReDoc |
 
@@ -106,8 +108,12 @@ app/                             # Main Python package
 │   ├── entities/
 │   │   ├── base_component.py    # ComponentStatus enum + BaseComponent ABC
 │   │   ├── supply/              # WindTurbine, SolarPanel, NuclearPlant
-│   │   └── demand/              # House, ElectricVehicle
-│   ├── interfaces/              # ABCs: ISupplyRepository, IDemandRepository, ISimulationRepository
+│   │   ├── demand/              # House, ElectricVehicle
+│   │   └── network/             # Cable, Transformer
+│   ├── interfaces/              # ABCs: ISupplyRepository, IDemandRepository,
+│   │                            #   INetworkRepository, ISimulationRepository,
+│   │                            #   ISimulationPersistenceRepository,
+│   │                            #   IPvProfileRepository, ILoadProfileProvider
 │   └── use_cases/               # GetReferentialUseCase, RunSimulationUseCase
 │
 ├── application/                 # Application layer
@@ -117,11 +123,16 @@ app/                             # Main Python package
 ├── infrastructure/              # Infrastructure layer
 │   ├── secrets/
 │   │   └── settings.py          # get_settings() — cached settings from .env
-
 │   ├── db/
 │   │   ├── connection.py        # Async engine + get_db() FastAPI dependency
-│   │   ├── models/              # SupplyModel, DemandModel (SQLAlchemy ORM)
-│   │   └── repositories/        # SupplyRepositoryImpl, DemandRepositoryImpl
+│   │   ├── models/              # SupplyModel, DemandModel, NetworkModel,
+│   │   │                        #   SimulationRequestModel, SimulationResultModel,
+│   │   │                        #   AssetParametersModel, PvHourlyModel
+│   │   └── repositories/        # SupplyRepositoryImpl, DemandRepositoryImpl,
+│   │                            #   NetworkRepositoryImpl, SimulationRepositoryImpl,
+│   │                            #   PvHourlyRepositoryImpl
+│   ├── external/
+│   │   └── open_meteo_provider.py  # ILoadProfileProvider via Open-Meteo API
 │   └── simulation/
 │       ├── pypsa_adapter.py     # AbstractGridSimulation + SimulationConfig/Result
 │       └── network_builder.py   # PyPSANetworkBuilder (runs PyPSA in ThreadPoolExecutor)
@@ -139,12 +150,21 @@ pyproject.toml                   # Project metadata and dependencies
 
 ---
 
-## Dependency injection chain (GET /api/v1/referential)
+## Dependency injection chains
 
 ```
 GET /api/v1/referential
   └─ ReferentialService
       └─ GetReferentialUseCase
-          ├─ SupplyRepositoryImpl  ─┐
-          └─ DemandRepositoryImpl  ─┴─ AsyncSession shared via get_db()
+          ├─ SupplyRepositoryImpl   ─┐
+          ├─ DemandRepositoryImpl   ─┤
+          └─ NetworkRepositoryImpl  ─┴─ AsyncSession shared via get_db()
+
+POST /api/v1/simulation/run
+  └─ SimulationService
+      └─ RunSimulationUseCase
+          ├─ PyPSANetworkBuilder
+          ├─ PvHourlyRepositoryImpl  ───┐
+          ├─ SimulationRepositoryImpl ──┤
+          └─ OpenMeteoProvider          └─ AsyncSession shared via get_db()
 ```
