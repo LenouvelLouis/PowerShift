@@ -1,0 +1,70 @@
+trigger:
+  branches:
+    include:
+      - '*'
+
+pr:
+  branches:
+    include:
+      - '*'
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  - job: test
+    displayName: 'Test'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-retries 5
+
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '$(PYTHON_VERSION)'
+        displayName: 'Setup Python $(PYTHON_VERSION)'
+
+      - script: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+        displayName: 'Install dependencies'
+
+      - script: |
+          pytest tests/ \
+            --cov=app \
+            --cov-report=xml \
+            --junitxml=test-results.xml \
+            -v
+        displayName: 'Run tests'
+        env:
+          DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+          APP_NAME: 'Energy Grid API'
+          APP_VERSION: '0.1.0'
+          ENVIRONMENT: testing
+          DEBUG: 'false'
+
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: JUnit
+          testResultsFiles: test-results.xml
+        condition: always()
+        displayName: 'Publish test results'
+
+      - task: PublishCodeCoverageResults@2
+        inputs:
+          summaryFileLocation: coverage.xml
+        condition: always()
+        displayName: 'Publish coverage'
