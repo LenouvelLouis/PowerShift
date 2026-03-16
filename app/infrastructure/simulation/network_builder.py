@@ -43,6 +43,9 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
             params = supply.to_pypsa_params()
             solar_profile = config.solar_profiles.get(supply.name)
             if solar_profile is not None:
+                # PyPSA requires p_max_pu to be a pd.Series indexed on network snapshots
+                # to align the solar profile temporally with the optimization timesteps.
+                # Imported inline to avoid making pandas a hard dependency of the whole module.
                 import pandas as pd  # noqa: PLC0415
                 params["p_max_pu"] = pd.Series(solar_profile, index=n.snapshots)
                 params["marginal_cost"] = 0.001  # near-zero to keep solar cheapest but LP objective non-trivial
@@ -52,7 +55,8 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
         for demand in config.demands:
             profile = config.load_profiles.get(demand.name)
             params = demand.to_pypsa_params(profile=profile)
-            # Convert list p_set to a pandas Series aligned with network snapshots
+            # PyPSA requires p_set to be a pd.Series indexed on network snapshots.
+            # Imported inline to avoid making pandas a hard dependency of the whole module.
             if isinstance(params.get("p_set"), list):
                 import pandas as pd  # noqa: PLC0415
                 params["p_set"] = pd.Series(params["p_set"], index=n.snapshots)
