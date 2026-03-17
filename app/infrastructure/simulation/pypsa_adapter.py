@@ -24,6 +24,7 @@ class SimulationConfig:
     network_components: list = field(default_factory=list)  # list[BaseNetwork]
     load_profiles: dict = field(default_factory=dict)       # demand.name -> list[float]
     solar_profiles: dict = field(default_factory=dict)      # supply.name -> list[float] (p_max_pu)
+    wind_profiles: dict = field(default_factory=dict)       # supply.name -> list[float] (p_max_pu)
     pypsa_params: dict = field(default_factory=dict)        # asset.name -> param overrides
 
 

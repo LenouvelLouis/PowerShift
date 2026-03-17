@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
+from app.application.wind.schemas import CalculatePowerRequest
+from app.application.wind.use_cases import CalculateWindPowerUseCase
 from app.domain.interfaces.load_profile_provider import ILoadProfileProvider
 from app.domain.interfaces.pv_profile_repository import IPVProfileRepository
 from app.domain.interfaces.simulation_repository import (
@@ -17,6 +19,7 @@ from app.infrastructure.simulation.pypsa_adapter import (
     AdapterOutput,
     SimulationConfig,
 )
+from app.infrastructure.wind.repository import WindTurbineRepositoryImpl
 
 
 class _DefaultPyPSASimulation(AbstractGridSimulation):
@@ -49,6 +52,13 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
                 import pandas as pd  # noqa: PLC0415
                 params["p_max_pu"] = pd.Series(solar_profile, index=n.snapshots)
                 params["marginal_cost"] = 0.001  # near-zero to keep solar cheapest but LP objective non-trivial
+
+            wind_profile = config.wind_profiles.get(supply.name)
+            if wind_profile is not None:
+                import pandas as pd  # noqa: PLC0415
+                params["p_max_pu"] = pd.Series(wind_profile, index=n.snapshots)
+                params["marginal_cost"] = 0.0  # wind = marginal cost zero, dispatched first
+
             params.update(config.pypsa_params.get(supply.name, {}))
             n.add("Generator", supply.name, **params)
 
@@ -138,10 +148,12 @@ class PyPSANetworkBuilder(ISimulationRepository):
         simulation: AbstractGridSimulation | None = None,
         load_profile_provider: ILoadProfileProvider | None = None,
         pv_profile_repo: IPVProfileRepository | None = None,
+        wind_repo: WindTurbineRepositoryImpl | None = None,
     ) -> None:
         self._simulation = simulation or _DefaultPyPSASimulation()
         self._load_profile_provider = load_profile_provider
         self._pv_profile_repo = pv_profile_repo
+        self._wind_repo = wind_repo
 
     async def run(
         self,
@@ -171,6 +183,30 @@ class PyPSANetworkBuilder(ISimulationRepository):
                         run_input.start_date, run_input.end_date
                     )
 
+        # Compute wind power profiles from KNMI measurements
+        wind_profiles: dict[str, list[float]] = {}
+        if (
+            self._wind_repo is not None
+            and run_input.start_date is not None
+            and run_input.end_date is not None
+        ):
+            for supply in supplies:
+                if supply.get_carrier() == "wind":
+                    wind_use_case = CalculateWindPowerUseCase(self._wind_repo)
+                    result = await wind_use_case.execute(
+                        CalculatePowerRequest(
+                            asset_id=supply.id,
+                            station_code="06280",
+                            start=run_input.start_date,
+                            end=run_input.end_date,
+                        )
+                    )
+                    rated_kw = supply.capacity_mw * 1000
+                    wind_profiles[supply.name] = [
+                        min(pt.power_kw / rated_kw, 1.0) if rated_kw > 0 else 0.0
+                        for pt in result.power_series
+                    ]
+
         config = SimulationConfig(
             snapshot_hours=run_input.snapshot_hours,
             solver=run_input.solver,
@@ -179,6 +215,7 @@ class PyPSANetworkBuilder(ISimulationRepository):
             network_components=network_components,
             load_profiles=load_profiles,
             solar_profiles=solar_profiles,
+            wind_profiles=wind_profiles,
             pypsa_params=run_input.pypsa_params or {},
         )
         loop = asyncio.get_running_loop()

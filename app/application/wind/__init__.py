@@ -1,0 +1,1 @@
+"""Wind turbine application package."""

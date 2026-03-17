@@ -19,6 +19,7 @@ from app.infrastructure.db.repositories.simulation_repository_impl import Simula
 from app.infrastructure.db.repositories.supply_repository_impl import SupplyRepositoryImpl
 from app.infrastructure.external.open_meteo_provider import OpenMeteoLoadProfileProvider
 from app.infrastructure.simulation.network_builder import PyPSANetworkBuilder
+from app.infrastructure.wind.repository import WindTurbineRepositoryImpl
 
 # ── DB session (shared by all repos via FastAPI deduplication) ───────────────
 
@@ -61,17 +62,23 @@ def get_referential_use_case(
     )
 
 
+def get_wind_repository(db: DbSession) -> WindTurbineRepositoryImpl:
+    return WindTurbineRepositoryImpl(db)
+
+
 def get_simulation_use_case(
     supply_repo: Annotated[SupplyRepositoryImpl, Depends(get_supply_repository)],
     demand_repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
     network_repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
     persistence: Annotated[SimulationRepositoryImpl, Depends(get_simulation_persistence_repository)],
     pv_repo: Annotated[PVHourlyRepositoryImpl, Depends(get_pv_profile_repository)],
+    wind_repo: Annotated[WindTurbineRepositoryImpl, Depends(get_wind_repository)],
 ) -> RunSimulationUseCase:
     return RunSimulationUseCase(
         grid_simulation=PyPSANetworkBuilder(
             load_profile_provider=OpenMeteoLoadProfileProvider(),
             pv_profile_repo=pv_repo,
+            wind_repo=wind_repo,
         ),
         persistence=persistence,
         supply_repo=supply_repo,
