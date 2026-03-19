@@ -1,3 +1,7 @@
+<script setup lang="ts">
+
+</script>
+
 <template>
     <div class="Top">
         <img class="logo" src="/img/logo.png" alt="Logo">
@@ -59,10 +63,5 @@
         <div class="Right_panel">
         </div>
     </div>
-
-
-<div class="Bottom">
-        <div class="Blue_circle"></div>
-         <a class="Data_ref" href="https://developer.dataplatform.knmi.nl/apis" target="_blank">DATA REFERENCE: KNMI Data Platform</a>
-    </div>
+    <App_footer/>
 </template>
