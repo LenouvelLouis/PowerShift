@@ -65,3 +65,14 @@ Thumbs.db
 # Python
 # ──────────────────────────────────────────────
 .ipynb_checkpoints/
+
+
+# ──────────────────────────────────────────────
+# Projet Nuxt 
+# ──────────────────────────────────────────────
+energy-dashboard/node_modules
+energy-dashboard/.nuxt
+energy-dashboard/.output
+energy-dashboard/.nitro
+energy-dashboard/.cache
+energy-dashboard/dist
