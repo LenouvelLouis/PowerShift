@@ -1,67 +1,76 @@
-<script setup lang="ts">
-
-</script>
-
 <template>
-    <div class="Top">
-        <img class="logo" src="/img/logo.png" alt="Logo">
-        <div class="Title">ENERGY NETWORK SIMULATOR</div>
-        <div class="Title_y">2026</div>
-        <select name="" id="" class="Select">
-            <option>Scénario 1</option>
-            <option>Scénario 2</option>
-            <option>Scénario 3</option>
-            <option>Scénario 4</option>
-        </select>
-        <div class="Button_div">
-            <button class="Button_play" onclick="startSimulation()">
-                <svg viewBox="0 0 24 24" fill="white" width="15" height="15">
-                    <polygon points="5,3 19,12 5,21 5,3"/>
-                </svg>
-            </button>
-            <button class="Button_stop" onclick="stopSimulation()">
-                <svg viewBox="0 0 24 24" fill="Red" width="20" height="20">
-                    <rect x="8" y="8" width="9" height="9" rx="1"/>
-                </svg>
-            </button>
-        </div>
-            <div class="Loader" id="Loader"></div>
-            <div class="Simu_ready" id="Simu_ready"> Simulation Ready !</div>
+  <div>
+    <UPageHero
+      title="Nuxt Starter Template"
+      description="A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours."
+      :links="[{
+        label: 'Get started',
+        to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
+        target: '_blank',
+        trailingIcon: 'i-lucide-arrow-right',
+        size: 'xl'
+      }, {
+        label: 'Use this template',
+        to: 'https://github.com/nuxt-ui-templates/starter',
+        target: '_blank',
+        icon: 'i-simple-icons-github',
+        size: 'xl',
+        color: 'neutral',
+        variant: 'subtle'
+      }]"
+    />
 
+    <UPageSection
+      id="features"
+      title="Everything you need to build modern Nuxt apps"
+      description="Start with a solid foundation. This template includes all the essentials for building production-ready applications with Nuxt UI's powerful component system."
+      :features="[{
+        icon: 'i-lucide-rocket',
+        title: 'Production-ready from day one',
+        description: 'Pre-configured with TypeScript, ESLint, Tailwind CSS, and all the best practices. Focus on building features, not setting up tooling.'
+      }, {
+        icon: 'i-lucide-palette',
+        title: 'Beautiful by default',
+        description: 'Leveraging Nuxt UI\'s design system with automatic dark mode, consistent spacing, and polished components that look great out of the box.'
+      }, {
+        icon: 'i-lucide-zap',
+        title: 'Lightning fast',
+        description: 'Optimized for performance with SSR/SSG support, automatic code splitting, and edge-ready deployment. Your users will love the speed.'
+      }, {
+        icon: 'i-lucide-blocks',
+        title: '100+ components included',
+        description: 'Access Nuxt UI\'s comprehensive component library. From forms to navigation, everything is accessible, responsive, and customizable.'
+      }, {
+        icon: 'i-lucide-code-2',
+        title: 'Developer experience first',
+        description: 'Auto-imports, hot module replacement, and TypeScript support. Write less boilerplate and ship more features.'
+      }, {
+        icon: 'i-lucide-shield-check',
+        title: 'Built for scale',
+        description: 'Enterprise-ready architecture with proper error handling, SEO optimization, and security best practices built-in.'
+      }]"
+    />
 
-
-
-
-            <button class="Export">Export</button>
-    </div>
-    
-
-
-    <div class="Mid">
-        <div class="Main_content"> 
-            <div class="Schemas">
-                <div class="Schemas_header">
-                    Simulation
-                </div>
-                <div class="Schemas_content">
-                    <div class="Img_header">
-                                <select name="" id="imageSelector" class="Img_selection_header" onchange="showImage()">
-                                    <option value="schema exemple 1">Schema Exemple 1</option>
-                                    <option value="schema exemple 2">Schema Exemple 2</option>
-                                </select>
-                    </div>
-                    <div class="Img_content" id="imageDisplay"><img src="/img/schema exemple 1.png" alt="Sélection" class="schema_1"></div>
-                </div>
-            </div>
-            <div class="Kpi-list">
-                <div class="Kpi"></div>
-                <div class="Kpi"></div>
-                <div class="Kpi"></div>
-                <div class="Kpi"></div>
-            </div>
-        </div>
-        <div class="Right_panel">
-        </div>
-    </div>
-    <App_footer/>
+    <UPageSection>
+      <UPageCTA
+        title="Ready to build your next Nuxt app?"
+        description="Join thousands of developers building with Nuxt and Nuxt UI. Get this template and start shipping today."
+        variant="subtle"
+        :links="[{
+          label: 'Start building',
+          to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
+          target: '_blank',
+          trailingIcon: 'i-lucide-arrow-right',
+          color: 'neutral'
+        }, {
+          label: 'View on GitHub',
+          to: 'https://github.com/nuxt-ui-templates/starter',
+          target: '_blank',
+          icon: 'i-simple-icons-github',
+          color: 'neutral',
+          variant: 'outline'
+        }]"
+      />
+    </UPageSection>
+  </div>
 </template>

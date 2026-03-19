@@ -1,6 +1,34 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import Aura from '@primeuix/themes/aura'
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
+  modules: [
+    '@nuxt/eslint',
+    '@nuxt/ui',
+    '@pinia/nuxt',
+    '@vueuse/nuxt'
+  ],
+
   devtools: { enabled: true },
-  css: ['~/assets/css/main.css']
+
+  css: ['~/assets/css/main.css'],
+
+  routeRules: {
+    '/': { prerender: true }
+  },
+
+  compatibilityDate: '2025-01-15',
+
+  // ← Ajoute ce bloc pour Pinia persistedstate
+  pinia: {
+    storesDirs: ['./app/stores/**'],
+  },
+
+  eslint: {
+    config: {
+      stylistic: {
+        commaDangle: 'never',
+        braceStyle: '1tbs'
+      }
+    }
+  }
 })
