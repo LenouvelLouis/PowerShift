@@ -70,12 +70,11 @@ Thumbs.db
 # ──────────────────────────────────────────────
 # Projet Nuxt 
 # ──────────────────────────────────────────────
-energy-dashboard/.nuxt/
+*.nuxt/
 energy-dashboard/.output/
 energy-dashboard/dist/
-energy-dashboard/node_modules/
+*/node_modules/
 energy-dashboard/.env
 energy-dashboard/.env.*
 !energy-dashboard/.env.example
 energy-dashboard/package-lock.json
-energy-dashboard/cleanup/
