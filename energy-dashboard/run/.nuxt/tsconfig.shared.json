@@ -110,10 +110,7 @@
         "./imports"
       ],
       "#app-manifest": [
-        "./manifest/meta/dev"
-      ],
-      "#components": [
-        "./components"
+        "./manifest/meta/dev.json"
       ],
       "#build": [
         "."
@@ -137,14 +134,6 @@
     "noImplicitOverride": true,
     "module": "preserve",
     "noEmit": true,
-    "lib": [
-      "ESNext",
-      "dom",
-      "dom.iterable",
-      "webworker"
-    ],
-    "jsx": "preserve",
-    "jsxImportSource": "vue",
     "types": [],
     "moduleResolution": "Bundler",
     "useDefineForClassFields": true,
@@ -152,47 +141,12 @@
     "allowSyntheticDefaultImports": true
   },
   "include": [
-    "./nuxt.d.ts",
-    "../**/*",
-    "../modules/*/runtime/**/*",
-    "../test/nuxt/**/*",
-    "../tests/nuxt/**/*",
-    "../layers/*/app/**/*",
-    "../layers/*/modules/*/runtime/**/*",
-    "../shared/**/*.d.ts",
-    "../modules/*/shared/**/*.d.ts",
-    "../layers/*/shared/**/*.d.ts",
-    "../*.d.ts",
-    "../layers/*/*.d.ts",
-    "./nuxt.node.d.ts",
-    "../modules/*.*",
-    "../nuxt.config.*",
-    "../.config/nuxt.*",
-    "../layers/*/nuxt.config.*",
-    "../layers/*/.config/nuxt.*",
-    "../layers/*/modules/**/*",
+    "./nuxt.shared.d.ts",
     "../shared/**/*",
     "../modules/*/shared/**/*",
     "../layers/*/shared/**/*",
-    "../../node_modules/.pnpm/@nuxt+devtools@3.2.3_vite@7_5b23751557e523e954c7afcef7d2cc7d/node_modules/runtime",
-    "../../node_modules/.pnpm/@nuxt+devtools@3.2.3_vite@7_5b23751557e523e954c7afcef7d2cc7d/node_modules/dist/runtime",
-    "../../node_modules/.pnpm/@nuxt+telemetry@2.7.0_@nuxt+kit@4.4.2_magicast@0.5.2_/node_modules/runtime",
-    "../../node_modules/.pnpm/@nuxt+telemetry@2.7.0_@nuxt+kit@4.4.2_magicast@0.5.2_/node_modules/dist/runtime"
+    "../*.d.ts",
+    "../layers/*/*.d.ts"
   ],
-  "exclude": [
-    "../node_modules",
-    "../../node_modules",
-    "../../node_modules/.pnpm/nuxt@4.4.2_@babel+core@7.29_84d8bc8d7d7200812db4f2afe5bfa8de/node_modules/nuxt/node_modules",
-    "../../node_modules/.pnpm/@nuxt+devtools@3.2.3_vite@7_5b23751557e523e954c7afcef7d2cc7d/node_modules/@nuxt/devtools/node_modules",
-    "../../node_modules/.pnpm/@nuxt+telemetry@2.7.0_@nuxt+kit@4.4.2_magicast@0.5.2_/node_modules/@nuxt/telemetry/node_modules",
-    "../dist",
-    "../.data",
-    "../modules/*/runtime/server/**/*",
-    "../layers/*/server/**/*",
-    "../layers/*/modules/*/runtime/server/**/*",
-    "../../node_modules/.pnpm/@nuxt+devtools@3.2.3_vite@7_5b23751557e523e954c7afcef7d2cc7d/node_modules/runtime/server",
-    "../../node_modules/.pnpm/@nuxt+devtools@3.2.3_vite@7_5b23751557e523e954c7afcef7d2cc7d/node_modules/dist/runtime/server",
-    "../../node_modules/.pnpm/@nuxt+telemetry@2.7.0_@nuxt+kit@4.4.2_magicast@0.5.2_/node_modules/runtime/server",
-    "../../node_modules/.pnpm/@nuxt+telemetry@2.7.0_@nuxt+kit@4.4.2_magicast@0.5.2_/node_modules/dist/runtime/server"
-  ]
+  "exclude": []
 }

@@ -36,7 +36,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname as dirname$1, resolve as resolve$1 } from 'file://C:/Users/Val/Documents/Python/ui/energy-dashboard/node_modules/.pnpm/pathe@2.0.3/node_modules/pathe/dist/index.mjs';
 import { walkResolver } from 'file://C:/Users/Val/Documents/Python/ui/energy-dashboard/node_modules/.pnpm/unhead@2.1.12/node_modules/unhead/dist/utils.mjs';
 
-const serverAssets = [{"baseName":"server","dir":"C:/Users/Val/Documents/Python/ui/energy-dashboard/cleanup/server/assets"}];
+const serverAssets = [{"baseName":"server","dir":"C:/Users/Val/Documents/Python/ui/energy-dashboard/run/server/assets"}];
 
 const assets$1 = createStorage();
 
@@ -48,11 +48,11 @@ const storage = createStorage({});
 
 storage.mount('/assets', assets$1);
 
-storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"C:/Users/Val/Documents/Python/ui/energy-dashboard/cleanup","watchOptions":{"ignored":[null]}}));
-storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"C:/Users/Val/Documents/Python/ui/energy-dashboard/cleanup/server","watchOptions":{"ignored":[null]}}));
-storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"C:/Users/Val/Documents/Python/ui/energy-dashboard/cleanup/.nuxt"}));
-storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"C:/Users/Val/Documents/Python/ui/energy-dashboard/cleanup/.nuxt/cache"}));
-storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"C:/Users/Val/Documents/Python/ui/energy-dashboard/cleanup/.data/kv"}));
+storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"C:/Users/Val/Documents/Python/ui/energy-dashboard/run","watchOptions":{"ignored":[null]}}));
+storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"C:/Users/Val/Documents/Python/ui/energy-dashboard/run/server","watchOptions":{"ignored":[null]}}));
+storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"C:/Users/Val/Documents/Python/ui/energy-dashboard/run/.nuxt"}));
+storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"C:/Users/Val/Documents/Python/ui/energy-dashboard/run/.nuxt/cache"}));
+storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"C:/Users/Val/Documents/Python/ui/energy-dashboard/run/.data/kv"}));
 
 function useStorage(base = "") {
   return base ? prefixStorage(storage, base) : storage;
@@ -2026,7 +2026,7 @@ const _ZymkdIFAKbgEpcOpn2c0LnSWUy2y7yMLsTU6Xl4I52Q = (function(nitro) {
   });
 });
 
-const rootDir = "C:/Users/Val/Documents/Python/ui/energy-dashboard/cleanup";
+const rootDir = "C:/Users/Val/Documents/Python/ui/energy-dashboard/run";
 
 const appHead = {"meta":[{"name":"viewport","content":"width=device-width, initial-scale=1"},{"charset":"utf-8"}],"link":[],"style":[],"script":[],"noscript":[]};
 
@@ -2300,9 +2300,9 @@ function publicAssetsURL(...path) {
 const APP_ROOT_OPEN_TAG = `<${appRootTag}${propsToString(appRootAttrs)}>`;
 const APP_ROOT_CLOSE_TAG = `</${appRootTag}>`;
 // @ts-expect-error file will be produced after app build
-const getServerEntry = () => import('file://C:/Users/Val/Documents/Python/ui/energy-dashboard/cleanup/.nuxt//dist/server/server.mjs').then((r) => r.default || r);
+const getServerEntry = () => import('file://C:/Users/Val/Documents/Python/ui/energy-dashboard/run/.nuxt//dist/server/server.mjs').then((r) => r.default || r);
 // @ts-expect-error file will be produced after app build
-const getClientManifest = () => import('file://C:/Users/Val/Documents/Python/ui/energy-dashboard/cleanup/.nuxt//dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
+const getClientManifest = () => import('file://C:/Users/Val/Documents/Python/ui/energy-dashboard/run/.nuxt//dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
 // -- SSR Renderer --
 const getSSRRenderer = lazyCachedFunction(async () => {
 	// Load server bundle
