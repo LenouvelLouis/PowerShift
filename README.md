@@ -200,6 +200,17 @@ make check         # ruff + make ci (stricter local gate before push)
 make test-quick    # fast pytest without coverage / junit
 ```
 
+### Makefile (run CI checks locally)
+
+If you have **GNU Make** and PostgreSQL available at the same URL as CI (or override `DATABASE_URL`):
+
+```bash
+make help          # list targets
+make install       # pip install -e ".[dev]"
+make ci            # ruff + pytest with same flags as Azure Pipelines
+make test-quick    # fast pytest without coverage / junit
+```
+
 ---
 
 ## Endpoints
