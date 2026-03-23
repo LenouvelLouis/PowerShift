@@ -1,6 +1,8 @@
 <script setup>
-const sidebarOpen = ref(true)
 
+
+//--------------SIDEBAR------------
+const sidebarOpen = ref(true)
 const tabGroups = [
   {
     label: 'Supply',
@@ -11,7 +13,7 @@ const tabGroups = [
       { id: 'solar_panel', emoji: '☀️', label: 'Solar Panel',
         params: { name: '', type: 'solar_panel', capacity_mw: 200, efficiency: 0.20, status: 'active', unit: 'MW', description: '' }
       },
-      { id: 'nuclear_plant', emoji: '⚡', label: 'Nuclear Plant',
+      { id: 'nuclear_plant', emoji: '☢️', label: 'Nuclear Plant',
         params: { name: '', type: 'nuclear_plant', capacity_mw: 1000, efficiency: 0.95, status: 'active', unit: 'MW', description: '' }
       },
     ]
@@ -22,7 +24,7 @@ const tabGroups = [
       { id: 'transformer', emoji: '🔌', label: 'Transformer',
         params: { name: '', type: 'transformer', voltage_kv: 400, voltage_hv_kv: 400, voltage_lv_kv: 20, capacity_mva: 500, status: 'active', unit: 'MVA', description: '' }
       },
-      { id: 'cable', emoji: '🌐', label: 'Cable',
+      { id: 'cable', emoji: '🔌', label: 'Cable',
         params: { name: '', type: 'cable', voltage_kv: 20, length_km: 10, resistance_ohm_per_km: 0.1, reactance_ohm_per_km: 0.05, status: 'active', unit: 'MVA', description: '' }
       },
     ]
@@ -39,8 +41,6 @@ const tabGroups = [
     ]
   },
 ]
-
-
 const activeGroup = ref('Supply')
 const activeTab   = ref('Nuclear')
 const allTabs     = computed(() => tabGroups.flatMap(g => g.tabs)) //tous les sous onglets
@@ -48,6 +48,14 @@ const currentTabs = computed(() => tabGroups.find(g => g.label === activeGroup.v
 const selectedTab = computed(() => currentTabs.value.find(tab => tab.id === activeTab.value)) //Sous onglet sélectionné 
 const tabOptions = computed(() => currentTabs.value.map(tab => ({label: tab.emoji + ' ' + tab.label, value: tab.id})))
 watch(activeGroup, () => {activeTab.value = currentTabs.value[0]?.id ?? null})
+
+
+
+//--------------SIMULATION------------
+
+
+
+
 
 </script>
 
@@ -67,7 +75,8 @@ watch(activeGroup, () => {activeTab.value = currentTabs.value[0]?.id ?? null})
         <span class="font-bold text-lg  mr-50"> Energy Network Simulator 2026</span>
         
         <!--Bouton play stop -->
-        <UButton icon="i-heroicons-play" color="success" label="Play" class=" hover:bg-[#2d3f55] text-white" size="sm"/>
+        <UButton icon="i-heroicons-play" color="success" label="Play"
+/>
         <UButton icon="i-heroicons-stop" color="error" label="Stop" class="hover:bg-[#2d3f55] text-white" size="sm"/>
         <UButton icon="i-heroicons-arrow-down-tray" label="Exporter" class="bg-[#1E293B] hover:bg-[#2d3f55] text-white ml-auto" />
     
@@ -143,7 +152,7 @@ watch(activeGroup, () => {activeTab.value = currentTabs.value[0]?.id ?? null})
 
       <!-- Zone centrale -->
       <main class="flex-1 overflow-y-auto p-6">
-        <slot/>
+        <NuxtPage />
       </main>
     </div>
   </div>

@@ -1,0 +1,79 @@
+{
+  "id": "f010b00d-aace-4046-aa23-5bb3f08b9f62",
+  "request_id": "98a6be2a-3828-491f-bf86-02efee41aae2",
+  "status": "optimal",
+  "total_supply_mwh": 94,
+  "total_demand_mwh": 94,
+  "balance_mwh": 0,
+  "objective_value": 94,
+  "result_json": {
+    "generators_t": {
+      "Nuclear Plant US03": {
+        "p": [
+          94
+        ]
+      }
+    },
+    "loads_t": {
+      "House 1": {
+        "p": [
+          8
+        ]
+      },
+      "House 2": {
+        "p": [
+          10
+        ]
+      },
+      "House 3": {
+        "p": [
+          12
+        ]
+      },
+      "House 4": {
+        "p": [
+          7
+        ]
+      },
+      "House 5": {
+        "p": [
+          9
+        ]
+      },
+      "House 6": {
+        "p": [
+          11
+        ]
+      },
+      "House 7": {
+        "p": [
+          6
+        ]
+      },
+      "House 8": {
+        "p": [
+          13
+        ]
+      },
+      "House 9": {
+        "p": [
+          8
+        ]
+      },
+      "House 10": {
+        "p": [
+          10
+        ]
+      }
+    },
+    "capacity_factors": {
+      "Nuclear Plant US03": 0.94
+    },
+    "violations": {
+      "overloads": [],
+      "overvoltages": []
+    },
+    "objective_value": 94
+  },
+  "created_at": "2026-03-22T22:30:18.240337Z"
+}

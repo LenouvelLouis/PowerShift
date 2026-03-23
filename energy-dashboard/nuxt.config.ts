@@ -5,8 +5,19 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/ui',
     '@pinia/nuxt',
-    '@vueuse/nuxt'
+    '@vueuse/nuxt',
+    '@nuxt/icon'
   ],
+
+  // ← AJOUTE ce bloc pour corriger les icons
+  icon: {
+    collections: [
+      'heroicons',
+      'lucide'
+    ],
+    // @ts-ignore do not delete or Vs code will consider it as an error
+    provider: 'unjs'
+  },
 
   devtools: { enabled: true },
 
@@ -14,6 +25,12 @@ export default defineNuxtConfig({
 
   routeRules: {
     '/': { prerender: true }
+  },
+
+    nitro: {
+    routeRules: {
+      '/api/**': { proxy: 'http://localhost:8000/**' }
+    }
   },
 
   compatibilityDate: '2025-01-15',
