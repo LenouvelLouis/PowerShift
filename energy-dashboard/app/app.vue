@@ -1,7 +1,14 @@
+<template>
+  <UApp>
+    <NuxtLayout>
+    </NuxtLayout>
+  </UApp>
+</template>
+
 <script setup>
 useHead({
   link: [{ rel: 'icon', href: '/favicon.ico' }],
-  htmlAttrs: { lang: 'fr' }
+  htmlAttrs: { lang: 'en' }
 })
 
 useSeoMeta({
@@ -9,10 +16,3 @@ useSeoMeta({
   description: 'Outil de simulation énergétique PyPSA',
 })
 </script>
-
-<template>
-  <UApp>
-    <NuxtLayout>
-    </NuxtLayout>
-  </UApp>
-</template>

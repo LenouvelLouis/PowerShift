@@ -1,3 +1,96 @@
+
+
+
+
+<template>
+  <div class="flex flex-col h-screen bg-[#020617] text-white">
+
+    <!-- Header -->
+    <header class="bg-[#0F172A] flex items-center justify-between px-4 gap-2 h-14 border-b border-gray-200 dark:border-gray-800 shrink-0">
+      
+        <UButton
+          variant="ghost" :icon="sidebarOpen ? 'i-heroicons-bars-3' : 'i-heroicons-bars-3'" 
+          @click="sidebarOpen = !sidebarOpen"
+        />
+        <img src="/logo.png" alt="EnergyDash" class="h-10 w-auto" >
+        <span class="font-bold text-lg  mr-50"> Energy Network Simulator 2026</span>
+        
+        <!--Bouton play stop -->
+        <UButton icon="i-heroicons-play" color="success" label="Play"
+/>
+        <UButton icon="i-heroicons-stop" color="error" label="Stop" class="hover:bg-[#2d3f55] text-white" size="sm"/>
+        <UButton icon="i-heroicons-arrow-down-tray" label="Export" class="bg-[#1E293B] hover:bg-[#2d3f55] text-white ml-auto" />
+    
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+      <Transition name="sidebar">
+        <aside
+          v-if="sidebarOpen"
+          class="bg-[#0F172A] w-60 border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 overflow-hidden"
+        >
+        <div class="w-56 flex flex-col bg-[#0F172A] h-full">
+            <div class="flex flex-row border-b border-[#1E293B]">
+                <button
+                v-for="group in tabGroups"
+                :key="group.label"
+                @click="activeGroup = group.label"
+                class="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer"
+                :class="activeGroup === group.label
+                    ? 'text-white border-b-2 border-[#3C83F8]'
+                    : 'text-gray-500 hover:text-gray-300'"
+                >
+                <span>{{ group.tabs[0].emoji }}</span>
+                <span>{{ group.label }}</span>
+                </button>
+            </div>
+              <div class="flex-1 p-2 overflow-y-auto">
+                <USelect
+                  v-model="activeTab"
+                  :items="tabOptions"
+                  placeholder="Select..."
+                  class="w-full"
+                />
+                <div class="flex-1 overflow-y-auto p-6">
+                  <div v-if="selectedTab">
+                    <div v-for="(value, key) in selectedTab.params" :key="key">
+                      <label>{{ key }}</label>
+                      <UInput v-model="selectedTab.params[key]" />
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+             <div class="border-t border-[#1E293B] p-3 flex flex-col gap-2">
+                <UButton
+                block
+                icon="i-heroicons-folder-open"
+                label="Load Scenario"
+                color="neutral"
+                variant="outline"
+                size="sm"
+                />
+                <UButton
+                block
+                icon="i-heroicons-cloud-arrow-up"
+                label="Save This Scenario"
+                color="primary"
+                variant="solid"
+                size="sm"
+                />
+            </div>
+        </div>
+        </aside>
+      </Transition>
+
+      <!-- Zone centrale -->
+      <main class="flex-1 overflow-y-auto p-6">
+        <NuxtPage />
+      </main>
+    </div>
+  </div>
+</template>
+
 <script setup>
 
 
@@ -48,108 +141,7 @@ const currentTabs = computed(() => tabGroups.find(g => g.label === activeGroup.v
 const selectedTab = computed(() => currentTabs.value.find(tab => tab.id === activeTab.value)) //Sous onglet sélectionné 
 const tabOptions = computed(() => currentTabs.value.map(tab => ({label: tab.emoji + ' ' + tab.label, value: tab.id})))
 watch(activeGroup, () => {activeTab.value = currentTabs.value[0]?.id ?? null})
-
-
 </script>
-
-
-
-<template>
-  <div class="flex flex-col h-screen bg-[#020617] text-white">
-
-    <!-- Header -->
-    <header class="bg-[#0F172A] flex items-center justify-between px-4 gap-2 h-14 border-b border-gray-200 dark:border-gray-800 shrink-0">
-      
-        <UButton
-          variant="ghost" :icon="sidebarOpen ? 'i-heroicons-bars-3' : 'i-heroicons-bars-3'" 
-          @click="sidebarOpen = !sidebarOpen"
-        />
-        <img src="/logo.png" alt="EnergyDash" class="h-10 w-auto" >
-        <span class="font-bold text-lg  mr-50"> Energy Network Simulator 2026</span>
-        
-        <!--Bouton play stop -->
-        <UButton icon="i-heroicons-play" color="success" label="Play"
-/>
-        <UButton icon="i-heroicons-stop" color="error" label="Stop" class="hover:bg-[#2d3f55] text-white" size="sm"/>
-        <UButton icon="i-heroicons-arrow-down-tray" label="Export" class="bg-[#1E293B] hover:bg-[#2d3f55] text-white ml-auto" />
-    
-    </header>
-
-    <div class="flex flex-1 overflow-hidden">
-
-      <!-- Sidebar rétractable -->
-      <Transition name="sidebar">
-        <aside
-          v-if="sidebarOpen"
-          class="bg-[#0F172A] w-60 border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 overflow-hidden"
-        >
-        <div class="w-56 flex flex-col bg-[#0F172A] h-full">
-
-            <!-- Header avec les 3 catégories -->
-            <div class="flex flex-row border-b border-[#1E293B]">
-                <button
-                v-for="group in tabGroups"
-                :key="group.label"
-                @click="activeGroup = group.label"
-                class="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer"
-                :class="activeGroup === group.label
-                    ? 'text-white border-b-2 border-[#3C83F8]'
-                    : 'text-gray-500 hover:text-gray-300'"
-                >
-                <span>{{ group.tabs[0].emoji }}</span>
-                <span>{{ group.label }}</span>
-                </button>
-            </div>
-
-            <!-- Contenu — onglets du groupe actif -->
-              <div class="flex-1 p-2 overflow-y-auto">
-                <USelect
-                  v-model="activeTab"
-                  :items="tabOptions"
-                  placeholder="Select..."
-                  class="w-full"
-                />
-                <div class="flex-1 overflow-y-auto p-6">
-                  <div v-if="selectedTab">
-
-                    <!-- Boucle sur tous les params -->
-                    <div v-for="(value, key) in selectedTab.params" :key="key">
-                      <label>{{ key }}</label>
-                      <UInput v-model="selectedTab.params[key]" />
-                    </div>
-                  </div>
-                </div>
-            </div>
-
-             <div class="border-t border-[#1E293B] p-3 flex flex-col gap-2">
-                <UButton
-                block
-                icon="i-heroicons-folder-open"
-                label="Load Scenario"
-                color="neutral"
-                variant="outline"
-                size="sm"
-                />
-                <UButton
-                block
-                icon="i-heroicons-cloud-arrow-up"
-                label="Save This Scenario"
-                color="primary"
-                variant="solid"
-                size="sm"
-                />
-            </div>
-        </div>
-        </aside>
-      </Transition>
-
-      <!-- Zone centrale -->
-      <main class="flex-1 overflow-y-auto p-6">
-        <NuxtPage />
-      </main>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 

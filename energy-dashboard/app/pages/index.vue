@@ -6,9 +6,9 @@
     <div class="mb-8 p-6 bg-[#0F172A] rounded-xl border border-[#1E293B]">
       <div class="flex items-center gap-4">
         <label class="font-medium text-gray-300">Scénario :</label>
-        <USelect
+        <!-- TO DO MAKE IT DYNAMIC --> <USelect
           v-model="currentScenario"
-          :items="[
+          :items="[ 
             { label: 'Scenario 1 (1h)', value: 'scenario1' },
             { label: 'Scenario 2 (24h)', value: 'scenario2' }
           ]"
@@ -21,11 +21,11 @@
     <section v-if="result" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
       <div class="bg-[#0F172A] p-6 rounded-xl border border-[#1E293B]">
         <p class="text-sm font-medium text-gray-400 mb-2">Nuclear Central Utilisation</p>
-        <p class="text-3xl font-bold text-white mb-1">{{ utilisation }}%</p>
+        <p class="text-3xl font-bold text-white mb-1">{{ usage }}%</p>
         <div class="w-full bg-gray-700 rounded-full h-3">
           <div 
             class="bg-gradient-to-r from-emerald-500 to-emerald-400 h-3 rounded-full transition-all duration-500"
-            :style="{ width: utilisation + '%' }"
+            :style="{ width: usage + '%' }"
           ></div>
         </div>
       </div>
