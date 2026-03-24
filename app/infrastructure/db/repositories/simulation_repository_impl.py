@@ -21,11 +21,15 @@ class SimulationRepositoryImpl(ISimulationPersistenceRepository):
         row = SimulationRequestModel(
             snapshot_hours=run_input.snapshot_hours,
             solver=run_input.solver,
+            start_date=run_input.start_date,
+            end_date=run_input.end_date,
             pypsa_params=run_input.pypsa_params or None,
             asset_overrides=run_input.asset_overrides or None,
             supply_ids=[str(i) for i in run_input.supply_ids],
             demand_ids=[str(i) for i in run_input.demand_ids],
             network_ids=[str(i) for i in run_input.network_ids],
+            custom_load_profiles=run_input.custom_load_profiles or None,
+            optimization_objective=run_input.optimization_objective,
         )
         self._session.add(row)
         await self._session.flush()
@@ -50,6 +54,12 @@ class SimulationRepositoryImpl(ISimulationPersistenceRepository):
     async def get_result_by_id(self, result_id: uuid.UUID) -> SimulationResultModel | None:
         result = await self._session.execute(
             select(SimulationResultModel).where(SimulationResultModel.id == result_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_request_by_id(self, request_id: uuid.UUID) -> SimulationRequestModel | None:
+        result = await self._session.execute(
+            select(SimulationRequestModel).where(SimulationRequestModel.id == request_id)
         )
         return result.scalar_one_or_none()
 

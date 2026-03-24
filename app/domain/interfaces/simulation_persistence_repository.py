@@ -20,3 +20,6 @@ class ISimulationPersistenceRepository(ABC):
 
     @abstractmethod
     async def list_results(self) -> list: ...
+
+    @abstractmethod
+    async def get_request_by_id(self, request_id: uuid.UUID) -> object | None: ...

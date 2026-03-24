@@ -8,6 +8,7 @@ from app.api.v1.schemas.simulation_schema import (
     SimulationListItem,
     SimulationRunRequest,
     SimulationRunResponse,
+    SimulationScenarioExport,
 )
 from app.domain.interfaces.simulation_persistence_repository import ISimulationPersistenceRepository
 from app.domain.interfaces.simulation_repository import SimulationRunInput
@@ -36,6 +37,8 @@ class SimulationService:
             network_ids=body.network_ids,
             pypsa_params=body.pypsa_params or {},
             asset_overrides=body.asset_overrides or {},
+            custom_load_profiles=body.custom_load_profiles or {},
+            optimization_objective=body.optimization_objective,
         )
         result_id, output = await self._use_case.execute(run_input)
         # Fetch the stored row to get created_at and request_id
@@ -51,6 +54,26 @@ class SimulationService:
         if row is None:
             return None
         return self._to_response(row)
+
+    async def export_scenario(self, simulation_id: uuid.UUID) -> SimulationScenarioExport | None:
+        result_row = await self._persistence.get_result_by_id(simulation_id)
+        if result_row is None:
+            return None
+        request_row = await self._persistence.get_request_by_id(result_row.request_id)
+        if request_row is None:
+            return None
+        return SimulationScenarioExport(
+            snapshot_hours=request_row.snapshot_hours,
+            solver=request_row.solver,
+            start_date=request_row.start_date,
+            end_date=request_row.end_date,
+            supply_ids=request_row.supply_ids or [],
+            demand_ids=request_row.demand_ids or [],
+            network_ids=request_row.network_ids or [],
+            pypsa_params=request_row.pypsa_params,
+            custom_load_profiles=request_row.custom_load_profiles,
+            optimization_objective=request_row.optimization_objective,
+        )
 
     @staticmethod
     def _to_response(row: SimulationResultModel) -> SimulationRunResponse:

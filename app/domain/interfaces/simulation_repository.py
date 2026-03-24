@@ -19,6 +19,8 @@ class SimulationRunInput:
     network_ids: list[str] = field(default_factory=list)
     pypsa_params: dict = field(default_factory=dict)
     asset_overrides: dict = field(default_factory=dict)
+    custom_load_profiles: dict[str, list[float]] = field(default_factory=dict)
+    optimization_objective: str = "min_cost"
 
 
 @dataclass

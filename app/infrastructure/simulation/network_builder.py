@@ -59,7 +59,27 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
                 params["p_max_pu"] = pd.Series(wind_profile, index=n.snapshots)
                 params["marginal_cost"] = 0.0  # wind = marginal cost zero, dispatched first
 
-            params.update(config.pypsa_params.get(supply.name, {}))
+            # Adjust marginal cost based on optimization objective
+            carrier = supply.get_carrier()
+            supply_overrides = config.pypsa_params.get(supply.name, {})
+            if config.optimization_objective == "min_emissions":
+                # Use emissions_factor from pypsa_params if provided, else 0 for renewables / 1 for others
+                emissions_factor = supply_overrides.get("emissions_factor", None)
+                if emissions_factor is not None:
+                    params["marginal_cost"] = float(emissions_factor)
+                elif carrier in ("wind", "solar"):
+                    params["marginal_cost"] = 0.0
+                else:
+                    params["marginal_cost"] = 1.0
+            elif config.optimization_objective == "max_renewable":
+                # Force solver to prefer renewables by making non-renewables very expensive
+                if carrier in ("wind", "solar"):
+                    params["marginal_cost"] = 0.0
+                else:
+                    params["marginal_cost"] = 1000.0
+
+            # Apply user overrides last, excluding internal keys not meant for PyPSA
+            params.update({k: v for k, v in supply_overrides.items() if k != "emissions_factor"})
             n.add("Generator", supply.name, **params)
 
         for demand in config.demands:
@@ -170,6 +190,12 @@ class PyPSANetworkBuilder(ISimulationRepository):
                     demand.get_type(), run_input.snapshot_hours, run_input.start_date
                 )
 
+        # Custom profiles override auto-generated ones (keyed by demand UUID)
+        for demand in demands:
+            demand_id = str(demand.id)
+            if demand_id in run_input.custom_load_profiles:
+                load_profiles[demand.name] = run_input.custom_load_profiles[demand_id]
+
         # Fetch solar irradiance profiles from pv_hourly table
         solar_profiles: dict[str, list[float]] = {}
         if (
@@ -217,6 +243,7 @@ class PyPSANetworkBuilder(ISimulationRepository):
             solar_profiles=solar_profiles,
             wind_profiles=wind_profiles,
             pypsa_params=run_input.pypsa_params or {},
+            optimization_objective=run_input.optimization_objective,
         )
         loop = asyncio.get_running_loop()
         result: AdapterOutput = await loop.run_in_executor(
