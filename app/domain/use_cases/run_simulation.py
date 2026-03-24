@@ -51,10 +51,18 @@ class RunSimulationUseCase:
             if (n := await self._network_repo.get_by_id(nid)) is not None
         ]
 
-        # 3. Run PyPSA
+        # 3. Apply overrides to entity attributes before simulation
+        overrides = run_input.overrides or {}
+        for entity in [*supplies, *demands, *networks]:
+            entity_overrides = overrides.get(str(entity.id), {})
+            for field_name, value in entity_overrides.items():
+                if hasattr(entity, field_name):
+                    setattr(entity, field_name, value)
+
+        # 4. Run PyPSA
         output = await self._grid_simulation.run(run_input, supplies, demands, networks)
 
-        # 4. Persist result
+        # 5. Persist result
         result_row = await self._persistence.save_result(request_id, output)
 
         return result_row.id, output

@@ -18,6 +18,7 @@ class SimulationRequestModel(SQLModel, table=True):
     snapshot_hours: int = 8760
     solver: str = "highs"
     pypsa_params: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    overrides: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
     supply_ids: list = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     demand_ids: list = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     network_ids: list = Field(default_factory=list, sa_column=Column(JSON, nullable=False))

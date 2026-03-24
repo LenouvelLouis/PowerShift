@@ -27,11 +27,7 @@ export default defineNuxtConfig({
     '/': { prerender: true }
   },
 
-    nitro: {
-    routeRules: {
-      '/api/**': { proxy: 'http://localhost:8000/**' }
-    }
-  },
+  // Proxy géré par server/routes/api/[...path].ts (runtime, pas build-time)
 
   compatibilityDate: '2025-01-15',
 

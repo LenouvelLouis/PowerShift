@@ -20,7 +20,7 @@ class SupplyResponse(BaseModel):
     efficiency: float = Field(description="Conversion efficiency, between 0.0 and 1.0.")
     status: ComponentStatus = Field(description="Operational status.")
     unit: str = Field(description="Unit of the capacity field (typically `MW`).")
-    description: str = Field(default="", description="Free-text description.")
+    description: str | None = Field(default=None, description="Free-text description.")
     carrier: str = Field(description="Energy carrier used by PyPSA: `wind`, `solar`, or `nuclear`.")
     created_at: datetime = Field(description="UTC timestamp of creation.")
     updated_at: datetime = Field(description="UTC timestamp of the last update.")

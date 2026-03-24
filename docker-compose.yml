@@ -1,0 +1,31 @@
+services:
+
+  # ─── FastAPI backend ─────────────────────────────────────────────────────────
+  # Database: NeonDB (cloud PostgreSQL) — configure DATABASE_URL in .env
+  backend:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: production
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /workspace/app
+
+  # ─── Nuxt frontend ───────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./energy-dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NUXT_API_BASE_URL: http://backend:8000
+    depends_on:
+      - backend

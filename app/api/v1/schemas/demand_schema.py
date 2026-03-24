@@ -19,7 +19,7 @@ class DemandResponse(BaseModel):
     load_mw: float = Field(description="Nominal power consumption in megawatts.")
     status: ComponentStatus = Field(description="Operational status.")
     unit: str = Field(description="Unit of the load field (typically `MW`).")
-    description: str = Field(default="", description="Free-text description.")
+    description: str | None = Field(default=None, description="Free-text description.")
     created_at: datetime = Field(description="UTC timestamp of creation.")
     updated_at: datetime = Field(description="UTC timestamp of the last update.")
 
