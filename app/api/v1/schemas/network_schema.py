@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.domain.entities.base_component import ComponentStatus
 
@@ -28,7 +28,7 @@ class NetworkResponse(BaseModel):
     reactance_ohm_per_km: float | None
     status: ComponentStatus
     unit: str
-    description: str
+    description: str = Field(default="", description="Free-text description.")
     created_at: datetime
     updated_at: datetime
 

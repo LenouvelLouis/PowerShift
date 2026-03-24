@@ -28,7 +28,7 @@ def _to_response(supply: BaseSupply) -> SupplyResponse:
         efficiency=supply.efficiency,
         status=supply.status,
         unit=supply.unit,
-        description=supply.description,
+        description=supply.description or "",
         carrier=supply.get_carrier(),
         created_at=supply.created_at,
         updated_at=supply.updated_at,
@@ -58,11 +58,11 @@ async def list_supplies(
     responses=_404,
 )
 async def get_supply(
-    supply_id: str,
+    supply_id: uuid.UUID,
     repo: Annotated[SupplyRepositoryImpl, Depends(get_supply_repository)],
 ) -> SupplyResponse:
     """Return a single supply component identified by its UUID."""
-    supply = await repo.get_by_id(supply_id)
+    supply = await repo.get_by_id(str(supply_id))
     if supply is None:
         raise HTTPException(status_code=404, detail="Supply not found")
     return _to_response(supply)
@@ -108,12 +108,12 @@ async def create_supply(
     responses=_404,
 )
 async def update_supply(
-    supply_id: str,
+    supply_id: uuid.UUID,
     body: SupplyUpdate,
     repo: Annotated[SupplyRepositoryImpl, Depends(get_supply_repository)],
 ) -> SupplyResponse:
     """Partially update a supply component — only the fields you provide are changed."""
-    existing = await repo.get_by_id(supply_id)
+    existing = await repo.get_by_id(str(supply_id))
     if existing is None:
         raise HTTPException(status_code=404, detail="Supply not found")
 
@@ -131,7 +131,7 @@ async def update_supply(
         updated_at=now,
     )
 
-    saved = await repo.update(supply_id, updated)
+    saved = await repo.update(str(supply_id), updated)
     return _to_response(saved)  # type: ignore[arg-type]
 
 
@@ -144,11 +144,11 @@ async def update_supply(
     responses=_404,
 )
 async def delete_supply(
-    supply_id: str,
+    supply_id: uuid.UUID,
     repo: Annotated[SupplyRepositoryImpl, Depends(get_supply_repository)],
 ) -> Response:
     """Permanently delete a supply component by its UUID."""
-    deleted = await repo.delete(supply_id)
+    deleted = await repo.delete(str(supply_id))
     if not deleted:
         raise HTTPException(status_code=404, detail="Supply not found")
     return Response(status_code=204)

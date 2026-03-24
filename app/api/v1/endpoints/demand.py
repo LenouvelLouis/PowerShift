@@ -27,7 +27,7 @@ def _to_response(demand: BaseDemand) -> DemandResponse:
         load_mw=demand.load_mw,
         status=demand.status,
         unit=demand.unit,
-        description=demand.description,
+        description=demand.description or "",
         created_at=demand.created_at,
         updated_at=demand.updated_at,
     )
@@ -56,11 +56,11 @@ async def list_demands(
     responses=_404,
 )
 async def get_demand(
-    demand_id: str,
+    demand_id: uuid.UUID,
     repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
 ) -> DemandResponse:
     """Return a single demand component identified by its UUID."""
-    demand = await repo.get_by_id(demand_id)
+    demand = await repo.get_by_id(str(demand_id))
     if demand is None:
         raise HTTPException(status_code=404, detail="Demand not found")
     return _to_response(demand)
@@ -105,12 +105,12 @@ async def create_demand(
     responses=_404,
 )
 async def update_demand(
-    demand_id: str,
+    demand_id: uuid.UUID,
     body: DemandUpdate,
     repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
 ) -> DemandResponse:
     """Partially update a demand component — only the fields you provide are changed."""
-    existing = await repo.get_by_id(demand_id)
+    existing = await repo.get_by_id(str(demand_id))
     if existing is None:
         raise HTTPException(status_code=404, detail="Demand not found")
 
@@ -127,7 +127,7 @@ async def update_demand(
         updated_at=now,
     )
 
-    saved = await repo.update(demand_id, updated)
+    saved = await repo.update(str(demand_id), updated)
     return _to_response(saved)  # type: ignore[arg-type]
 
 
@@ -140,11 +140,11 @@ async def update_demand(
     responses=_404,
 )
 async def delete_demand(
-    demand_id: str,
+    demand_id: uuid.UUID,
     repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
 ) -> Response:
     """Permanently delete a demand component by its UUID."""
-    deleted = await repo.delete(demand_id)
+    deleted = await repo.delete(str(demand_id))
     if not deleted:
         raise HTTPException(status_code=404, detail="Demand not found")
     return Response(status_code=204)
