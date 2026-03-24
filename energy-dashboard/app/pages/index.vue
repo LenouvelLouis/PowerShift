@@ -3,7 +3,7 @@
 
     <!-- Banner backend indisponible -->
     <div
-      v-if="store.backendAvailable === false"
+      v-if="referential.backendAvailable === false"
       class="mb-4 px-4 py-3 bg-amber-900/30 border border-amber-600 rounded-lg text-amber-400 text-sm flex items-center gap-2"
     >
       <span>⚠</span>
@@ -11,7 +11,7 @@
     </div>
 
     <!-- Sélecteur scénario -->
-    <div v-if="store.simulationHistory.length > 0" class="mb-6 p-4 bg-[#0F172A] rounded-xl border border-[#1E293B] flex items-center gap-4">
+    <div v-if="history.simulationHistory.length > 0" class="mb-6 p-4 bg-[#0F172A] rounded-xl border border-[#1E293B] flex items-center gap-4">
       <label class="font-medium text-gray-300 shrink-0">Scénario :</label>
       <USelect
         v-model="selectedScenario"
@@ -21,7 +21,7 @@
     </div>
 
     <!-- ── Simulation en cours : skeletons ── -->
-    <template v-if="store.isRunning">
+    <template v-if="sim.isRunning">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div v-for="i in 4" :key="i" class="bg-[#0F172A] p-6 rounded-xl border border-[#1E293B]">
           <div class="h-4 bg-gray-700/50 rounded animate-pulse w-24 mb-3" />
@@ -201,10 +201,14 @@ import {
   Filler,
 } from 'chart.js'
 import { useSimulationStore } from '~/stores/simulation'
+import { useReferentialStore } from '~/stores/referential'
+import { useHistoryStore } from '~/stores/history'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
-const store = useSimulationStore()
+const sim = useSimulationStore()
+const referential = useReferentialStore()
+const history = useHistoryStore()
 
 // ─── Palette de couleurs ──────────────────────────────────────────────────────
 
@@ -239,7 +243,7 @@ const selectedScenario = ref('')
 const loadingScenario = ref(false)
 
 const scenarioOptions = computed(() =>
-  store.simulationHistory.map((s, i) => ({
+  history.simulationHistory.map((s, i) => ({
     label: `Simulation #${i + 1} — ${new Date(s.created_at).toLocaleString()} — ${s.status}`,
     value: `api-${s.id}`,
   }))
@@ -249,7 +253,7 @@ watch(selectedScenario, async (val) => {
   if (!val) return
   loadingScenario.value = true
   try {
-    await store.loadSimulationById(val.replace('api-', ''))
+    await history.loadSimulationById(val.replace('api-', ''))
   }
   finally {
     loadingScenario.value = false
@@ -257,15 +261,15 @@ watch(selectedScenario, async (val) => {
 })
 
 // Auto-sélectionner la dernière simulation quand une nouvelle est lancée
-watch(() => store.simulationHistory.length, (newLen, oldLen) => {
-  if (newLen > oldLen && store.simulationHistory[0]) {
-    selectedScenario.value = `api-${store.simulationHistory[0].id}`
+watch(() => history.simulationHistory.length, (newLen, oldLen) => {
+  if (newLen > oldLen && history.simulationHistory[0]) {
+    selectedScenario.value = `api-${history.simulationHistory[0].id}`
   }
 })
 
 // ─── Résultat courant ─────────────────────────────────────────────────────────
 
-const result = computed(() => store.currentResult)
+const result = computed(() => history.currentResult)
 
 // ─── KPIs dynamiques ─────────────────────────────────────────────────────────
 
@@ -355,12 +359,12 @@ const formatVal = (v: number | null | undefined) =>
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
-  await store.loadReferential()
-  if (store.backendAvailable) {
-    await store.loadHistory()
-    if (store.simulationHistory.length > 0) {
-      const latest = store.simulationHistory[0]
-      await store.loadSimulationById(latest.id)
+  await referential.loadReferential()
+  if (referential.backendAvailable) {
+    await history.loadHistory()
+    if (history.simulationHistory.length > 0) {
+      const latest = history.simulationHistory[0]
+      await history.loadSimulationById(latest.id)
       selectedScenario.value = `api-${latest.id}`
     }
   }

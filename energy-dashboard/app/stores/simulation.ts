@@ -1,36 +1,19 @@
 import { defineStore } from 'pinia'
 import {
-  fetchReferential,
-  createSupply,
-  updateSupply,
-  deleteSupply,
-  createDemand,
-  deleteDemand,
-  createNetworkComponent,
-  deleteNetworkComponent,
   runSimulation,
-  fetchSimulations,
-  fetchSimulationById,
-  type Supply,
-  type Demand,
-  type NetworkComponent,
-  type SimulationResult,
-  type SimulationListItem,
   type SupplyCreate,
   type SupplyUpdate,
   type DemandCreate,
   type NetworkCreate,
 } from '~/composables/api'
+import { useReferentialStore } from '~/stores/referential'
+import { useHistoryStore } from '~/stores/history'
 
 interface AssetEntry { id: string; overrides: Record<string, number> }
 
 export const useSimulationStore = defineStore('simulation', () => {
-  // ─── Assets disponibles en BDD ──────────────────────────────────────────────
-  const availableSupplies = ref<Supply[]>([])
-  const availableDemands = ref<Demand[]>([])
-  const availableNetwork = ref<NetworkComponent[]>([])
-  const referentialLoading = ref(false)
-  const referentialLoaded = ref(false)
+  const referential = useReferentialStore()
+  const historyStore = useHistoryStore()
 
   // ─── Sélection courante avec overrides ──────────────────────────────────────
   const _supplyEntries = ref<AssetEntry[]>([])
@@ -43,47 +26,22 @@ export const useSimulationStore = defineStore('simulation', () => {
 
   // ─── Computed : objets sélectionnés ─────────────────────────────────────────
   const selectedSupplies = computed(() =>
-    availableSupplies.value.filter(s => selectedSupplyIds.value.includes(s.id))
+    referential.availableSupplies.filter(s => selectedSupplyIds.value.includes(s.id))
   )
   const selectedDemands = computed(() =>
-    availableDemands.value.filter(d => selectedDemandIds.value.includes(d.id))
+    referential.availableDemands.filter(d => selectedDemandIds.value.includes(d.id))
   )
   const selectedNetwork = computed(() =>
-    availableNetwork.value.filter(n => selectedNetworkIds.value.includes(n.id))
+    referential.availableNetwork.filter(n => selectedNetworkIds.value.includes(n.id))
   )
 
   // ─── État simulation ─────────────────────────────────────────────────────────
-  const currentResult = ref<SimulationResult | null>(null)
-  const simulationHistory = ref<SimulationListItem[]>([])
   const isRunning = ref(false)
   const error = ref<string | null>(null)
-  const backendAvailable = ref<boolean | null>(null)
 
   // ─── Paramètres ──────────────────────────────────────────────────────────────
   const snapshotHours = ref(24)
   const solver = ref('highs')
-
-  // ─── Chargement référentiel ──────────────────────────────────────────────────
-
-  async function loadReferential() {
-    referentialLoading.value = true
-    error.value = null
-    try {
-      const data = await fetchReferential()
-      availableSupplies.value = data.supplies
-      availableDemands.value = data.demands
-      availableNetwork.value = data.network
-      referentialLoaded.value = true
-      backendAvailable.value = true
-    }
-    catch {
-      backendAvailable.value = false
-      error.value = 'Backend unavailable — running in demo mode'
-    }
-    finally {
-      referentialLoading.value = false
-    }
-  }
 
   // ─── Gestion de la sélection ─────────────────────────────────────────────────
 
@@ -138,7 +96,6 @@ export const useSimulationStore = defineStore('simulation', () => {
     isRunning.value = true
     error.value = null
     try {
-      // Collect overrides from all selected entries
       const overrides: Record<string, Record<string, number>> = {}
       for (const e of [..._supplyEntries.value, ..._demandEntries.value, ..._networkEntries.value]) {
         if (Object.keys(e.overrides).length > 0) overrides[e.id] = { ...e.overrides }
@@ -152,9 +109,10 @@ export const useSimulationStore = defineStore('simulation', () => {
         solver: solver.value,
         overrides: Object.keys(overrides).length > 0 ? overrides : undefined,
       })
-      currentResult.value = result
-      backendAvailable.value = true
-      simulationHistory.value.unshift({
+
+      historyStore.currentResult = result
+      referential.backendAvailable = true
+      historyStore.simulationHistory.unshift({
         id: result.id,
         request_id: result.request_id,
         status: result.status,
@@ -177,104 +135,70 @@ export const useSimulationStore = defineStore('simulation', () => {
     }
   }
 
-  async function loadHistory() {
-    try {
-      simulationHistory.value = await fetchSimulations()
-    }
-    catch {
-      // silently fail — history is non-critical
-    }
-  }
-
-  async function loadSimulationById(id: string) {
-    const result = await fetchSimulationById(id)
-    currentResult.value = result
-  }
-
-  // ─── CRUD Supply ─────────────────────────────────────────────────────────────
+  // ─── Wrapper CRUD : Supply ────────────────────────────────────────────────────
 
   async function addSupply(data: SupplyCreate) {
-    const created = await createSupply(data)
-    availableSupplies.value.push(created)
-    return created
+    return referential.addSupply(data)
   }
 
   async function editSupply(id: string, data: SupplyUpdate) {
-    const updated = await updateSupply(id, data)
-    const idx = availableSupplies.value.findIndex(s => s.id === id)
-    if (idx !== -1) availableSupplies.value[idx] = updated
-    return updated
+    return referential.editSupply(id, data)
   }
 
   async function removeSupply(id: string) {
-    await deleteSupply(id)
-    availableSupplies.value = availableSupplies.value.filter(s => s.id !== id)
+    await referential.removeSupply(id)
     removeSupplyFromSelection(id)
   }
 
-  // ─── CRUD Demand ─────────────────────────────────────────────────────────────
+  // ─── Wrapper CRUD : Demand ────────────────────────────────────────────────────
 
   async function addDemand(data: DemandCreate) {
-    const created = await createDemand(data)
-    availableDemands.value.push(created)
-    return created
+    return referential.addDemand(data)
   }
 
   async function removeDemand(id: string) {
-    await deleteDemand(id)
-    availableDemands.value = availableDemands.value.filter(d => d.id !== id)
+    await referential.removeDemand(id)
     removeDemandFromSelection(id)
   }
 
-  // ─── CRUD Network ────────────────────────────────────────────────────────────
+  // ─── Wrapper CRUD : Network ───────────────────────────────────────────────────
 
   async function addNetworkComponent(data: NetworkCreate) {
-    const created = await createNetworkComponent(data)
-    availableNetwork.value.push(created)
-    return created
+    return referential.addNetworkComponent(data)
   }
 
   async function removeNetworkComponent(id: string) {
-    await deleteNetworkComponent(id)
-    availableNetwork.value = availableNetwork.value.filter(n => n.id !== id)
+    await referential.removeNetworkComponent(id)
     removeNetworkFromSelection(id)
   }
 
   return {
     // State
-    availableSupplies,
-    availableDemands,
-    availableNetwork,
     selectedSupplyIds,
     selectedDemandIds,
     selectedNetworkIds,
     selectedSupplies,
     selectedDemands,
     selectedNetwork,
-    referentialLoading,
-    referentialLoaded,
-    currentResult,
-    simulationHistory,
     isRunning,
     error,
-    backendAvailable,
     snapshotHours,
     solver,
-    // Actions
-    loadReferential,
+    // Actions — selection
     addSupplyToSelection,
     removeSupplyFromSelection,
     addDemandToSelection,
     removeDemandFromSelection,
     addNetworkToSelection,
     removeNetworkFromSelection,
+    // Actions — overrides
     getOverrides,
     setOverride,
     clearOverrides,
     hasOverrides,
+    // Actions — simulation
     runFullSimulation,
-    loadHistory,
-    loadSimulationById,
+    // Actions — CRUD wrappers
     addSupply,
     editSupply,
     removeSupply,

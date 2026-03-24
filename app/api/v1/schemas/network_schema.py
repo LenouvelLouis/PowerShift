@@ -28,7 +28,7 @@ class NetworkResponse(BaseModel):
     reactance_ohm_per_km: float | None
     status: ComponentStatus
     unit: str
-    description: str | None
+    description: str = Field(default="", description="Free-text description.")
     created_at: datetime
     updated_at: datetime
 

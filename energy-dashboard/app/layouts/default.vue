@@ -18,13 +18,13 @@
       <!-- Statut backend -->
       <span
         class="text-xs px-2 py-1 rounded-full"
-        :class="store.backendAvailable === true
+        :class="referential.backendAvailable === true
           ? 'bg-emerald-900/40 text-emerald-400'
-          : store.backendAvailable === false
+          : referential.backendAvailable === false
             ? 'bg-red-900/40 text-red-400'
             : 'bg-gray-800 text-gray-500'"
       >
-        {{ store.backendAvailable === true ? '● API' : store.backendAvailable === false ? '● Demo' : '● …' }}
+        {{ referential.backendAvailable === true ? '● API' : referential.backendAvailable === false ? '● Demo' : '● …' }}
       </span>
 
       <!-- Sélecteur heures -->
@@ -199,7 +199,7 @@
                   size="sm"
                   class="mt-2"
                   :loading="isSaving"
-                  :disabled="isSaving || !store.backendAvailable"
+                  :disabled="isSaving || !referential.backendAvailable"
                   @click="handleCreate"
                 />
               </template>
@@ -213,7 +213,7 @@
                     <p class="text-xs text-gray-500 uppercase tracking-wider">Ajouter à la simulation</p>
                     <button
                       class="text-xs text-[#3C83F8] hover:text-blue-300 font-medium"
-                      :disabled="!store.backendAvailable"
+                      :disabled="!referential.backendAvailable"
                       @click="showCreateForm = true"
                     >
                       + Créer
@@ -224,13 +224,13 @@
                     :items="availableForDropdown"
                     placeholder="Sélectionner un asset…"
                     class="w-full"
-                    :disabled="!store.backendAvailable || availableForDropdown.length === 0"
+                    :disabled="!referential.backendAvailable || availableForDropdown.length === 0"
                     @update:model-value="handleAddAsset"
                   />
-                  <p v-if="store.backendAvailable && availableForDropdown.length === 0 && selectedAssetsList.length > 0" class="text-xs text-gray-600 mt-1 text-center">
+                  <p v-if="referential.backendAvailable && availableForDropdown.length === 0 && selectedAssetsList.length > 0" class="text-xs text-gray-600 mt-1 text-center">
                     Tous les assets sont sélectionnés
                   </p>
-                  <p v-else-if="store.backendAvailable && availableForDropdown.length === 0 && selectedAssetsList.length === 0" class="text-xs text-gray-600 mt-1 text-center">
+                  <p v-else-if="referential.backendAvailable && availableForDropdown.length === 0 && selectedAssetsList.length === 0" class="text-xs text-gray-600 mt-1 text-center">
                     Aucun asset — créez-en un avec + Créer
                   </p>
                 </div>
@@ -349,7 +349,7 @@
               </template>
 
               <!-- Spinner chargement -->
-              <div v-if="store.referentialLoading" class="flex justify-center pt-2">
+              <div v-if="referential.referentialLoading" class="flex justify-center pt-2">
                 <div class="animate-spin h-5 w-5 border-t-2 border-[#3C83F8] rounded-full" />
               </div>
             </div>
@@ -366,8 +366,8 @@
                 color="neutral"
                 variant="outline"
                 size="sm"
-                :loading="store.referentialLoading"
-                @click="store.loadReferential()"
+                :loading="referential.referentialLoading"
+                @click="referential.loadReferential()"
               />
             </div>
           </div>
@@ -384,15 +384,17 @@
 
 <script setup lang="ts">
 import { useSimulationStore } from '~/stores/simulation'
+import { useReferentialStore } from '~/stores/referential'
 import type { Supply, Demand, NetworkComponent } from '~/composables/api'
 
 const store = useSimulationStore()
+const referential = useReferentialStore()
 const toast = useToast()
 
 // ─── Play handler ─────────────────────────────────────────────────────────────
 
 const handlePlay = async () => {
-  if (!store.backendAvailable) {
+  if (!referential.backendAvailable) {
     toast.add({ title: 'Backend non disponible', description: 'Démarrez le serveur API', color: 'warning' })
     return
   }
@@ -456,17 +458,17 @@ function assetSummary(asset: Supply | Demand | NetworkComponent): string {
 
 const availableForDropdown = computed(() => {
   if (activeGroup.value === 'Supply') {
-    return store.availableSupplies
+    return referential.availableSupplies
       .filter(s => !store.selectedSupplyIds.includes(s.id))
       .map(s => ({ label: `${typeEmoji(s.type)} ${s.name}`, value: s.id }))
   }
   if (activeGroup.value === 'Demand') {
-    return store.availableDemands
+    return referential.availableDemands
       .filter(d => !store.selectedDemandIds.includes(d.id))
       .map(d => ({ label: `${typeEmoji(d.type)} ${d.name}`, value: d.id }))
   }
   if (activeGroup.value === 'Network') {
-    return store.availableNetwork
+    return referential.availableNetwork
       .filter(n => !store.selectedNetworkIds.includes(n.id))
       .map(n => ({ label: `${typeEmoji(n.type)} ${n.name}`, value: n.id }))
   }
@@ -571,17 +573,17 @@ const handleCreate = async () => {
   isSaving.value = true
   try {
     if (activeGroup.value === 'Supply') {
-      const created = await store.addSupply({ ...createSupplyForm })
+      const created = await referential.addSupply({ ...createSupplyForm })
       store.addSupplyToSelection(created.id)
       createSupplyForm.name = ''
     }
     else if (activeGroup.value === 'Demand') {
-      const created = await store.addDemand({ ...createDemandForm })
+      const created = await referential.addDemand({ ...createDemandForm })
       store.addDemandToSelection(created.id)
       createDemandForm.name = ''
     }
     else {
-      const created = await store.addNetworkComponent({
+      const created = await referential.addNetworkComponent({
         ...createNetworkForm,
         losses_kw: null,
         voltage_hv_kv: null,
