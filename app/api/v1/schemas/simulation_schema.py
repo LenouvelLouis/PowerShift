@@ -35,6 +35,22 @@ class SimulationRunRequest(BaseModel):
                 )
         return self
 
+    @model_validator(mode="after")
+    def validate_date_range_vs_snapshot_hours(self) -> SimulationRunRequest:
+        """Validate that date range matches snapshot_hours (assuming 24 hourly snapshots per day)."""
+        if self.start_date is None or self.end_date is None:
+            return self
+        if self.start_date > self.end_date:
+            raise ValueError("start_date must be <= end_date")
+        days_covered = (self.end_date - self.start_date).days + 1  # inclusive
+        expected_hours = days_covered * 24
+        if expected_hours != self.snapshot_hours:
+            raise ValueError(
+                f"Date range ({self.start_date} to {self.end_date}) covers {expected_hours} hours, "
+                f"but snapshot_hours={self.snapshot_hours}. They must match."
+            )
+        return self
+
 
 class SimulationRunResponse(BaseModel):
     id: uuid.UUID
