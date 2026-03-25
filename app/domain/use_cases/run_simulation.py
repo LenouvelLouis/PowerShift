@@ -51,10 +51,10 @@ class RunSimulationUseCase:
             if (n := await self._network_repo.get_by_id(nid)) is not None
         ]
 
-        # 3. Apply overrides to entity attributes before simulation
-        overrides = run_input.overrides or {}
+        # 3. Apply asset_overrides to entity attributes before simulation
+        asset_overrides = run_input.asset_overrides or {}
         for entity in [*supplies, *demands, *networks]:
-            entity_overrides = overrides.get(str(entity.id), {})
+            entity_overrides = asset_overrides.get(str(entity.id), {})
             for field_name, value in entity_overrides.items():
                 if hasattr(entity, field_name):
                     setattr(entity, field_name, value)

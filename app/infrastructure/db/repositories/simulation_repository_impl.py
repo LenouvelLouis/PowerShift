@@ -22,7 +22,7 @@ class SimulationRepositoryImpl(ISimulationPersistenceRepository):
             snapshot_hours=run_input.snapshot_hours,
             solver=run_input.solver,
             pypsa_params=run_input.pypsa_params or None,
-            overrides=run_input.overrides or None,
+            asset_overrides=run_input.asset_overrides or None,
             supply_ids=[str(i) for i in run_input.supply_ids],
             demand_ids=[str(i) for i in run_input.demand_ids],
             network_ids=[str(i) for i in run_input.network_ids],

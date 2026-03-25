@@ -75,7 +75,7 @@ export interface SimulationRunRequest {
   start_date?: string
   end_date?: string
   pypsa_params?: Record<string, unknown>
-  overrides?: Record<string, Record<string, number>>
+  asset_overrides?: Record<string, Record<string, number>>
 }
 
 export interface SimulationResultJson {

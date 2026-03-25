@@ -9,7 +9,7 @@ import {
 import { useReferentialStore } from '~/stores/referential'
 import { useHistoryStore } from '~/stores/history'
 
-interface AssetEntry { id: string; overrides: Record<string, number> }
+interface AssetEntry { id: string; assetOverrides: Record<string, number> }
 
 export const useSimulationStore = defineStore('simulation', () => {
   const referential = useReferentialStore()
@@ -46,19 +46,19 @@ export const useSimulationStore = defineStore('simulation', () => {
   // ─── Gestion de la sélection ─────────────────────────────────────────────────
 
   function addSupplyToSelection(id: string) {
-    if (!selectedSupplyIds.value.includes(id)) _supplyEntries.value.push({ id, overrides: {} })
+    if (!selectedSupplyIds.value.includes(id)) _supplyEntries.value.push({ id, assetOverrides: {} })
   }
   function removeSupplyFromSelection(id: string) {
     _supplyEntries.value = _supplyEntries.value.filter(e => e.id !== id)
   }
   function addDemandToSelection(id: string) {
-    if (!selectedDemandIds.value.includes(id)) _demandEntries.value.push({ id, overrides: {} })
+    if (!selectedDemandIds.value.includes(id)) _demandEntries.value.push({ id, assetOverrides: {} })
   }
   function removeDemandFromSelection(id: string) {
     _demandEntries.value = _demandEntries.value.filter(e => e.id !== id)
   }
   function addNetworkToSelection(id: string) {
-    if (!selectedNetworkIds.value.includes(id)) _networkEntries.value.push({ id, overrides: {} })
+    if (!selectedNetworkIds.value.includes(id)) _networkEntries.value.push({ id, assetOverrides: {} })
   }
   function removeNetworkFromSelection(id: string) {
     _networkEntries.value = _networkEntries.value.filter(e => e.id !== id)
@@ -73,17 +73,17 @@ export const useSimulationStore = defineStore('simulation', () => {
   }
 
   function getOverrides(type: 'supply' | 'demand' | 'network', id: string): Record<string, number> {
-    return _entries(type).value.find(e => e.id === id)?.overrides ?? {}
+    return _entries(type).value.find(e => e.id === id)?.assetOverrides ?? {}
   }
 
   function setOverride(type: 'supply' | 'demand' | 'network', id: string, field: string, value: number) {
     const entry = _entries(type).value.find(e => e.id === id)
-    if (entry) entry.overrides[field] = value
+    if (entry) entry.assetOverrides[field] = value
   }
 
   function clearOverrides(type: 'supply' | 'demand' | 'network', id: string) {
     const entry = _entries(type).value.find(e => e.id === id)
-    if (entry) entry.overrides = {}
+    if (entry) entry.assetOverrides = {}
   }
 
   function hasOverrides(type: 'supply' | 'demand' | 'network', id: string): boolean {
@@ -96,9 +96,9 @@ export const useSimulationStore = defineStore('simulation', () => {
     isRunning.value = true
     error.value = null
     try {
-      const overrides: Record<string, Record<string, number>> = {}
+      const assetOverrides: Record<string, Record<string, number>> = {}
       for (const e of [..._supplyEntries.value, ..._demandEntries.value, ..._networkEntries.value]) {
-        if (Object.keys(e.overrides).length > 0) overrides[e.id] = { ...e.overrides }
+        if (Object.keys(e.assetOverrides).length > 0) assetOverrides[e.id] = { ...e.assetOverrides }
       }
 
       const result = await runSimulation({
@@ -107,7 +107,7 @@ export const useSimulationStore = defineStore('simulation', () => {
         network_ids: selectedNetworkIds.value,
         snapshot_hours: snapshotHours.value,
         solver: solver.value,
-        overrides: Object.keys(overrides).length > 0 ? overrides : undefined,
+        asset_overrides: Object.keys(assetOverrides).length > 0 ? assetOverrides : undefined,
       })
 
       historyStore.currentResult = result

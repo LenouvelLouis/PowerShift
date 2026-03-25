@@ -525,8 +525,8 @@ function hasOverridesFor(id: string): boolean {
 }
 
 function getOverrideValue(id: string, field: string, defaultVal: number): number {
-  const overrides = store.getOverrides(currentGroupType(), id)
-  return field in overrides ? overrides[field] : defaultVal
+  const assetOverrides = store.getOverrides(currentGroupType(), id)
+  return field in assetOverrides ? assetOverrides[field] : defaultVal
 }
 
 function setOverrideValue(id: string, field: string, rawValue: string | number) {

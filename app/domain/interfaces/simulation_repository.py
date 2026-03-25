@@ -18,7 +18,7 @@ class SimulationRunInput:
     demand_ids: list[str] = field(default_factory=list)
     network_ids: list[str] = field(default_factory=list)
     pypsa_params: dict = field(default_factory=dict)
-    overrides: dict = field(default_factory=dict)
+    asset_overrides: dict = field(default_factory=dict)
 
 
 @dataclass

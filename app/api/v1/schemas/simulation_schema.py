@@ -18,7 +18,7 @@ class SimulationRunRequest(BaseModel):
     demand_ids: list[str] = Field(default_factory=list)
     network_ids: list[str] = Field(default_factory=list)
     pypsa_params: Optional[dict] = None
-    overrides: Optional[dict] = None
+    asset_overrides: Optional[dict] = None
 
 
 class SimulationRunResponse(BaseModel):

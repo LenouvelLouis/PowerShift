@@ -23,5 +23,5 @@ async def init_db() -> None:
 
         # Idempotent migrations: add columns introduced after initial schema
         await conn.execute(
-            text("ALTER TABLE simulation_requests ADD COLUMN IF NOT EXISTS overrides JSONB")
+            text("ALTER TABLE simulation_requests ADD COLUMN IF NOT EXISTS asset_overrides JSONB")
         )

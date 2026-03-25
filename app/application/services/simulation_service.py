@@ -35,7 +35,7 @@ class SimulationService:
             demand_ids=body.demand_ids,
             network_ids=body.network_ids,
             pypsa_params=body.pypsa_params or {},
-            overrides=body.overrides or {},
+            asset_overrides=body.asset_overrides or {},
         )
         result_id, output = await self._use_case.execute(run_input)
         # Fetch the stored row to get created_at and request_id
