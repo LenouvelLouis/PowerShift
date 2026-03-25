@@ -46,7 +46,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         for err in errors
     ):
         return JSONResponse(status_code=404, content={"detail": "Not found"})
-    return JSONResponse(status_code=422, content={"detail": errors})
+    # Remove non-serializable 'ctx' field from errors
+    clean_errors = [
+        {k: v for k, v in err.items() if k != "ctx"}
+        for err in errors
+    ]
+    return JSONResponse(status_code=422, content={"detail": clean_errors})
 
 
 @app.get("/health", tags=["Health"])
