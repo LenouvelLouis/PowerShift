@@ -28,7 +28,7 @@ class SimulationRepositoryImpl(ISimulationPersistenceRepository):
             supply_ids=[str(i) for i in run_input.supply_ids],
             demand_ids=[str(i) for i in run_input.demand_ids],
             network_ids=[str(i) for i in run_input.network_ids],
-            custom_load_profiles=run_input.custom_load_profiles or None,
+            hourly_load_overrides=run_input.hourly_load_overrides or None,
             optimization_objective=run_input.optimization_objective,
         )
         self._session.add(row)

@@ -190,11 +190,11 @@ class PyPSANetworkBuilder(ISimulationRepository):
                     demand.get_type(), run_input.snapshot_hours, run_input.start_date
                 )
 
-        # Custom profiles override auto-generated ones (keyed by demand UUID)
+        # Hourly load overrides replace auto-generated profiles (keyed by demand UUID)
         for demand in demands:
             demand_id = str(demand.id)
-            if demand_id in run_input.custom_load_profiles:
-                load_profiles[demand.name] = run_input.custom_load_profiles[demand_id]
+            if demand_id in run_input.hourly_load_overrides:
+                load_profiles[demand.name] = run_input.hourly_load_overrides[demand_id]
 
         # Fetch solar irradiance profiles from pv_hourly table
         solar_profiles: dict[str, list[float]] = {}

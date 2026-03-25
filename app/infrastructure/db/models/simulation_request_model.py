@@ -24,7 +24,7 @@ class SimulationRequestModel(SQLModel, table=True):
     supply_ids: list = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     demand_ids: list = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     network_ids: list = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
-    custom_load_profiles: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    hourly_load_overrides: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
     optimization_objective: str = "min_cost"
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),

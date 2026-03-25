@@ -37,7 +37,7 @@ class SimulationService:
             network_ids=body.network_ids,
             pypsa_params=body.pypsa_params or {},
             asset_overrides=body.asset_overrides or {},
-            custom_load_profiles=body.custom_load_profiles or {},
+            hourly_load_overrides=body.hourly_load_overrides or {},
             optimization_objective=body.optimization_objective,
         )
         result_id, output = await self._use_case.execute(run_input)
@@ -71,7 +71,7 @@ class SimulationService:
             demand_ids=request_row.demand_ids or [],
             network_ids=request_row.network_ids or [],
             pypsa_params=request_row.pypsa_params,
-            custom_load_profiles=request_row.custom_load_profiles,
+            hourly_load_overrides=request_row.hourly_load_overrides,
             optimization_objective=request_row.optimization_objective,
         )
 

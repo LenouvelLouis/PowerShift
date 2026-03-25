@@ -70,7 +70,7 @@ async def import_scenario(
         demand_ids=body.demand_ids,
         network_ids=body.network_ids,
         pypsa_params=body.pypsa_params,
-        custom_load_profiles=body.custom_load_profiles,
+        hourly_load_overrides=body.hourly_load_overrides,
         optimization_objective=body.optimization_objective,
     )
     return await service.run(run_request)

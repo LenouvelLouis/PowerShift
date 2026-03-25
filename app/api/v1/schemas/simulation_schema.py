@@ -19,16 +19,16 @@ class SimulationRunRequest(BaseModel):
     network_ids: list[str] = Field(default_factory=list)
     pypsa_params: Optional[dict] = None
     asset_overrides: Optional[dict] = None
-    custom_load_profiles: Optional[dict[str, list[float]]] = None
+    hourly_load_overrides: Optional[dict[str, list[float]]] = None
     optimization_objective: Literal["min_cost", "min_emissions", "max_renewable"] = "min_cost"
 
     @model_validator(mode="after")
-    def validate_custom_profiles(self) -> SimulationRunRequest:
-        if not self.custom_load_profiles:
+    def validate_hourly_load_overrides(self) -> SimulationRunRequest:
+        if not self.hourly_load_overrides:
             return self
-        for demand_id, profile in self.custom_load_profiles.items():
+        for demand_id, profile in self.hourly_load_overrides.items():
             if demand_id not in self.demand_ids:
-                raise ValueError(f"custom_load_profiles key '{demand_id}' not in demand_ids")
+                raise ValueError(f"hourly_load_overrides key '{demand_id}' not in demand_ids")
             if len(profile) != self.snapshot_hours:
                 raise ValueError(
                     f"Profile for '{demand_id}' has {len(profile)} values, expected {self.snapshot_hours}"
@@ -88,5 +88,5 @@ class SimulationScenarioExport(BaseModel):
     demand_ids: list[str]
     network_ids: list[str]
     pypsa_params: Optional[dict] = None
-    custom_load_profiles: Optional[dict[str, list[float]]] = None
+    hourly_load_overrides: Optional[dict[str, list[float]]] = None
     optimization_objective: Literal["min_cost", "min_emissions", "max_renewable"] = "min_cost"
