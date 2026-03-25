@@ -9,34 +9,12 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.router import router as v1_router
 from app.config import settings
-
-
-async def _init_db() -> None:
-    """Create all tables on startup (idempotent — safe to run every time)."""
-    # Import models so SQLModel.metadata knows about them
-    import app.infrastructure.db.models.supply_model  # noqa: F401
-    import app.infrastructure.db.models.demand_model  # noqa: F401
-    import app.infrastructure.db.models.network_model  # noqa: F401
-    import app.infrastructure.db.models.simulation_request_model  # noqa: F401
-    import app.infrastructure.db.models.simulation_result_model  # noqa: F401
-    import app.infrastructure.db.models.pv_hourly_model  # noqa: F401
-
-    from sqlmodel import SQLModel
-    from app.infrastructure.db.connection import get_engine
-
-    from sqlalchemy import text
-
-    async with get_engine().begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-        # Idempotent migration: add overrides column if it doesn't exist yet
-        await conn.execute(
-            text("ALTER TABLE simulation_requests ADD COLUMN IF NOT EXISTS overrides JSONB")
-        )
+from app.infrastructure.db.init_db import init_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await _init_db()
+    await init_db()
     yield
 
 
