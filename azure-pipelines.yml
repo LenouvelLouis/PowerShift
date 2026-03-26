@@ -82,7 +82,7 @@ jobs:
         displayName: 'Deploy to Vercel'
         workingDirectory: energy-dashboard
         env:
-          VERCEL_ORG_ID: team_6oqbtVfbTg67O1tSL0EvfDucE
+          VERCEL_ORG_ID: team_6oqbtVfbTg67O1tSLEvfDucE
           VERCEL_PROJECT_ID: prj_FA0YmYMYJij1G73160fp9vGfvhxH
 
   - job: deploy_backend
@@ -94,7 +94,7 @@ jobs:
       - script: npm install -g @railway/cli
         displayName: 'Install Railway CLI'
 
-      - script: railway up --service backend --detach
+      - script: railway up --detach
         displayName: 'Deploy to Railway'
         env:
           RAILWAY_TOKEN: $(RAILWAY_TOKEN)
