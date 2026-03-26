@@ -12,6 +12,7 @@ async def init_db() -> None:
     import app.infrastructure.db.models.simulation_request_model  # noqa: F401
     import app.infrastructure.db.models.simulation_result_model  # noqa: F401
     import app.infrastructure.db.models.pv_hourly_model  # noqa: F401
+    import app.infrastructure.db.models.weather_snapshot_model  # noqa: F401
 
     from sqlmodel import SQLModel
     from sqlalchemy import text
