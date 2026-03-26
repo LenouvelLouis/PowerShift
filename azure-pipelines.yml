@@ -94,7 +94,7 @@ jobs:
       - script: npm install -g @railway/cli
         displayName: 'Install Railway CLI'
 
-      - script: railway up --detach
+      - script: railway up --service backend --detach
         displayName: 'Deploy to Railway'
         env:
           RAILWAY_TOKEN: $(RAILWAY_TOKEN)
