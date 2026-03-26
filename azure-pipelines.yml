@@ -68,3 +68,34 @@ jobs:
           summaryFileLocation: coverage.xml
         condition: always()
         displayName: 'Publish coverage'
+
+  - job: deploy_frontend
+    displayName: 'Deploy Frontend to Vercel'
+    condition: and(succeeded('test'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    dependsOn: test
+
+    steps:
+      - script: npm install -g vercel
+        displayName: 'Install Vercel CLI'
+
+      - script: vercel deploy --prod --token=$(VERCEL_TOKEN)
+        displayName: 'Deploy to Vercel'
+        workingDirectory: energy-dashboard
+        env:
+          VERCEL_ORG_ID: team_6oqbtVfbTg67O1tSL0EvfDucE
+          VERCEL_PROJECT_ID: prj_FA0YmYMYJij1G73160fp9vGfvhxH
+
+  - job: deploy_backend
+    displayName: 'Deploy Backend to Railway'
+    condition: and(succeeded('test'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    dependsOn: test
+
+    steps:
+      - script: npm install -g @railway/cli
+        displayName: 'Install Railway CLI'
+
+      - script: railway up --service backend --detach
+        displayName: 'Deploy to Railway'
+        env:
+          RAILWAY_TOKEN: $(RAILWAY_TOKEN)
+          RAILWAY_PROJECT_ID: 71653cf2-620b-4c3a-b090-cc118f4b1969

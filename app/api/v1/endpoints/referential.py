@@ -28,7 +28,7 @@ def _supply_dto_to_response(dto: SupplyDTO) -> SupplyResponse:
         efficiency=dto.efficiency,
         status=dto.status,
         unit=dto.unit,
-        description=dto.description,
+        description=dto.description or "",
         carrier=dto.carrier,
         created_at=dto.created_at,
         updated_at=dto.updated_at,
