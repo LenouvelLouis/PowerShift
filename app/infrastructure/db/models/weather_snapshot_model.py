@@ -34,11 +34,12 @@ class WeatherSnapshotORM(SQLModel, table=True):
     __table_args__ = (
         UniqueConstraint("source", "timestamp", name="uq_weather_snapshot_source_ts"),
         Index("ix_weather_snapshot_source_ts", "source", "timestamp"),
+        Index("ix_weather_snapshot_timestamp", "timestamp"),
     )
 
     id: uuid.UUID = Field(default_factory=uuid4, primary_key=True)
     timestamp: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), nullable=False, index=True)
+        sa_column=Column(DateTime(timezone=True), nullable=False)
     )
     # Origin identifier — e.g. "pv_2023", "knmi_06280", "knmi_06260"
     source: str = Field(nullable=False, index=True)
