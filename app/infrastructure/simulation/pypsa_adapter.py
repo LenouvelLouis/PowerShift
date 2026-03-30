@@ -25,9 +25,9 @@ class SimulationConfig:
     load_profiles: dict = field(default_factory=dict)       # demand.name -> list[float]
     solar_profiles: dict = field(default_factory=dict)      # supply.name -> list[float] (p_max_pu)
     wind_profiles: dict = field(default_factory=dict)       # supply.name -> list[float] (p_max_pu)
+    nuclear_constraints: dict = field(default_factory=dict)  # supply.name -> PyPSA param overrides
     pypsa_params: dict = field(default_factory=dict)        # asset.name -> param overrides
     optimization_objective: str = "min_cost"                # min_cost | min_emissions | max_renewable
-
 
 @dataclass
 class AdapterOutput:
