@@ -24,6 +24,8 @@ from app.infrastructure.simulation.pypsa_adapter import (
     SimulationConfig,
 )
 from app.infrastructure.wind.repository import WindTurbineRepositoryImpl
+from app.infrastructure.nuclear.repository import NuclearRepositoryImpl
+from app.domain.nuclear.services import NuclearConstraintsBuilder
 
 _log = logging.getLogger(__name__)
 
@@ -50,40 +52,29 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
         # Generic — each group controls their own PyPSA params via to_pypsa_params()
         for supply in config.supplies:
             params = supply.to_pypsa_params()
+
             solar_profile = config.solar_profiles.get(supply.name)
             if solar_profile is not None:
                 # PyPSA requires p_max_pu to be a pd.Series indexed on network snapshots
                 # to align the solar profile temporally with the optimization timesteps.
                 # Imported inline to avoid making pandas a hard dependency of the whole module.
                 import pandas as pd  # noqa: PLC0415
+
                 params["p_max_pu"] = pd.Series(solar_profile, index=n.snapshots)
 
             wind_profile = config.wind_profiles.get(supply.name)
             if wind_profile is not None:
                 import pandas as pd  # noqa: PLC0415
+
                 params["p_max_pu"] = pd.Series(wind_profile, index=n.snapshots)
 
-            # Adjust marginal cost based on optimization objective
-            carrier = supply.get_carrier()
-            supply_overrides = config.pypsa_params.get(supply.name, {})
-            if config.optimization_objective == "min_emissions":
-                # Use emissions_factor from pypsa_params if provided, else 0 for renewables / 1 for others
-                emissions_factor = supply_overrides.get("emissions_factor", None)
-                if emissions_factor is not None:
-                    params["marginal_cost"] = float(emissions_factor)
-                elif carrier in ("wind", "solar"):
-                    params["marginal_cost"] = 0.0
-                else:
-                    params["marginal_cost"] = 1.0
-            elif config.optimization_objective == "max_renewable":
-                # Force solver to prefer renewables by making non-renewables very expensive
-                if carrier in ("wind", "solar"):
-                    params["marginal_cost"] = 0.0
-                else:
-                    params["marginal_cost"] = 1000.0
+            nuclear_params = config.nuclear_constraints.get(supply.name)
+            if nuclear_params is not None:
+                params.update(nuclear_params)
+                # nuclear_params already contains p_min_pu, marginal_cost, etc.
+                # Do NOT set p_max_pu — nuclear dispatches freely up to p_nom
 
-            # Apply user overrides last, excluding internal keys not meant for PyPSA
-            params.update({k: v for k, v in supply_overrides.items() if k != "emissions_factor"})
+            params.update(config.pypsa_params.get(supply.name, {}))
             n.add("Generator", supply.name, **params)
 
         for demand in config.demands:
@@ -93,6 +84,7 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
             # Imported inline to avoid making pandas a hard dependency of the whole module.
             if isinstance(params.get("p_set"), list):
                 import pandas as pd  # noqa: PLC0415
+
                 params["p_set"] = pd.Series(params["p_set"], index=n.snapshots)
             n.add("Load", demand.name, **params)
 
@@ -198,11 +190,13 @@ class PyPSANetworkBuilder(ISimulationRepository):
         load_profile_provider: ILoadProfileProvider | None = None,
         pv_profile_repo: IPVProfileRepository | None = None,
         wind_repo: WindTurbineRepositoryImpl | None = None,
+        nuclear_repo: NuclearRepositoryImpl | None = None,
     ) -> None:
         self._simulation = simulation or _DefaultPyPSASimulation()
         self._load_profile_provider = load_profile_provider
         self._pv_profile_repo = pv_profile_repo
         self._wind_repo = wind_repo
+        self._nuclear_repo = nuclear_repo
 
     async def run(
         self,
@@ -291,6 +285,17 @@ class PyPSANetworkBuilder(ISimulationRepository):
                             "Running at rated capacity (p_nom)."
                         )
 
+        # Build nuclear operational constraints
+        nuclear_constraints: dict[str, dict] = {}
+        if self._nuclear_repo is not None:
+            for supply in supplies:
+                if supply.get_carrier() == "nuclear":
+                    reactor = await self._nuclear_repo.get_reactor(supply.id)
+                    if reactor is not None:
+                        nuclear_constraints[supply.name] = NuclearConstraintsBuilder.build_pypsa_params(
+                            reactor
+                        )
+
         config = SimulationConfig(
             snapshot_hours=run_input.snapshot_hours,
             solver=run_input.solver,
@@ -300,6 +305,7 @@ class PyPSANetworkBuilder(ISimulationRepository):
             load_profiles=load_profiles,
             solar_profiles=solar_profiles,
             wind_profiles=wind_profiles,
+            nuclear_constraints=nuclear_constraints,
             pypsa_params=run_input.pypsa_params or {},
             optimization_objective=run_input.optimization_objective,
         )
