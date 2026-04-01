@@ -51,13 +51,11 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
                 # Imported inline to avoid making pandas a hard dependency of the whole module.
                 import pandas as pd  # noqa: PLC0415
                 params["p_max_pu"] = pd.Series(solar_profile, index=n.snapshots)
-                params["marginal_cost"] = 0.001  # near-zero to keep solar cheapest but LP objective non-trivial
 
             wind_profile = config.wind_profiles.get(supply.name)
             if wind_profile is not None:
                 import pandas as pd  # noqa: PLC0415
                 params["p_max_pu"] = pd.Series(wind_profile, index=n.snapshots)
-                params["marginal_cost"] = 0.0  # wind = marginal cost zero, dispatched first
 
             # Adjust marginal cost based on optimization objective
             carrier = supply.get_carrier()
