@@ -85,6 +85,7 @@ class SimulationService:
             id=uuid.uuid4(),
             request_id=uuid.uuid4(),
             status=output.status,
+            solver=body.solver,
             total_supply_mwh=output.total_supply_mwh,
             total_demand_mwh=output.total_demand_mwh,
             balance_mwh=output.balance_mwh,
