@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import {
   runSimulation,
+  type SimulationResult,
+  type SimulationRunRequest,
   type DemandCreate,
   type NetworkCreate,
   type ScenarioExport,
@@ -53,12 +55,58 @@ export const useSimulationStore = defineStore("simulation", () => {
 
   // ─── État simulation ─────────────────────────────────────────────────────────
   const isRunning = ref(false);
+  const isLiveRunning = ref(false);
+  const isSaving = ref(false);
   const error = ref<string | null>(null);
+  const liveError = ref<string | null>(null);
+
+  // ─── Résultats ───────────────────────────────────────────────────────────────
+  // currentLiveResult — the result from the latest live preview (not saved)
+  const currentLiveResult = ref<SimulationResult | null>(null);
+
+  // selectedHistoryId — null = live mode, string = viewing a saved simulation
+  const selectedHistoryId = ref<string | null>(null);
+
+  const isLiveMode = computed(() => selectedHistoryId.value === null);
+
+  // displayedResult — what the dashboard shows:
+  //   live mode  → currentLiveResult (from /preview)
+  //   history    → historyStore.currentResult (loaded by id)
+  const displayedResult = computed<SimulationResult | null>(() =>
+    isLiveMode.value ? currentLiveResult.value : historyStore.currentResult,
+  );
 
   // ─── Paramètres ──────────────────────────────────────────────────────────────
   const snapshotHours = ref(24);
   const solver = ref("highs");
   const scenarioName = ref("");
+
+  // ─── Live simulation helpers ──────────────────────────────────────────────────
+
+  const hasMinimumAssets = computed(() =>
+    _supplyEntries.value.length > 0 && _demandEntries.value.length > 0,
+  );
+
+  function buildPayload(): SimulationRunRequest {
+    const assetOverrides: Record<string, Record<string, number>> = {};
+    for (const e of [
+      ..._supplyEntries.value,
+      ..._demandEntries.value,
+      ..._networkEntries.value,
+    ]) {
+      if (Object.keys(e.assetOverrides).length > 0)
+        assetOverrides[e.id] = { ...e.assetOverrides };
+    }
+    return {
+      supply_ids: selectedSupplyIds.value,
+      demand_ids: selectedDemandIds.value,
+      network_ids: selectedNetworkIds.value,
+      snapshot_hours: snapshotHours.value,
+      solver: solver.value,
+      asset_overrides:
+        Object.keys(assetOverrides).length > 0 ? assetOverrides : undefined,
+    };
+  }
 
   // ─── Gestion de la sélection ─────────────────────────────────────────────────
 
@@ -121,22 +169,12 @@ export const useSimulationStore = defineStore("simulation", () => {
     return Object.keys(getOverrides(type, id)).length > 0;
   }
 
-  // ─── Simulation ──────────────────────────────────────────────────────────────
+  // ─── Simulation (full run — saves to DB) ─────────────────────────────────────
 
   async function runFullSimulation() {
     isRunning.value = true;
     error.value = null;
     try {
-      const assetOverrides: Record<string, Record<string, number>> = {};
-      for (const e of [
-        ..._supplyEntries.value,
-        ..._demandEntries.value,
-        ..._networkEntries.value,
-      ]) {
-        if (Object.keys(e.assetOverrides).length > 0)
-          assetOverrides[e.id] = { ...e.assetOverrides };
-      }
-
       // If a scenario with the same name already exists, delete it first (unique named scenarios)
       if (scenarioName.value) {
         const existing = historyStore.simulationHistory.find(
@@ -148,17 +186,12 @@ export const useSimulationStore = defineStore("simulation", () => {
       }
 
       const result = await runSimulation({
-        supply_ids: selectedSupplyIds.value,
-        demand_ids: selectedDemandIds.value,
-        network_ids: selectedNetworkIds.value,
-        snapshot_hours: snapshotHours.value,
-        solver: solver.value,
+        ...buildPayload(),
         name: scenarioName.value || undefined,
-        asset_overrides:
-          Object.keys(assetOverrides).length > 0 ? assetOverrides : undefined,
       });
 
       historyStore.currentResult = result;
+      currentLiveResult.value = result;
       referential.backendAvailable = true;
       historyStore.simulationHistory.unshift({
         id: result.id,
@@ -260,10 +293,19 @@ export const useSimulationStore = defineStore("simulation", () => {
     selectedDemands,
     selectedNetwork,
     isRunning,
+    isLiveRunning,
+    isSaving,
     error,
+    liveError,
     snapshotHours,
     solver,
     scenarioName,
+    // Live mode
+    currentLiveResult,
+    selectedHistoryId,
+    isLiveMode,
+    displayedResult,
+    hasMinimumAssets,
     // Actions — selection
     addSupplyToSelection,
     removeSupplyFromSelection,
@@ -278,6 +320,7 @@ export const useSimulationStore = defineStore("simulation", () => {
     hasOverrides,
     // Actions — simulation
     runFullSimulation,
+    buildPayload,
     clearScenario,
     loadFromScenario,
     // Actions — CRUD wrappers

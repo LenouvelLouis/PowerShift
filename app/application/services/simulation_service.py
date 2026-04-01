@@ -1,10 +1,11 @@
-"""Simulation service — orchestrates the run simulation use case."""
+"""Simulation service — orchestrates the run and preview simulation use cases."""
 
 from __future__ import annotations
 
 import importlib.util
 import shutil
 import uuid
+from datetime import datetime, timezone
 
 from app.api.v1.schemas.simulation_schema import (
     SimulationListItem,
@@ -15,6 +16,7 @@ from app.api.v1.schemas.simulation_schema import (
 )
 from app.domain.interfaces.simulation_persistence_repository import ISimulationPersistenceRepository
 from app.domain.interfaces.simulation_repository import SimulationRunInput
+from app.domain.use_cases.preview_simulation import PreviewSimulationUseCase
 from app.domain.use_cases.run_simulation import RunSimulationUseCase
 from app.infrastructure.db.models.simulation_request_model import SimulationRequestModel
 from app.infrastructure.db.models.simulation_result_model import SimulationResultModel
@@ -35,12 +37,17 @@ class SimulationService:
         self,
         use_case: RunSimulationUseCase,
         persistence: ISimulationPersistenceRepository,
+        preview_use_case: PreviewSimulationUseCase | None = None,
     ) -> None:
         self._use_case = use_case
         self._persistence = persistence
+        self._preview_use_case = preview_use_case
 
-    async def run(self, body: SimulationRunRequest) -> SimulationRunResponse:
-        run_input = SimulationRunInput(
+    # ── Helpers ──────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _to_run_input(body: SimulationRunRequest) -> SimulationRunInput:
+        return SimulationRunInput(
             snapshot_hours=body.snapshot_hours,
             solver=body.solver,
             name=body.name,
@@ -54,10 +61,37 @@ class SimulationService:
             hourly_load_overrides=body.hourly_load_overrides or {},
             optimization_objective=body.optimization_objective,
         )
+
+    # ── Public methods ────────────────────────────────────────────────────────────
+
+    async def run(self, body: SimulationRunRequest) -> SimulationRunResponse:
+        run_input = self._to_run_input(body)
         result_id, output = await self._use_case.execute(run_input)
         row = await self._persistence.get_result_by_id(result_id)
         req = await self._persistence.get_request_by_id(row.request_id)
         return self._to_response(row, req)
+
+    async def preview(self, body: SimulationRunRequest) -> SimulationRunResponse:
+        """Run PyPSA without any database writes — for live frontend preview.
+
+        Returns the same SimulationRunResponse schema as /run but with
+        generated (non-persisted) id, request_id and created_at values.
+        """
+        if self._preview_use_case is None:
+            raise RuntimeError("PreviewSimulationUseCase not wired — check dependencies.py")
+        run_input = self._to_run_input(body)
+        output = await self._preview_use_case.execute(run_input)
+        return SimulationRunResponse(
+            id=uuid.uuid4(),
+            request_id=uuid.uuid4(),
+            status=output.status,
+            total_supply_mwh=output.total_supply_mwh,
+            total_demand_mwh=output.total_demand_mwh,
+            balance_mwh=output.balance_mwh,
+            objective_value=output.objective_value,
+            result_json=output.result_json,
+            created_at=datetime.now(timezone.utc),
+        )
 
     async def list(self) -> list[SimulationListItem]:
         pairs = await self._persistence.list_results()

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.application.services.referential_service import ReferentialService
 from app.application.services.simulation_service import SimulationService
 from app.domain.use_cases.get_referential import GetReferentialUseCase
+from app.domain.use_cases.preview_simulation import PreviewSimulationUseCase
 from app.domain.use_cases.run_simulation import RunSimulationUseCase
 from app.infrastructure.db.connection import get_db
 from app.infrastructure.db.repositories.demand_repository_impl import DemandRepositoryImpl
@@ -87,6 +88,25 @@ def get_simulation_use_case(
     )
 
 
+def get_preview_simulation_use_case(
+    supply_repo: Annotated[SupplyRepositoryImpl, Depends(get_supply_repository)],
+    demand_repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
+    network_repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
+    pv_repo: Annotated[PVHourlyRepositoryImpl, Depends(get_pv_profile_repository)],
+    wind_repo: Annotated[WindTurbineRepositoryImpl, Depends(get_wind_repository)],
+) -> PreviewSimulationUseCase:
+    return PreviewSimulationUseCase(
+        grid_simulation=PyPSANetworkBuilder(
+            load_profile_provider=OpenMeteoLoadProfileProvider(),
+            pv_profile_repo=pv_repo,
+            wind_repo=wind_repo,
+        ),
+        supply_repo=supply_repo,
+        demand_repo=demand_repo,
+        network_repo=network_repo,
+    )
+
+
 # ── Services ─────────────────────────────────────────────────────────────────
 
 def get_referential_service(
@@ -98,5 +118,10 @@ def get_referential_service(
 def get_simulation_service(
     use_case: Annotated[RunSimulationUseCase, Depends(get_simulation_use_case)],
     persistence: Annotated[SimulationRepositoryImpl, Depends(get_simulation_persistence_repository)],
+    preview_use_case: Annotated[PreviewSimulationUseCase, Depends(get_preview_simulation_use_case)],
 ) -> SimulationService:
-    return SimulationService(use_case=use_case, persistence=persistence)
+    return SimulationService(
+        use_case=use_case,
+        persistence=persistence,
+        preview_use_case=preview_use_case,
+    )

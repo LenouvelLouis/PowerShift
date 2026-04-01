@@ -197,6 +197,10 @@ export const runSimulation = (params: SimulationRunRequest) =>
     body: params,
   });
 
+/** Run PyPSA without writing to the database — for live frontend preview. */
+export const previewSimulation = (params: SimulationRunRequest) =>
+  $fetch<SimulationResult>('/api/v1/simulation/preview', { method: 'POST', body: params })
+
 export const fetchSimulations = () =>
   $fetch<SimulationListItem[]>("/api/v1/simulation");
 

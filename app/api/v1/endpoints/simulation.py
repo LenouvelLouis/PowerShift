@@ -67,6 +67,27 @@ async def list_solvers(
 
 
 @router.post(
+    "/preview",
+    response_model=SimulationRunResponse,
+    summary="Preview a simulation without saving",
+    response_description="Simulation result — NOT persisted to the database.",
+)
+async def preview_simulation(
+    body: SimulationRunRequest,
+    service: Annotated[SimulationService, Depends(get_simulation_service)],
+) -> SimulationRunResponse:
+    """Run a PyPSA optimal power flow simulation without persisting the result.
+
+    Identical request body to POST /run.
+    The response has the same format but the result is NOT stored in the database
+    (id and request_id are generated on the fly and discarded after the response).
+
+    Used by the frontend live-preview mode — safe to call on every parameter change.
+    """
+    return await service.preview(body)
+
+
+@router.post(
     "/import",
     response_model=SimulationRunResponse,
     summary="Load a scenario and run a simulation",
