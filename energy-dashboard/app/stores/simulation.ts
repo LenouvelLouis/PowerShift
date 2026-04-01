@@ -5,6 +5,7 @@ import {
   type SupplyUpdate,
   type DemandCreate,
   type NetworkCreate,
+  type ScenarioExport,
 } from '~/composables/api'
 import { useReferentialStore } from '~/stores/referential'
 import { useHistoryStore } from '~/stores/history'
@@ -42,6 +43,7 @@ export const useSimulationStore = defineStore('simulation', () => {
   // ─── Paramètres ──────────────────────────────────────────────────────────────
   const snapshotHours = ref(24)
   const solver = ref('highs')
+  const scenarioName = ref('')
 
   // ─── Gestion de la sélection ─────────────────────────────────────────────────
 
@@ -101,12 +103,21 @@ export const useSimulationStore = defineStore('simulation', () => {
         if (Object.keys(e.assetOverrides).length > 0) assetOverrides[e.id] = { ...e.assetOverrides }
       }
 
+      // If a scenario with the same name already exists, delete it first (unique named scenarios)
+      if (scenarioName.value) {
+        const existing = historyStore.simulationHistory.find(s => s.name === scenarioName.value)
+        if (existing) {
+          await historyStore.deleteEntry(existing.id)
+        }
+      }
+
       const result = await runSimulation({
         supply_ids: selectedSupplyIds.value,
         demand_ids: selectedDemandIds.value,
         network_ids: selectedNetworkIds.value,
         snapshot_hours: snapshotHours.value,
         solver: solver.value,
+        name: scenarioName.value || undefined,
         asset_overrides: Object.keys(assetOverrides).length > 0 ? assetOverrides : undefined,
       })
 
@@ -116,6 +127,7 @@ export const useSimulationStore = defineStore('simulation', () => {
         id: result.id,
         request_id: result.request_id,
         status: result.status,
+        name: result.name ?? null,
         supply_ids: selectedSupplyIds.value.slice(),
         demand_ids: selectedDemandIds.value.slice(),
         network_ids: selectedNetworkIds.value.slice(),
@@ -133,6 +145,28 @@ export const useSimulationStore = defineStore('simulation', () => {
     finally {
       isRunning.value = false
     }
+  }
+
+  // ─── Scenario management ─────────────────────────────────────────────────────
+
+  function clearScenario() {
+    scenarioName.value = ''
+    _supplyEntries.value = []
+    _demandEntries.value = []
+    _networkEntries.value = []
+  }
+
+  function loadFromScenario(scenario: ScenarioExport, name: string) {
+    clearScenario()
+    scenarioName.value = name
+    snapshotHours.value = scenario.snapshot_hours
+    const overrides = scenario.asset_overrides ?? {}
+    for (const id of scenario.supply_ids)
+      _supplyEntries.value.push({ id, assetOverrides: { ...(overrides[id] ?? {}) } })
+    for (const id of scenario.demand_ids)
+      _demandEntries.value.push({ id, assetOverrides: { ...(overrides[id] ?? {}) } })
+    for (const id of scenario.network_ids)
+      _networkEntries.value.push({ id, assetOverrides: { ...(overrides[id] ?? {}) } })
   }
 
   // ─── Wrapper CRUD : Supply ────────────────────────────────────────────────────
@@ -184,6 +218,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     error,
     snapshotHours,
     solver,
+    scenarioName,
     // Actions — selection
     addSupplyToSelection,
     removeSupplyFromSelection,
@@ -198,6 +233,8 @@ export const useSimulationStore = defineStore('simulation', () => {
     hasOverrides,
     // Actions — simulation
     runFullSimulation,
+    clearScenario,
+    loadFromScenario,
     // Actions — CRUD wrappers
     addSupply,
     editSupply,

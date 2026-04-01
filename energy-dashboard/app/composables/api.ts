@@ -72,6 +72,7 @@ export interface SimulationRunRequest {
   network_ids: string[]
   snapshot_hours: number
   solver: string
+  name?: string
   start_date?: string
   end_date?: string
   pypsa_params?: Record<string, unknown>
@@ -90,6 +91,7 @@ export interface SimulationResult {
   id: string
   request_id: string
   status: string
+  name?: string | null
   total_supply_mwh: number | null
   total_demand_mwh: number | null
   balance_mwh: number | null
@@ -102,6 +104,7 @@ export interface SimulationListItem {
   id: string
   request_id: string
   status: string
+  name?: string | null
   supply_ids: string[]
   demand_ids: string[]
   network_ids: string[]
@@ -157,6 +160,17 @@ export const deleteNetworkComponent = (id: string) =>
 export const fetchReferential = () =>
   $fetch<Referential>('/api/v1/referential')
 
+export interface ScenarioExport {
+  scenario_version: string
+  snapshot_hours: number
+  solver: string
+  supply_ids: string[]
+  demand_ids: string[]
+  network_ids: string[]
+  asset_overrides?: Record<string, Record<string, number>> | null
+  optimization_objective: string
+}
+
 // ─── Simulation ───────────────────────────────────────────────────────────────
 
 export const runSimulation = (params: SimulationRunRequest) =>
@@ -167,3 +181,12 @@ export const fetchSimulations = () =>
 
 export const fetchSimulationById = (id: string) =>
   $fetch<SimulationResult>(`/api/v1/simulation/${id}`)
+
+export const renameSimulation = (id: string, name: string) =>
+  $fetch<SimulationResult>(`/api/v1/simulation/${id}/rename`, { method: 'PATCH', body: { name } })
+
+export const deleteSimulation = (id: string) =>
+  $fetch<void>(`/api/v1/simulation/${id}`, { method: 'DELETE' })
+
+export const fetchScenarioExport = (id: string) =>
+  $fetch<ScenarioExport>(`/api/v1/simulation/${id}/export`)

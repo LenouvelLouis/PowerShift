@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, model_validator
 class SimulationRunRequest(BaseModel):
     snapshot_hours: int = Field(default=8760, ge=1, le=8760)
     solver: str = "highs"
+    name: Optional[str] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     supply_ids: list[str] = Field(default_factory=list)
@@ -56,6 +57,7 @@ class SimulationRunResponse(BaseModel):
     id: uuid.UUID
     request_id: uuid.UUID
     status: str
+    name: Optional[str] = None
     total_supply_mwh: Optional[float]
     total_demand_mwh: Optional[float]
     balance_mwh: Optional[float]
@@ -68,12 +70,17 @@ class SimulationListItem(BaseModel):
     id: uuid.UUID
     request_id: uuid.UUID
     status: str
+    name: Optional[str] = None
     supply_ids: list[str]
     demand_ids: list[str]
     network_ids: list[str]
     total_supply_mwh: Optional[float]
     total_demand_mwh: Optional[float]
     created_at: datetime
+
+
+class SimulationRenameRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200)
 
 
 class SimulationScenarioExport(BaseModel):
@@ -87,6 +94,7 @@ class SimulationScenarioExport(BaseModel):
     supply_ids: list[str]
     demand_ids: list[str]
     network_ids: list[str]
+    asset_overrides: Optional[dict] = None
     pypsa_params: Optional[dict] = None
     hourly_load_overrides: Optional[dict[str, list[float]]] = None
     optimization_objective: Literal["min_cost", "min_emissions", "max_renewable"] = "min_cost"

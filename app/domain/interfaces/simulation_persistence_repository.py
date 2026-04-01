@@ -23,3 +23,9 @@ class ISimulationPersistenceRepository(ABC):
 
     @abstractmethod
     async def get_request_by_id(self, request_id: uuid.UUID) -> object | None: ...
+
+    @abstractmethod
+    async def update_request_name(self, request_id: uuid.UUID, name: str) -> None: ...
+
+    @abstractmethod
+    async def delete_by_result_id(self, result_id: uuid.UUID) -> bool: ...

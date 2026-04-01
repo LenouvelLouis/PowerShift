@@ -4,6 +4,26 @@
     <!-- Notifications -->
     <UNotifications />
 
+    <!-- Delete asset confirmation modal -->
+    <UModal v-model:open="showDeleteModal">
+      <template #header>
+        <h3 class="text-base font-semibold text-white">Delete asset</h3>
+      </template>
+      <template #body>
+        <p class="text-sm text-gray-300">
+          Are you sure you want to permanently delete
+          <span class="font-semibold text-white">{{ deleteTarget?.name }}</span>?
+          This action cannot be undone.
+        </p>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton label="Cancel" color="neutral" variant="ghost" @click="deleteTarget = null" />
+          <UButton label="Delete" color="error" :loading="isDeleting" @click="handleDeleteAsset" />
+        </div>
+      </template>
+    </UModal>
+
     <!-- Header -->
     <header class="bg-[#0F172A] flex items-center justify-between px-4 gap-2 h-14 border-b border-gray-200 dark:border-gray-800 shrink-0">
 
@@ -43,7 +63,46 @@
         />
       </div>
 
-      <!-- Play / Stop / Export -->
+      <!-- Sélecteur solver -->
+      <div class="flex items-center gap-1.5">
+        <label class="text-xs text-gray-400">Solver:</label>
+        <USelect
+          v-model="store.solver"
+          :items="[
+            { label: 'HiGHS — open-source, défaut', value: 'highs' },
+            { label: 'GLPK — open-source, lent', value: 'glpk' },
+            { label: 'CBC — open-source, MIP', value: 'cbc' },
+            { label: 'SCIP — académique, MIP', value: 'scip' },
+            { label: 'Gurobi — commercial, ultra-rapide', value: 'gurobi' },
+            { label: 'CPLEX — commercial (IBM)', value: 'cplex' },
+            { label: 'Xpress — commercial (FICO)', value: 'xpress' },
+          ]"
+          class="w-28"
+          size="sm"
+        />
+      </div>
+
+      <!-- Scenario name + rename -->
+      <div class="flex items-center gap-1">
+        <UInput
+          v-model="store.scenarioName"
+          placeholder="Scenario name (optional)"
+          size="sm"
+          class="w-44"
+        />
+        <UButton
+          icon="i-heroicons-pencil-square"
+          size="sm"
+          color="neutral"
+          variant="ghost"
+          title="Rename selected scenario"
+          :disabled="!history.selectedSimulationId"
+          @click="handleHeaderRename"
+        />
+      </div>
+
+      <!-- Play / Stop / Import / Export -->
+      <input ref="fileInput" type="file" accept=".json" class="hidden" @change="handleImport" />
       <UButton
         icon="i-heroicons-play"
         color="success"
@@ -60,9 +119,17 @@
         :disabled="!store.isRunning"
       />
       <UButton
+        icon="i-heroicons-arrow-up-tray"
+        label="Import"
+        class="bg-[#1E293B] hover:bg-[#2d3f55] text-white ml-auto"
+        @click="fileInput?.click()"
+      />
+      <UButton
         icon="i-heroicons-arrow-down-tray"
         label="Export"
-        class="bg-[#1E293B] hover:bg-[#2d3f55] text-white ml-auto"
+        class="bg-[#1E293B] hover:bg-[#2d3f55] text-white"
+        :disabled="!history.currentResult && !history.selectedSimulationId"
+        @click="handleExport"
       />
     </header>
 
@@ -97,10 +164,10 @@
               <template v-if="showCreateForm">
                 <div class="flex items-center justify-between mb-1">
                   <p class="text-xs font-semibold text-[#3C83F8] uppercase tracking-wider">
-                    Nouvel asset — {{ activeGroup }}
+                    New asset — {{ activeGroup }}
                   </p>
                   <button class="text-xs text-gray-500 hover:text-gray-300" @click="showCreateForm = false">
-                    ✕ Annuler
+                    ✕ Cancel
                   </button>
                 </div>
 
@@ -121,15 +188,15 @@
                       />
                     </div>
                     <div>
-                      <label class="text-xs text-gray-400 block mb-0.5">Nom</label>
+                      <label class="text-xs text-gray-400 block mb-0.5">Name</label>
                       <UInput v-model="createSupplyForm.name" size="sm" placeholder="ex: Wind Farm Alpha" />
                     </div>
                     <div>
-                      <label class="text-xs text-gray-400 block mb-0.5">Capacité (MW)</label>
+                      <label class="text-xs text-gray-400 block mb-0.5">Capacity (MW)</label>
                       <UInput v-model="createSupplyForm.capacity_mw" type="number" size="sm" />
                     </div>
                     <div>
-                      <label class="text-xs text-gray-400 block mb-0.5">Efficacité (0–1)</label>
+                      <label class="text-xs text-gray-400 block mb-0.5">Efficiency (0-1)</label>
                       <UInput v-model="createSupplyForm.efficiency" type="number" step="0.01" size="sm" />
                     </div>
                   </div>
@@ -151,11 +218,11 @@
                       />
                     </div>
                     <div>
-                      <label class="text-xs text-gray-400 block mb-0.5">Nom</label>
+                      <label class="text-xs text-gray-400 block mb-0.5">Name</label>
                       <UInput v-model="createDemandForm.name" size="sm" placeholder="ex: Groningen Zone A" />
                     </div>
                     <div>
-                      <label class="text-xs text-gray-400 block mb-0.5">Charge (MW)</label>
+                      <label class="text-xs text-gray-400 block mb-0.5">Load (MW)</label>
                       <UInput v-model="createDemandForm.load_mw" type="number" size="sm" />
                     </div>
                   </div>
@@ -177,15 +244,15 @@
                       />
                     </div>
                     <div>
-                      <label class="text-xs text-gray-400 block mb-0.5">Nom</label>
+                      <label class="text-xs text-gray-400 block mb-0.5">Name</label>
                       <UInput v-model="createNetworkForm.name" size="sm" placeholder="ex: HV Transformer 01" />
                     </div>
                     <div>
-                      <label class="text-xs text-gray-400 block mb-0.5">Tension (kV)</label>
+                      <label class="text-xs text-gray-400 block mb-0.5">Voltage (kV)</label>
                       <UInput v-model="createNetworkForm.voltage_kv" type="number" size="sm" />
                     </div>
                     <div>
-                      <label class="text-xs text-gray-400 block mb-0.5">Capacité (MVA)</label>
+                      <label class="text-xs text-gray-400 block mb-0.5">Capacity (MVA)</label>
                       <UInput v-model="createNetworkForm.capacity_mva" type="number" size="sm" />
                     </div>
                   </div>
@@ -194,7 +261,7 @@
                 <UButton
                   block
                   icon="i-heroicons-plus"
-                  label="Créer et ajouter"
+                  label="Create and add"
                   color="primary"
                   size="sm"
                   class="mt-2"
@@ -210,40 +277,55 @@
                 <!-- Dropdown sélection asset -->
                 <div>
                   <div class="flex items-center justify-between mb-1.5">
-                    <p class="text-xs text-gray-500 uppercase tracking-wider">Ajouter à la simulation</p>
+                    <p class="text-xs text-gray-500 uppercase tracking-wider">Add to simulation</p>
                     <button
                       class="text-xs text-[#3C83F8] hover:text-blue-300 font-medium"
                       :disabled="!referential.backendAvailable"
                       @click="showCreateForm = true"
                     >
-                      + Créer
+                      + Create
                     </button>
                   </div>
-                  <USelect
+                  <USelectMenu
                     v-model="assetToAdd"
                     :items="availableForDropdown"
-                    placeholder="Sélectionner un asset…"
+                    value-attribute="value"
+                    searchable
+                    search-placeholder="Search assets..."
+                    placeholder="Select an asset..."
                     class="w-full"
                     :disabled="!referential.backendAvailable || availableForDropdown.length === 0"
                     @update:model-value="handleAddAsset"
-                  />
+                  >
+                    <template #item="{ item }">
+                      <div class="flex items-center justify-between w-full gap-2">
+                        <span class="flex-1 truncate">{{ item.label }}</span>
+                        <button
+                          class="text-gray-700 hover:text-gray-500 flex-shrink-0 rounded"
+                          @click.stop.prevent="deleteTarget = { id: item.value as string, name: (item as any).name ?? item.label, group: activeGroup }"
+                        >
+                          <UIcon name="i-heroicons-trash" class="w-3 h-3" />
+                        </button>
+                      </div>
+                    </template>
+                  </USelectMenu>
                   <p v-if="referential.backendAvailable && availableForDropdown.length === 0 && selectedAssetsList.length > 0" class="text-xs text-gray-600 mt-1 text-center">
-                    Tous les assets sont sélectionnés
+                    All assets are selected
                   </p>
                   <p v-else-if="referential.backendAvailable && availableForDropdown.length === 0 && selectedAssetsList.length === 0" class="text-xs text-gray-600 mt-1 text-center">
-                    Aucun asset — créez-en un avec + Créer
+                    No assets — create one with + Create
                   </p>
                 </div>
 
                 <!-- Liste des assets sélectionnés -->
                 <div class="border-t border-[#1E293B] pt-3">
                   <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">
-                    Dans la simulation
+                    In simulation
                     <span class="ml-1 px-1.5 py-0.5 bg-[#1E293B] rounded text-gray-300 font-mono">{{ selectedCount }}</span>
                   </p>
 
                   <div v-if="selectedAssetsList.length === 0" class="text-xs text-gray-600 text-center py-4">
-                    Aucun asset sélectionné
+                    No assets selected
                   </div>
 
                   <div
@@ -266,7 +348,7 @@
                             <span
                               v-if="hasOverridesFor(asset.id)"
                               class="text-xs px-1 py-0.5 bg-amber-900/40 text-amber-400 rounded leading-none"
-                            >Modifié</span>
+                            >Modified</span>
                           </div>
                           <p class="text-xs text-gray-500 mt-0.5 truncate">{{ assetSummary(asset) }}</p>
                         </div>
@@ -285,12 +367,12 @@
                       v-if="expandedAssetId === asset.id"
                       class="border-t border-[#1E293B] p-2.5 space-y-2 bg-[#0a111e]"
                     >
-                      <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Paramètres</p>
+                      <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Parameters</p>
 
                       <!-- Supply fields -->
                       <template v-if="activeGroup === 'Supply' && 'capacity_mw' in asset">
                         <div>
-                          <label class="text-xs text-gray-400 block mb-0.5">Capacité (MW)</label>
+                          <label class="text-xs text-gray-400 block mb-0.5">Capacity (MW)</label>
                           <UInput
                             :model-value="getOverrideValue(asset.id, 'capacity_mw', (asset as Supply).capacity_mw)"
                             type="number"
@@ -299,7 +381,7 @@
                           />
                         </div>
                         <div>
-                          <label class="text-xs text-gray-400 block mb-0.5">Efficacité (0–1)</label>
+                          <label class="text-xs text-gray-400 block mb-0.5">Efficiency (0-1)</label>
                           <UInput
                             :model-value="getOverrideValue(asset.id, 'efficiency', (asset as Supply).efficiency)"
                             type="number"
@@ -313,7 +395,7 @@
                       <!-- Demand fields -->
                       <template v-else-if="activeGroup === 'Demand' && 'load_mw' in asset">
                         <div>
-                          <label class="text-xs text-gray-400 block mb-0.5">Charge (MW)</label>
+                          <label class="text-xs text-gray-400 block mb-0.5">Load (MW)</label>
                           <UInput
                             :model-value="getOverrideValue(asset.id, 'load_mw', (asset as Demand).load_mw)"
                             type="number"
@@ -326,7 +408,7 @@
                       <!-- Network fields -->
                       <template v-else-if="activeGroup === 'Network' && 'capacity_mva' in asset">
                         <div>
-                          <label class="text-xs text-gray-400 block mb-0.5">Capacité (MVA)</label>
+                          <label class="text-xs text-gray-400 block mb-0.5">Capacity (MVA)</label>
                           <UInput
                             :model-value="getOverrideValue(asset.id, 'capacity_mva', (asset as NetworkComponent).capacity_mva)"
                             type="number"
@@ -341,7 +423,7 @@
                         class="text-xs text-gray-500 hover:text-gray-300 mt-1"
                         @click="clearOverridesFor(asset.id)"
                       >
-                        ↺ Réinitialiser
+                        ↺ Reset
                       </button>
                     </div>
                   </div>
@@ -385,34 +467,49 @@
 <script setup lang="ts">
 import { useSimulationStore } from '~/stores/simulation'
 import { useReferentialStore } from '~/stores/referential'
-import type { Supply, Demand, NetworkComponent } from '~/composables/api'
+import { useHistoryStore } from '~/stores/history'
+import { fetchScenarioExport, type Supply, type Demand, type NetworkComponent, type ScenarioExport } from '~/composables/api'
 
 const store = useSimulationStore()
 const referential = useReferentialStore()
+const history = useHistoryStore()
 const toast = useToast()
+
+const handleHeaderRename = async () => {
+  const id = history.selectedSimulationId
+  const name = store.scenarioName.trim()
+  if (!id || !name) return
+  try {
+    await history.renameEntry(id, name)
+    toast.add({ title: 'Scenario renamed', color: 'success' })
+  }
+  catch {
+    toast.add({ title: 'Rename failed', color: 'error' })
+  }
+}
 
 // ─── Play handler ─────────────────────────────────────────────────────────────
 
 const handlePlay = async () => {
   if (!referential.backendAvailable) {
-    toast.add({ title: 'Backend non disponible', description: 'Démarrez le serveur API', color: 'warning' })
+    toast.add({ title: 'Backend unavailable', description: 'Start the API server', color: 'warning' })
     return
   }
   if (store.selectedSupplyIds.length === 0 || store.selectedDemandIds.length === 0) {
-    toast.add({ title: 'Sélection incomplète', description: 'Sélectionnez au moins un supply et un demand dans la sidebar', color: 'warning' })
+    toast.add({ title: 'Incomplete selection', description: 'Select at least one supply and one demand in the sidebar', color: 'warning' })
     return
   }
   try {
     const result = await store.runFullSimulation()
     if (result.status === 'error') {
-      toast.add({ title: 'Simulation infaisable', description: 'PyPSA n\'a pas trouvé de solution optimale', color: 'error' })
+      toast.add({ title: 'Infeasible simulation', description: 'PyPSA did not find an optimal solution', color: 'error' })
     }
     else {
-      toast.add({ title: 'Simulation terminée', description: `Status : ${result.status}`, color: 'success' })
+      toast.add({ title: 'Simulation complete', description: `Status: ${result.status}`, color: 'success' })
     }
   }
   catch {
-    toast.add({ title: 'Erreur simulation', description: store.error ?? 'Erreur inconnue', color: 'error' })
+    toast.add({ title: 'Simulation error', description: store.error ?? 'Unknown error', color: 'error' })
   }
 }
 
@@ -424,6 +521,94 @@ const assetToAdd = ref('')
 const showCreateForm = ref(false)
 const isSaving = ref(false)
 const expandedAssetId = ref<string | null>(null)
+
+// ─── Export / Import ──────────────────────────────────────────────────────────
+
+const fileInput = ref<HTMLInputElement | null>(null)
+
+const solverOptions = [
+  { label: 'HiGHS', value: 'highs', description: 'Minimizes total operating cost — fast LP, open-source (default)' },
+  { label: 'GLPK', value: 'glpk', description: 'Minimizes total cost — reliable LP/MIP but slower, open-source' },
+  { label: 'CBC', value: 'cbc', description: 'Optimizes ON/OFF unit commitment decisions — MIP open-source (COIN-OR)' },
+  { label: 'SCIP', value: 'scip', description: 'Solves complex MIP problems with constraints — academic solver' },
+  { label: 'Gurobi', value: 'gurobi', description: 'Minimizes cost or emissions ultra-fast — LP/MIP commercial' },
+  { label: 'CPLEX', value: 'cplex', description: 'Industrial-grade LP/MIP optimization — IBM, commercial' },
+  { label: 'Xpress', value: 'xpress', description: 'Large-scale LP/MIP optimization — FICO, commercial' },
+] as const
+
+const solverModel = computed({
+  get: () => solverOptions.find(o => o.value === store.solver) ?? solverOptions[0],
+  set: (item: typeof solverOptions[number]) => { store.solver = item.value },
+})
+
+const handleExport = async () => {
+  const id = history.selectedSimulationId ?? history.currentResult?.id
+  if (!id) return
+  try {
+    const scenario = await fetchScenarioExport(id)
+    const name = history.currentResult?.name ?? id
+    const filename = `scenario-${name}-${new Date().toISOString().slice(0, 10)}.json`
+    const blob = new Blob([JSON.stringify(scenario, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+  catch {
+    toast.add({ title: 'Export error', color: 'error' })
+  }
+}
+
+const handleImport = (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const scenario = JSON.parse(e.target?.result as string) as ScenarioExport
+      store.loadFromScenario(scenario, file.name.replace('.json', ''))
+      toast.add({ title: 'Scenario loaded', color: 'success' })
+    }
+    catch {
+      toast.add({ title: 'Invalid file', color: 'error' })
+    }
+    finally {
+      if (fileInput.value) fileInput.value.value = ''
+    }
+  }
+  reader.readAsText(file)
+}
+
+// ─── Delete asset ─────────────────────────────────────────────────────────────
+
+const deleteTarget = ref<{ id: string; name: string; group: string } | null>(null)
+const isDeleting = ref(false)
+
+const showDeleteModal = computed({
+  get: () => deleteTarget.value !== null,
+  set: (val: boolean) => { if (!val) deleteTarget.value = null },
+})
+
+const handleDeleteAsset = async () => {
+  if (!deleteTarget.value) return
+  isDeleting.value = true
+  try {
+    const { id, group } = deleteTarget.value
+    if (group === 'Supply') await store.removeSupply(id)
+    else if (group === 'Demand') await store.removeDemand(id)
+    else await store.removeNetworkComponent(id)
+    toast.add({ title: 'Asset deleted', color: 'success' })
+    deleteTarget.value = null
+  }
+  catch (e: unknown) {
+    toast.add({ title: 'Deletion error', description: e instanceof Error ? e.message : 'Unknown error', color: 'error' })
+  }
+  finally {
+    isDeleting.value = false
+  }
+}
 
 const tabGroups = ['Supply', 'Network', 'Demand'] as const
 const tabGroupEmojis: Record<string, string> = {
@@ -459,18 +644,18 @@ function assetSummary(asset: Supply | Demand | NetworkComponent): string {
 const availableForDropdown = computed(() => {
   if (activeGroup.value === 'Supply') {
     return referential.availableSupplies
-      .filter(s => !store.selectedSupplyIds.includes(s.id))
-      .map(s => ({ label: `${typeEmoji(s.type)} ${s.name}`, value: s.id }))
+      .filter((s: Supply) => !store.selectedSupplyIds.includes(s.id))
+      .map((s: Supply) => ({ label: `${typeEmoji(s.type)} ${s.name}`, value: s.id, name: s.name }))
   }
   if (activeGroup.value === 'Demand') {
     return referential.availableDemands
-      .filter(d => !store.selectedDemandIds.includes(d.id))
-      .map(d => ({ label: `${typeEmoji(d.type)} ${d.name}`, value: d.id }))
+      .filter((d: Demand) => !store.selectedDemandIds.includes(d.id))
+      .map((d: Demand) => ({ label: `${typeEmoji(d.type)} ${d.name}`, value: d.id, name: d.name }))
   }
   if (activeGroup.value === 'Network') {
     return referential.availableNetwork
-      .filter(n => !store.selectedNetworkIds.includes(n.id))
-      .map(n => ({ label: `${typeEmoji(n.type)} ${n.name}`, value: n.id }))
+      .filter((n: NetworkComponent) => !store.selectedNetworkIds.includes(n.id))
+      .map((n: NetworkComponent) => ({ label: `${typeEmoji(n.type)} ${n.name}`, value: n.id, name: n.name }))
   }
   return []
 })
@@ -486,7 +671,8 @@ const selectedCount = computed(() => selectedAssetsList.value.length)
 
 // ─── Actions sélection ────────────────────────────────────────────────────────
 
-const handleAddAsset = (id: string) => {
+const handleAddAsset = (val: string | { value: string } | null) => {
+  const id = val && typeof val === 'object' ? val.value : val
   if (!id) return
   if (activeGroup.value === 'Supply') store.addSupplyToSelection(id)
   else if (activeGroup.value === 'Demand') store.addDemandToSelection(id)
@@ -595,11 +781,11 @@ const handleCreate = async () => {
       store.addNetworkToSelection(created.id)
       createNetworkForm.name = ''
     }
-    toast.add({ title: 'Asset créé et ajouté à la simulation', color: 'success' })
+    toast.add({ title: 'Asset created and added to simulation', color: 'success' })
     showCreateForm.value = false
   }
   catch (e: unknown) {
-    toast.add({ title: 'Erreur', description: e instanceof Error ? e.message : 'Erreur inconnue', color: 'error' })
+    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Unknown error', color: 'error' })
   }
   finally {
     isSaving.value = false

@@ -15,6 +15,7 @@ class SimulationRequestModel(SQLModel, table=True):
     __tablename__ = "simulation_requests"
 
     id: uuid.UUID = Field(default_factory=uuid4, primary_key=True)
+    name: Optional[str] = Field(default=None)
     snapshot_hours: int = 8760
     solver: str = "highs"
     start_date: Optional[date] = Field(default=None, sa_column=Column(Date, nullable=True))

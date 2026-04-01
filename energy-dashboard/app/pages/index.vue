@@ -10,13 +10,59 @@
       <span>Backend unavailable — Start the API server to enable live simulations.</span>
     </div>
 
-    <!-- Sélecteur scénario -->
-    <div v-if="history.simulationHistory.length > 0" class="mb-6 p-4 bg-[#0F172A] rounded-xl border border-[#1E293B] flex items-center gap-4">
-      <label class="font-medium text-gray-300 shrink-0">Scénario :</label>
+    <!-- Rename scenario modal -->
+    <UModal v-model:open="showRenameModal">
+      <template #header>
+        <h3 class="font-semibold text-white">Rename scenario</h3>
+      </template>
+      <template #body>
+        <UInput
+          v-model="renameDraft"
+          placeholder="Scenario name"
+          autofocus
+          @keyup.enter="confirmRename"
+        />
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton label="Cancel" color="neutral" variant="ghost" @click="renameTarget = null" />
+          <UButton
+            label="Rename"
+            color="primary"
+            :loading="isRenaming"
+            :disabled="!renameDraft.trim()"
+            @click="confirmRename"
+          />
+        </div>
+      </template>
+    </UModal>
+
+    <!-- Scenario bar -->
+    <div class="mb-6 p-4 bg-[#0F172A] rounded-xl border border-[#1E293B] flex items-center gap-3">
+      <UButton
+        icon="i-heroicons-plus-circle"
+        label="New Scenario"
+        size="sm"
+        color="primary"
+        variant="outline"
+        @click="sim.clearScenario(); history.selectedSimulationId = null; selectedScenario = ''"
+      />
       <USelect
+        v-if="history.simulationHistory.length > 0"
         v-model="selectedScenario"
         :items="scenarioOptions"
         class="flex-1 max-w-xl"
+        placeholder="Load a past scenario..."
+      />
+      <span v-else class="text-sm text-gray-500 flex-1">No past scenarios yet — run your first simulation.</span>
+      <UButton
+        v-if="selectedScenario"
+        icon="i-heroicons-pencil-square"
+        size="sm"
+        color="neutral"
+        variant="ghost"
+        title="Rename scenario"
+        @click="openRenameModal"
       />
     </div>
 
@@ -41,10 +87,10 @@
       <div v-if="result.status === 'error'" class="mb-6 p-5 bg-red-900/20 border border-red-700 rounded-xl flex items-start gap-3">
         <span class="text-red-400 text-xl">✗</span>
         <div>
-          <p class="font-semibold text-red-300">Simulation infaisable</p>
+          <p class="font-semibold text-red-300">Infeasible simulation</p>
           <p class="text-sm text-red-400/80 mt-1">
-            L'optimisation PyPSA n'a pas trouvé de solution avec les assets sélectionnés.
-            Vérifiez que la capacité de production couvre la demande.
+            The PyPSA optimization did not find a solution with the selected assets.
+            Ensure that the production capacity covers the demand.
           </p>
         </div>
       </div>
@@ -57,7 +103,7 @@
             class="text-lg font-bold px-2 py-0.5 rounded"
             :class="result.status === 'optimal' ? 'text-emerald-400' : 'text-red-400'"
           >
-            {{ result.status === 'optimal' ? 'Optimal' : 'Infaisable' }}
+            {{ result.status === 'optimal' ? 'Optimal' : 'Infeasible' }}
           </span>
         </div>
 
@@ -112,7 +158,7 @@
 
         <!-- Chart Production -->
         <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-6 mb-6">
-          <h2 class="text-lg font-semibold text-white mb-4">Production par générateur (MW)</h2>
+          <h2 class="text-lg font-semibold text-white mb-4">Production by generator (MW)</h2>
           <div class="h-72">
             <Line :data="productionChartData" :options="chartOptions" />
           </div>
@@ -120,7 +166,7 @@
 
         <!-- Chart Consommation -->
         <div v-if="consumptionChartData.datasets.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-6 mb-6">
-          <h2 class="text-lg font-semibold text-white mb-4">Consommation par charge (MW)</h2>
+          <h2 class="text-lg font-semibold text-white mb-4">Consumption by load (MW)</h2>
           <div class="h-72">
             <Line :data="consumptionChartData" :options="chartOptions" />
           </div>
@@ -129,7 +175,7 @@
 
       <!-- Placeholder charts si erreur -->
       <div v-else-if="result.status === 'error'" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 mb-6 flex items-center justify-center h-48 text-gray-600">
-        Pas de données de production — simulation infaisable
+        No production data — infeasible simulation
       </div>
 
       <!-- Simulation Summary -->
@@ -144,7 +190,7 @@
             <div class="flex justify-between">
               <span class="text-gray-400">Status</span>
               <span class="font-semibold" :class="result.status === 'optimal' ? 'text-emerald-400' : 'text-red-400'">
-                {{ result.status === 'optimal' ? 'Optimal' : 'Infaisable' }}
+                {{ result.status === 'optimal' ? 'Optimal' : 'Infeasible' }}
               </span>
             </div>
             <div class="flex justify-between">
@@ -160,7 +206,7 @@
               <span :class="balanceColor">{{ result.status === 'error' ? '—' : formatVal(result.balance_mwh) + ' MWh' }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-400">Créé le</span>
+              <span class="text-gray-400">Created at</span>
               <span class="font-mono text-gray-300 text-xs">{{ new Date(result.created_at).toLocaleString() }}</span>
             </div>
           </div>
@@ -174,14 +220,14 @@
               <span class="font-mono text-white shrink-0">{{ (cf * 100).toFixed(1) }}%</span>
             </div>
           </div>
-          <p v-else class="text-gray-600 text-sm">Aucune donnée</p>
+          <p v-else class="text-gray-600 text-sm">No data</p>
         </div>
       </div>
     </template>
 
     <!-- ── État vide ── -->
     <div v-else class="flex flex-col items-center justify-center h-96 text-gray-500 gap-3">
-      <p class="text-lg">Sélectionnez des assets dans la sidebar et cliquez ▶ Play</p>
+      <p class="text-lg">Select assets in the sidebar and click ▶ Play</p>
     </div>
   </div>
 </template>
@@ -200,6 +246,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js'
+import { fetchScenarioExport } from '~/composables/api'
 import { useSimulationStore } from '~/stores/simulation'
 import { useReferentialStore } from '~/stores/referential'
 import { useHistoryStore } from '~/stores/history'
@@ -242,28 +289,57 @@ function generatorEmoji(name: string): string {
 const selectedScenario = ref('')
 const loadingScenario = ref(false)
 
+// ─── Rename scenario ──────────────────────────────────────────────────────────
+
+const renameTarget = ref<{ id: string } | null>(null)
+const renameDraft = ref('')
+const isRenaming = ref(false)
+
+const showRenameModal = computed({
+  get: () => renameTarget.value !== null,
+  set: (val: boolean) => { if (!val) renameTarget.value = null },
+})
+
+const openRenameModal = () => {
+  const current = history.simulationHistory.find(s => `api-${s.id}` === selectedScenario.value)
+  if (!current) return
+  renameTarget.value = { id: current.id }
+  renameDraft.value = current.name ?? ''
+}
+
+const confirmRename = async () => {
+  if (!renameTarget.value || !renameDraft.value.trim()) return
+  isRenaming.value = true
+  try {
+    await history.renameEntry(renameTarget.value.id, renameDraft.value.trim())
+    renameTarget.value = null
+  }
+  finally {
+    isRenaming.value = false
+  }
+}
+
 const scenarioOptions = computed(() =>
   history.simulationHistory.map((s, i) => ({
-    label: `Simulation #${i + 1} — ${new Date(s.created_at).toLocaleString()} — ${s.status}`,
+    label: s.name
+      ? `${s.name} — ${new Date(s.created_at).toLocaleString()} — ${s.status}`
+      : `Simulation #${i + 1} — ${new Date(s.created_at).toLocaleString()} — ${s.status}`,
     value: `api-${s.id}`,
   }))
 )
 
 watch(selectedScenario, async (val) => {
   if (!val) return
+  const id = val.replace('api-', '')
   loadingScenario.value = true
   try {
-    await history.loadSimulationById(val.replace('api-', ''))
+    const entry = history.simulationHistory.find(s => s.id === id)
+    await history.loadSimulationById(id)
+    const exported = await fetchScenarioExport(id)
+    sim.loadFromScenario(exported, entry?.name ?? '')
   }
   finally {
     loadingScenario.value = false
-  }
-})
-
-// Auto-sélectionner la dernière simulation quand une nouvelle est lancée
-watch(() => history.simulationHistory.length, (newLen, oldLen) => {
-  if (newLen > oldLen && history.simulationHistory[0]) {
-    selectedScenario.value = `api-${history.simulationHistory[0].id}`
   }
 })
 
@@ -362,11 +438,6 @@ onMounted(async () => {
   await referential.loadReferential()
   if (referential.backendAvailable) {
     await history.loadHistory()
-    if (history.simulationHistory.length > 0) {
-      const latest = history.simulationHistory[0]
-      await history.loadSimulationById(latest.id)
-      selectedScenario.value = `api-${latest.id}`
-    }
   }
 })
 </script>

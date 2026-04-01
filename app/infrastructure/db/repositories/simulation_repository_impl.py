@@ -21,6 +21,7 @@ class SimulationRepositoryImpl(ISimulationPersistenceRepository):
         row = SimulationRequestModel(
             snapshot_hours=run_input.snapshot_hours,
             solver=run_input.solver,
+            name=run_input.name,
             start_date=run_input.start_date,
             end_date=run_input.end_date,
             pypsa_params=run_input.pypsa_params or None,
@@ -62,6 +63,23 @@ class SimulationRepositoryImpl(ISimulationPersistenceRepository):
             select(SimulationRequestModel).where(SimulationRequestModel.id == request_id)
         )
         return result.scalar_one_or_none()
+
+    async def delete_by_result_id(self, result_id: uuid.UUID) -> bool:
+        row = await self.get_result_by_id(result_id)
+        if row is None:
+            return False
+        req = await self.get_request_by_id(row.request_id)
+        if req is not None:
+            await self._session.delete(req)
+            await self._session.flush()
+        return True
+
+    async def update_request_name(self, request_id: uuid.UUID, name: str) -> None:
+        req = await self.get_request_by_id(request_id)
+        if req is not None:
+            req.name = name
+            self._session.add(req)
+            await self._session.flush()
 
     async def list_results(self) -> list:
         stmt = (

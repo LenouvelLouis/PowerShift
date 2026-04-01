@@ -6,10 +6,12 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 
 from app.api.v1.dependencies import get_simulation_service
 from app.api.v1.schemas.simulation_schema import (
     SimulationListItem,
+    SimulationRenameRequest,
     SimulationRunRequest,
     SimulationRunResponse,
     SimulationScenarioExport,
@@ -74,6 +76,42 @@ async def import_scenario(
         optimization_objective=body.optimization_objective,
     )
     return await service.run(run_request)
+
+
+@router.delete(
+    "/{simulation_id}",
+    status_code=204,
+    response_class=Response,
+    summary="Delete a simulation",
+    responses={404: {"description": "Simulation not found."}},
+)
+async def delete_simulation(
+    simulation_id: uuid.UUID,
+    service: Annotated[SimulationService, Depends(get_simulation_service)],
+) -> Response:
+    """Permanently delete a simulation and its associated request."""
+    deleted = await service.delete(simulation_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Simulation not found")
+    return Response(status_code=204)
+
+
+@router.patch(
+    "/{simulation_id}/rename",
+    response_model=SimulationRunResponse,
+    summary="Rename a simulation scenario",
+    responses={404: {"description": "Simulation not found."}},
+)
+async def rename_simulation(
+    simulation_id: uuid.UUID,
+    body: SimulationRenameRequest,
+    service: Annotated[SimulationService, Depends(get_simulation_service)],
+) -> SimulationRunResponse:
+    """Set or update the display name of a past simulation."""
+    result = await service.rename(simulation_id, body.name)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Simulation not found")
+    return result
 
 
 @router.get(
