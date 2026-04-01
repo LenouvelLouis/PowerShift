@@ -74,7 +74,7 @@
         v-else-if="history.simulationHistory.length > 0"
         v-model="selectedScenario"
         :items="scenarioInitialOptions"
-        value-attribute="value"
+        value-key="value"
         :searchable="searchScenarioOptions"
         class="flex-1 max-w-xl"
         placeholder="Load a past scenario..."
