@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import importlib.util
+import shutil
 import uuid
 
 from app.api.v1.schemas.simulation_schema import (
     SimulationListItem,
+    SimulationSolverInfo,
     SimulationRunRequest,
     SimulationRunResponse,
     SimulationScenarioExport,
@@ -18,6 +21,16 @@ from app.infrastructure.db.models.simulation_result_model import SimulationResul
 
 
 class SimulationService:
+    _SUPPORTED_SOLVERS = (
+        "highs",
+        "glpk",
+        "cbc",
+        "scip",
+        "gurobi",
+        "cplex",
+        "xpress",
+    )
+
     def __init__(
         self,
         use_case: RunSimulationUseCase,
@@ -92,12 +105,87 @@ class SimulationService:
             optimization_objective=request_row.optimization_objective,
         )
 
+    async def list_solvers(self) -> list[SimulationSolverInfo]:
+        return [self._solver_info(name) for name in self._SUPPORTED_SOLVERS]
+
+    @staticmethod
+    def _has_python_module(module_name: str) -> bool:
+        return importlib.util.find_spec(module_name) is not None
+
+    @classmethod
+    def _solver_info(cls, solver_name: str) -> SimulationSolverInfo:
+        if solver_name == "highs":
+            if cls._has_python_module("highspy") or shutil.which("highs"):
+                return SimulationSolverInfo(name=solver_name, available=True)
+            return SimulationSolverInfo(
+                name=solver_name,
+                available=False,
+                reason="Install highspy or highs executable.",
+            )
+
+        if solver_name == "glpk":
+            if shutil.which("glpsol"):
+                return SimulationSolverInfo(name=solver_name, available=True)
+            return SimulationSolverInfo(
+                name=solver_name,
+                available=False,
+                reason="Install glpsol (GLPK).",
+            )
+
+        if solver_name == "cbc":
+            if shutil.which("cbc"):
+                return SimulationSolverInfo(name=solver_name, available=True)
+            return SimulationSolverInfo(
+                name=solver_name,
+                available=False,
+                reason="Install CBC executable.",
+            )
+
+        if solver_name == "scip":
+            if shutil.which("scip"):
+                return SimulationSolverInfo(name=solver_name, available=True)
+            return SimulationSolverInfo(
+                name=solver_name,
+                available=False,
+                reason="Install SCIP executable.",
+            )
+
+        if solver_name == "gurobi":
+            if cls._has_python_module("gurobipy") or shutil.which("gurobi_cl"):
+                return SimulationSolverInfo(name=solver_name, available=True)
+            return SimulationSolverInfo(
+                name=solver_name,
+                available=False,
+                reason="Install gurobipy or gurobi_cl and configure license.",
+            )
+
+        if solver_name == "cplex":
+            if cls._has_python_module("cplex"):
+                return SimulationSolverInfo(name=solver_name, available=True)
+            return SimulationSolverInfo(
+                name=solver_name,
+                available=False,
+                reason="Install cplex Python package and configure license.",
+            )
+
+        if solver_name == "xpress":
+            if cls._has_python_module("xpress"):
+                return SimulationSolverInfo(name=solver_name, available=True)
+            return SimulationSolverInfo(
+                name=solver_name,
+                available=False,
+                reason="Install xpress Python package and configure license.",
+            )
+
+        return SimulationSolverInfo(name=solver_name, available=False, reason="Unsupported solver.")
+
     @staticmethod
     def _to_response(row: SimulationResultModel, req: SimulationRequestModel | None = None) -> SimulationRunResponse:
         return SimulationRunResponse(
             id=row.id,
             request_id=row.request_id,
             status=row.status,
+            solver=req.solver if req is not None else "highs",
             name=req.name if req is not None else None,
             total_supply_mwh=row.total_supply_mwh,
             total_demand_mwh=row.total_demand_mwh,
@@ -113,6 +201,7 @@ class SimulationService:
             id=row.id,
             request_id=row.request_id,
             status=row.status,
+            solver=req.solver,
             name=req.name,
             supply_ids=req.supply_ids or [],
             demand_ids=req.demand_ids or [],

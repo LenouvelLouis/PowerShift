@@ -64,6 +64,12 @@
               </p>
               <div class="flex items-center gap-1.5">
                 <span
+                  v-if="isSolverUnavailable(solver.value)"
+                  class="text-[11px] px-1.5 py-0.5 rounded bg-red-900/30 text-red-300"
+                >
+                  Unavailable
+                </span>
+                <span
                   class="text-[11px] px-1.5 py-0.5 rounded bg-[#1E293B] text-slate-300"
                   >{{ solver.license }}</span
                 >
@@ -78,6 +84,12 @@
             </p>
             <p class="text-xs text-gray-400 mt-1.5">
               Best for: {{ solver.bestFor }}
+            </p>
+            <p
+              v-if="isSolverUnavailable(solver.value)"
+              class="text-xs text-red-300/90 mt-1"
+            >
+              {{ solverUnavailableReason(solver.value) }}
             </p>
           </div>
         </div>
@@ -148,6 +160,7 @@
         <USelect
           v-model="store.solver"
           :items="solverSelectItems"
+          :loading="solverAvailabilityLoading"
           class="w-36"
           size="sm"
         />
@@ -721,9 +734,11 @@
 <script setup lang="ts">
 import {
   fetchScenarioExport,
+  fetchSimulationSolvers,
   type Demand,
   type NetworkComponent,
   type ScenarioExport,
+  type SimulationSolverInfo,
   type Supply,
 } from "~/composables/api";
 import { useHistoryStore } from "~/stores/history";
@@ -772,15 +787,25 @@ const handlePlay = async () => {
   try {
     const result = await store.runFullSimulation();
     if (result.status === "error") {
+      const errorType = result.result_json?.error_type;
+      const solver = result.result_json?.solver ?? store.solver;
+      const backendError = result.result_json?.error;
+      const description =
+        errorType === "solver_error"
+          ? `Solver '${solver}' unavailable or misconfigured.${backendError ? ` ${backendError}` : ""}`
+          : `${backendError ?? "PyPSA did not find an optimal solution with the selected assets."} (solver: ${solver})`;
       toast.add({
-        title: "Infeasible simulation",
-        description: "PyPSA did not find an optimal solution",
+        title:
+          errorType === "solver_error"
+            ? "Solver execution error"
+            : "Simulation failed",
+        description,
         color: "error",
       });
     } else {
       toast.add({
         title: "Simulation complete",
-        description: `Status: ${result.status}`,
+        description: `Status: ${result.status} (solver: ${result.solver ?? store.solver})`,
         color: "success",
       });
     }
@@ -806,6 +831,8 @@ const expandedAssetId = ref<string | null>(null);
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const showSolverHelpModal = ref(false);
+const solverAvailabilityLoading = ref(false);
+const solverAvailabilityByName = ref<Record<string, SimulationSolverInfo>>({});
 
 const solverOptions = [
   {
@@ -870,24 +897,65 @@ const solverOptions = [
   },
 ] as const;
 
-const solverSelectItems = solverOptions.map(({ label, value }) => ({
-  label,
-  value,
-}));
+const solverSelectItems = computed(() =>
+  solverOptions.map(({ label, value }) => {
+    const info = solverAvailabilityByName.value[value];
+    const isUnavailable = info ? !info.available : false;
+    return {
+      label: isUnavailable ? `${label} (unavailable)` : label,
+      value,
+      disabled: isUnavailable,
+    };
+  }),
+);
 
 const selectedSolverTitle = computed(() => {
   const selected = solverOptions.find(
     (option) => option.value === store.solver,
   );
-  return selected ? `${selected.label} - ${selected.description}` : "Solver";
+  if (!selected) return "Solver";
+  const info = solverAvailabilityByName.value[selected.value];
+  if (info && !info.available) {
+    return `${selected.label} - ${selected.description}. Unavailable: ${info.reason ?? "not installed"}`;
+  }
+  return `${selected.label} - ${selected.description}`;
 });
 
 const selectedSolverLabel = computed(() => {
   const selected = solverOptions.find(
     (option) => option.value === store.solver,
   );
-  return selected?.label ?? "Unknown";
+  if (!selected) return "Unknown";
+  const info = solverAvailabilityByName.value[selected.value];
+  return info && !info.available
+    ? `${selected.label} (unavailable)`
+    : selected.label;
 });
+
+const refreshSolverAvailability = async () => {
+  solverAvailabilityLoading.value = true;
+  try {
+    const solvers = await fetchSimulationSolvers();
+    solverAvailabilityByName.value = Object.fromEntries(
+      solvers.map((solver) => [solver.name, solver]),
+    );
+  } catch {
+    solverAvailabilityByName.value = {};
+  } finally {
+    solverAvailabilityLoading.value = false;
+  }
+};
+
+const isSolverUnavailable = (solverName: string): boolean => {
+  const info = solverAvailabilityByName.value[solverName];
+  return info ? !info.available : false;
+};
+
+const solverUnavailableReason = (solverName: string): string => {
+  const info = solverAvailabilityByName.value[solverName];
+  if (!info || info.available) return "";
+  return info.reason ?? "Solver not available on backend.";
+};
 
 const handleExport = async () => {
   const id = history.selectedSimulationId ?? history.currentResult?.id;
@@ -1064,6 +1132,34 @@ watch(activeGroup, () => {
   showCreateForm.value = false;
   expandedAssetId.value = null;
 });
+
+watch(
+  solverSelectItems,
+  (items) => {
+    const current = items.find((item) => item.value === store.solver);
+    if (current && !current.disabled) return;
+    const fallback = items.find((item) => !item.disabled);
+    if (!fallback || store.solver === fallback.value) return;
+    const previousSolver = store.solver;
+    store.solver = fallback.value;
+    toast.add({
+      title: "Solver switched",
+      description: `Solver '${previousSolver}' is unavailable. Switched to '${fallback.value}'.`,
+      color: "warning",
+    });
+  },
+  { immediate: true },
+);
+
+watch(
+  () => referential.backendAvailable,
+  (available) => {
+    if (available) {
+      void refreshSolverAvailability();
+    }
+  },
+  { immediate: true },
+);
 
 // ─── Override helpers ─────────────────────────────────────────────────────────
 

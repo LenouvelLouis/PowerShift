@@ -46,7 +46,7 @@
 
     <!-- Scenario bar -->
     <div
-      class="mb-6 p-4 bg-[#0F172A] rounded-xl border border-[#1E293B] flex items-center gap-3"
+      class="group mb-6 p-4 bg-[#0F172A] rounded-xl border border-[#1E293B] flex items-center gap-3"
     >
       <UButton
         icon="i-heroicons-plus-circle"
@@ -70,14 +70,28 @@
         />
         <span class="text-xs text-slate-300/90">Loading past scenarios...</span>
       </div>
-      <USelect
+      <USelectMenu
         v-else-if="history.simulationHistory.length > 0"
         v-model="selectedScenario"
-        :items="scenarioOptions"
+        :items="scenarioInitialOptions"
+        value-attribute="value"
+        :searchable="searchScenarioOptions"
         class="flex-1 max-w-xl"
         placeholder="Load a past scenario..."
         :disabled="loadingScenario || historyLoading"
-      />
+      >
+        <template #item="{ item }">
+          <div class="group flex items-center justify-between gap-3 w-full">
+            <span class="truncate">{{ item.label }}</span>
+            <span
+              class="text-xs text-gray-500 opacity-0 transition-opacity group-hover:opacity-100 shrink-0"
+              :title="item.dateFull"
+            >
+              {{ item.dateShort }}
+            </span>
+          </div>
+        </template>
+      </USelectMenu>
       <span v-else class="text-sm text-gray-500 flex-1"
         >No past scenarios yet — run your first simulation.</span
       >
@@ -160,10 +174,11 @@
       >
         <span class="text-red-400 text-xl">✗</span>
         <div>
-          <p class="font-semibold text-red-300">Infeasible simulation</p>
+          <p class="font-semibold text-red-300">
+            {{ errorHeadline }}
+          </p>
           <p class="text-sm text-red-400/80 mt-1">
-            The PyPSA optimization did not find a solution with the selected
-            assets. Ensure that the production capacity covers the demand.
+            {{ errorDescription }}
           </p>
         </div>
       </div>
@@ -180,7 +195,7 @@
               result.status === 'optimal' ? 'text-emerald-400' : 'text-red-400'
             "
           >
-            {{ result.status === "optimal" ? "Optimal" : "Infeasible" }}
+            {{ result.status === "optimal" ? "Optimal" : "Error" }}
           </span>
         </div>
 
@@ -285,7 +300,7 @@
         v-else-if="result.status === 'error'"
         class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 mb-6 flex items-center justify-center h-48 text-gray-600"
       >
-        No production data — infeasible simulation
+        No production data — simulation error
       </div>
 
       <!-- Simulation Summary -->
@@ -311,7 +326,7 @@
                     : 'text-red-400'
                 "
               >
-                {{ result.status === "optimal" ? "Optimal" : "Infeasible" }}
+                {{ result.status === "optimal" ? "Optimal" : "Error" }}
               </span>
             </div>
             <div class="flex justify-between">
@@ -392,7 +407,7 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, shallowRef, watch } from "vue";
 import { Line } from "vue-chartjs";
 import { fetchScenarioExport } from "~/composables/api";
 import { useHistoryStore } from "~/stores/history";
@@ -486,14 +501,70 @@ const confirmRename = async () => {
   }
 };
 
-const scenarioOptions = computed(() =>
-  history.simulationHistory.map((s, i) => ({
-    label: s.name
-      ? `${s.name} — ${new Date(s.created_at).toLocaleString()} — ${s.status}`
-      : `Simulation #${i + 1} — ${new Date(s.created_at).toLocaleString()} — ${s.status}`,
-    value: `api-${s.id}`,
-  })),
+const scenarioDateFormatter = new Intl.DateTimeFormat(undefined, {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+
+const scenarioDateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+});
+
+type ScenarioOption = {
+  label: string;
+  value: string;
+  dateShort: string;
+  dateFull: string;
+  searchText: string;
+};
+
+const SCENARIO_MENU_LIMIT = 160;
+const scenarioAllOptions = shallowRef<ScenarioOption[]>([]);
+
+watch(
+  () => history.simulationHistory,
+  (rows) => {
+    scenarioAllOptions.value = rows.map((s, i) => {
+      const createdAt = new Date(s.created_at);
+      const label = s.name
+        ? `${s.name} · ${s.status} · ${s.solver.toUpperCase()}`
+        : `#${i + 1} · ${s.status} · ${s.solver.toUpperCase()}`;
+      return {
+        label,
+        value: `api-${s.id}`,
+        dateShort: scenarioDateFormatter.format(createdAt),
+        dateFull: scenarioDateTimeFormatter.format(createdAt),
+        searchText:
+          `${label} ${s.name ?? ""} ${s.status} ${s.solver} ${s.id}`.toLowerCase(),
+      };
+    });
+  },
+  { immediate: true, deep: true },
 );
+
+const scenarioInitialOptions = computed(() =>
+  scenarioAllOptions.value.slice(0, SCENARIO_MENU_LIMIT),
+);
+
+const searchScenarioOptions = (query: string): ScenarioOption[] => {
+  const q = query.trim().toLowerCase();
+  if (!q) return scenarioInitialOptions.value;
+
+  const out: ScenarioOption[] = [];
+  for (const item of scenarioAllOptions.value) {
+    if (item.searchText.includes(q)) {
+      out.push(item);
+      if (out.length >= SCENARIO_MENU_LIMIT) break;
+    }
+  }
+  return out;
+};
 
 watch(selectedScenario, async (val) => {
   if (!val) return;
@@ -512,6 +583,29 @@ watch(selectedScenario, async (val) => {
 // ─── Résultat courant ─────────────────────────────────────────────────────────
 
 const result = computed(() => history.currentResult);
+
+const errorHeadline = computed(() => {
+  if (result.value?.status !== "error") return "Simulation error";
+  if (result.value.result_json?.error_type === "solver_error") {
+    return "Solver unavailable";
+  }
+  return "Simulation error";
+});
+
+const errorDescription = computed(() => {
+  if (result.value?.status !== "error") return "";
+  const details = result.value.result_json?.error;
+  if (result.value.result_json?.error_type === "solver_error") {
+    const solver = result.value.result_json?.solver ?? "selected solver";
+    return details
+      ? `The solver '${solver}' is unavailable or misconfigured. ${details}`
+      : `The solver '${solver}' is unavailable or misconfigured on the backend.`;
+  }
+  return (
+    details ??
+    "The optimization failed. Ensure production can cover demand and try again."
+  );
+});
 
 // ─── KPIs dynamiques ─────────────────────────────────────────────────────────
 

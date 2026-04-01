@@ -57,6 +57,7 @@ class SimulationRunResponse(BaseModel):
     id: uuid.UUID
     request_id: uuid.UUID
     status: str
+    solver: str
     name: Optional[str] = None
     total_supply_mwh: Optional[float]
     total_demand_mwh: Optional[float]
@@ -70,6 +71,7 @@ class SimulationListItem(BaseModel):
     id: uuid.UUID
     request_id: uuid.UUID
     status: str
+    solver: str
     name: Optional[str] = None
     supply_ids: list[str]
     demand_ids: list[str]
@@ -98,3 +100,9 @@ class SimulationScenarioExport(BaseModel):
     pypsa_params: Optional[dict] = None
     hourly_load_overrides: Optional[dict[str, list[float]]] = None
     optimization_objective: Literal["min_cost", "min_emissions", "max_renewable"] = "min_cost"
+
+
+class SimulationSolverInfo(BaseModel):
+    name: str
+    available: bool
+    reason: Optional[str] = None

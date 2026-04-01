@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from concurrent.futures import ThreadPoolExecutor
 
 from app.application.wind.schemas import CalculatePowerRequest
@@ -138,11 +139,31 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
                     "objective_value": objective_value,
                 }
         except Exception as e:
+            error_message = str(e)
+            lowered = error_message.lower()
+            solver_error_hints = (
+                "solver",
+                "not installed",
+                "not found",
+                "unknown solver",
+                "no executable",
+                "license",
+                "xpress",
+                "cplex",
+                "cbc",
+                "highs",
+            )
+            error_type = "solver_error" if any(hint in lowered for hint in solver_error_hints) else "runtime_error"
+            compact_error = re.sub(r"\s+", " ", error_message).strip()
             status = "error"
             objective_value = 0.0
             total_supply = 0.0
             total_demand = 0.0
-            result_json = {"error": str(e)}
+            result_json = {
+                "error": compact_error,
+                "error_type": error_type,
+                "solver": config.solver,
+            }
 
         balance = total_supply - total_demand
         return AdapterOutput(

@@ -5,188 +5,215 @@
 
 // ─── TypeScript interfaces (mirrors backend Pydantic schemas) ─────────────────
 
-export type ComponentStatus = 'active' | 'inactive' | 'maintenance'
+export type ComponentStatus = "active" | "inactive" | "maintenance";
 
 export interface Supply {
-  id: string
-  name: string
-  type: 'wind_turbine' | 'solar_panel' | 'nuclear_plant'
-  capacity_mw: number
-  efficiency: number
-  status: ComponentStatus
-  unit: string
-  description: string
-  carrier: string
-  created_at: string
-  updated_at: string
+  id: string;
+  name: string;
+  type: "wind_turbine" | "solar_panel" | "nuclear_plant";
+  capacity_mw: number;
+  efficiency: number;
+  status: ComponentStatus;
+  unit: string;
+  description: string;
+  carrier: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export type SupplyCreate = Omit<Supply, 'id' | 'created_at' | 'updated_at' | 'carrier'>
-export type SupplyUpdate = Partial<Omit<Supply, 'id' | 'created_at' | 'updated_at' | 'carrier' | 'type'>>
+export type SupplyCreate = Omit<
+  Supply,
+  "id" | "created_at" | "updated_at" | "carrier"
+>;
+export type SupplyUpdate = Partial<
+  Omit<Supply, "id" | "created_at" | "updated_at" | "carrier" | "type">
+>;
 
 export interface Demand {
-  id: string
-  name: string
-  type: 'house' | 'electric_vehicle'
-  load_mw: number
-  status: ComponentStatus
-  unit: string
-  description: string
-  created_at: string
-  updated_at: string
+  id: string;
+  name: string;
+  type: "house" | "electric_vehicle";
+  load_mw: number;
+  status: ComponentStatus;
+  unit: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export type DemandCreate = Omit<Demand, 'id' | 'created_at' | 'updated_at'>
-export type DemandUpdate = Partial<Omit<Demand, 'id' | 'created_at' | 'updated_at' | 'type'>>
+export type DemandCreate = Omit<Demand, "id" | "created_at" | "updated_at">;
+export type DemandUpdate = Partial<
+  Omit<Demand, "id" | "created_at" | "updated_at" | "type">
+>;
 
 export interface NetworkComponent {
-  id: string
-  name: string
-  type: 'transformer' | 'cable'
-  voltage_kv: number
-  capacity_mva: number
-  losses_kw: number | null
-  voltage_hv_kv: number | null
-  voltage_lv_kv: number | null
-  length_km: number | null
-  resistance_ohm_per_km: number | null
-  reactance_ohm_per_km: number | null
-  status: ComponentStatus
-  unit: string
-  description: string
-  created_at: string
-  updated_at: string
+  id: string;
+  name: string;
+  type: "transformer" | "cable";
+  voltage_kv: number;
+  capacity_mva: number;
+  losses_kw: number | null;
+  voltage_hv_kv: number | null;
+  voltage_lv_kv: number | null;
+  length_km: number | null;
+  resistance_ohm_per_km: number | null;
+  reactance_ohm_per_km: number | null;
+  status: ComponentStatus;
+  unit: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export type NetworkCreate = Omit<NetworkComponent, 'id' | 'created_at' | 'updated_at'>
+export type NetworkCreate = Omit<
+  NetworkComponent,
+  "id" | "created_at" | "updated_at"
+>;
 
 export interface Referential {
-  supplies: Supply[]
-  demands: Demand[]
-  network: NetworkComponent[]
+  supplies: Supply[];
+  demands: Demand[];
+  network: NetworkComponent[];
 }
 
 export interface SimulationRunRequest {
-  supply_ids: string[]
-  demand_ids: string[]
-  network_ids: string[]
-  snapshot_hours: number
-  solver: string
-  name?: string
-  start_date?: string
-  end_date?: string
-  pypsa_params?: Record<string, unknown>
-  asset_overrides?: Record<string, Record<string, number>>
+  supply_ids: string[];
+  demand_ids: string[];
+  network_ids: string[];
+  snapshot_hours: number;
+  solver: string;
+  name?: string;
+  start_date?: string;
+  end_date?: string;
+  pypsa_params?: Record<string, unknown>;
+  asset_overrides?: Record<string, Record<string, number>>;
 }
 
 export interface SimulationResultJson {
-  generators_t: Record<string, { p: number[] }>
-  loads_t: Record<string, { p: number[] }>
-  capacity_factors: Record<string, number>
-  violations?: { overloads: unknown[]; overvoltages: unknown[] }
-  objective_value?: number
+  generators_t: Record<string, { p: number[] }>;
+  loads_t: Record<string, { p: number[] }>;
+  capacity_factors: Record<string, number>;
+  violations?: { overloads: unknown[]; overvoltages: unknown[] };
+  objective_value?: number;
+  error?: string;
+  error_type?: "solver_error" | "runtime_error";
+  solver?: string;
 }
 
 export interface SimulationResult {
-  id: string
-  request_id: string
-  status: string
-  name?: string | null
-  total_supply_mwh: number | null
-  total_demand_mwh: number | null
-  balance_mwh: number | null
-  objective_value: number | null
-  result_json: SimulationResultJson | null
-  created_at: string
+  id: string;
+  request_id: string;
+  status: string;
+  solver: string;
+  name?: string | null;
+  total_supply_mwh: number | null;
+  total_demand_mwh: number | null;
+  balance_mwh: number | null;
+  objective_value: number | null;
+  result_json: SimulationResultJson | null;
+  created_at: string;
 }
 
 export interface SimulationListItem {
-  id: string
-  request_id: string
-  status: string
-  name?: string | null
-  supply_ids: string[]
-  demand_ids: string[]
-  network_ids: string[]
-  total_supply_mwh: number | null
-  total_demand_mwh: number | null
-  created_at: string
+  id: string;
+  request_id: string;
+  status: string;
+  solver: string;
+  name?: string | null;
+  supply_ids: string[];
+  demand_ids: string[];
+  network_ids: string[];
+  total_supply_mwh: number | null;
+  total_demand_mwh: number | null;
+  created_at: string;
+}
+
+export interface SimulationSolverInfo {
+  name: string;
+  available: boolean;
+  reason?: string | null;
 }
 
 // ─── Supply ───────────────────────────────────────────────────────────────────
 
-export const fetchSupplies = () =>
-  $fetch<Supply[]>('/api/v1/supplies')
+export const fetchSupplies = () => $fetch<Supply[]>("/api/v1/supplies");
 
 export const fetchSupplyById = (id: string) =>
-  $fetch<Supply>(`/api/v1/supplies/${id}`)
+  $fetch<Supply>(`/api/v1/supplies/${id}`);
 
 export const createSupply = (data: SupplyCreate) =>
-  $fetch<Supply>('/api/v1/supplies', { method: 'POST', body: data })
+  $fetch<Supply>("/api/v1/supplies", { method: "POST", body: data });
 
 export const updateSupply = (id: string, data: SupplyUpdate) =>
-  $fetch<Supply>(`/api/v1/supplies/${id}`, { method: 'PUT', body: data })
+  $fetch<Supply>(`/api/v1/supplies/${id}`, { method: "PUT", body: data });
 
 export const deleteSupply = (id: string) =>
-  $fetch<void>(`/api/v1/supplies/${id}`, { method: 'DELETE' })
+  $fetch<void>(`/api/v1/supplies/${id}`, { method: "DELETE" });
 
 // ─── Demand ───────────────────────────────────────────────────────────────────
 
-export const fetchDemands = () =>
-  $fetch<Demand[]>('/api/v1/demands')
+export const fetchDemands = () => $fetch<Demand[]>("/api/v1/demands");
 
 export const fetchDemandById = (id: string) =>
-  $fetch<Demand>(`/api/v1/demands/${id}`)
+  $fetch<Demand>(`/api/v1/demands/${id}`);
 
 export const createDemand = (data: DemandCreate) =>
-  $fetch<Demand>('/api/v1/demands', { method: 'POST', body: data })
+  $fetch<Demand>("/api/v1/demands", { method: "POST", body: data });
 
 export const deleteDemand = (id: string) =>
-  $fetch<void>(`/api/v1/demands/${id}`, { method: 'DELETE' })
+  $fetch<void>(`/api/v1/demands/${id}`, { method: "DELETE" });
 
 // ─── Network ──────────────────────────────────────────────────────────────────
 
-export const fetchNetwork = () =>
-  $fetch<NetworkComponent[]>('/api/v1/network')
+export const fetchNetwork = () => $fetch<NetworkComponent[]>("/api/v1/network");
 
 export const createNetworkComponent = (data: NetworkCreate) =>
-  $fetch<NetworkComponent>('/api/v1/network', { method: 'POST', body: data })
+  $fetch<NetworkComponent>("/api/v1/network", { method: "POST", body: data });
 
 export const deleteNetworkComponent = (id: string) =>
-  $fetch<void>(`/api/v1/network/${id}`, { method: 'DELETE' })
+  $fetch<void>(`/api/v1/network/${id}`, { method: "DELETE" });
 
 // ─── Referential ──────────────────────────────────────────────────────────────
 
 export const fetchReferential = () =>
-  $fetch<Referential>('/api/v1/referential')
+  $fetch<Referential>("/api/v1/referential");
 
 export interface ScenarioExport {
-  scenario_version: string
-  snapshot_hours: number
-  solver: string
-  supply_ids: string[]
-  demand_ids: string[]
-  network_ids: string[]
-  asset_overrides?: Record<string, Record<string, number>> | null
-  optimization_objective: string
+  scenario_version: string;
+  snapshot_hours: number;
+  solver: string;
+  supply_ids: string[];
+  demand_ids: string[];
+  network_ids: string[];
+  asset_overrides?: Record<string, Record<string, number>> | null;
+  optimization_objective: string;
 }
 
 // ─── Simulation ───────────────────────────────────────────────────────────────
 
 export const runSimulation = (params: SimulationRunRequest) =>
-  $fetch<SimulationResult>('/api/v1/simulation/run', { method: 'POST', body: params })
+  $fetch<SimulationResult>("/api/v1/simulation/run", {
+    method: "POST",
+    body: params,
+  });
 
 export const fetchSimulations = () =>
-  $fetch<SimulationListItem[]>('/api/v1/simulation')
+  $fetch<SimulationListItem[]>("/api/v1/simulation");
 
 export const fetchSimulationById = (id: string) =>
-  $fetch<SimulationResult>(`/api/v1/simulation/${id}`)
+  $fetch<SimulationResult>(`/api/v1/simulation/${id}`);
 
 export const renameSimulation = (id: string, name: string) =>
-  $fetch<SimulationResult>(`/api/v1/simulation/${id}/rename`, { method: 'PATCH', body: { name } })
+  $fetch<SimulationResult>(`/api/v1/simulation/${id}/rename`, {
+    method: "PATCH",
+    body: { name },
+  });
 
 export const deleteSimulation = (id: string) =>
-  $fetch<void>(`/api/v1/simulation/${id}`, { method: 'DELETE' })
+  $fetch<void>(`/api/v1/simulation/${id}`, { method: "DELETE" });
 
 export const fetchScenarioExport = (id: string) =>
-  $fetch<ScenarioExport>(`/api/v1/simulation/${id}/export`)
+  $fetch<ScenarioExport>(`/api/v1/simulation/${id}/export`);
+
+export const fetchSimulationSolvers = () =>
+  $fetch<SimulationSolverInfo[]>("/api/v1/simulation/solvers");

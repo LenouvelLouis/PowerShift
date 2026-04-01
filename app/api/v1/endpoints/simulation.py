@@ -12,6 +12,7 @@ from app.api.v1.dependencies import get_simulation_service
 from app.api.v1.schemas.simulation_schema import (
     SimulationListItem,
     SimulationRenameRequest,
+    SimulationSolverInfo,
     SimulationRunRequest,
     SimulationRunResponse,
     SimulationScenarioExport,
@@ -50,6 +51,19 @@ async def list_simulations(
 ) -> list[SimulationListItem]:
     """Return a summary list of all previously run simulations."""
     return await service.list()
+
+
+@router.get(
+    "/solvers",
+    response_model=list[SimulationSolverInfo],
+    summary="List supported solvers and availability",
+    response_description="Array of solver names with availability and optional reason.",
+)
+async def list_solvers(
+    service: Annotated[SimulationService, Depends(get_simulation_service)],
+) -> list[SimulationSolverInfo]:
+    """Return supported solver names and whether they are available on the backend."""
+    return await service.list_solvers()
 
 
 @router.post(
