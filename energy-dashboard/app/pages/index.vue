@@ -359,12 +359,16 @@ const selectedScenario = computed({
 watch(selectedScenario, async (val) => {
   if (!val) return
   const id = val.replace('api-', '')
+  // Skip reload if this sim was just saved and is already the reference
+  if (sim.referenceSimId === id && history.currentResult?.id === id) return
   loadingScenario.value = true
   try {
     const entry = history.simulationHistory.find(s => s.id === id)
     await history.loadSimulationById(id)
     const exported = await fetchScenarioExport(id)
     sim.loadFromScenario(exported, entry?.name ?? '')
+    // Set as reference so Save is disabled until params change
+    sim.setReference(id, sim.buildPayload())
   } finally {
     loadingScenario.value = false
   }

@@ -9,6 +9,18 @@ import {
   type SupplyCreate,
   type SupplyUpdate,
 } from "~/composables/api";
+
+/** Normalize a payload for equality comparison (sort IDs, ignore name). */
+function _payloadKey(p: SimulationRunRequest): string {
+  return JSON.stringify({
+    supply_ids: [...p.supply_ids].sort(),
+    demand_ids: [...p.demand_ids].sort(),
+    network_ids: [...p.network_ids].sort(),
+    snapshot_hours: p.snapshot_hours,
+    solver: p.solver,
+    asset_overrides: p.asset_overrides ?? null,
+  });
+}
 import { useHistoryStore } from "~/stores/history";
 import { useReferentialStore } from "~/stores/referential";
 
@@ -80,6 +92,22 @@ export const useSimulationStore = defineStore("simulation", () => {
   const snapshotHours = ref(24);
   const solver = ref("highs");
   const scenarioName = ref("");
+
+  // ─── Référence de simulation sauvegardée ─────────────────────────────────────
+  // Tracks the last saved/loaded simulation so we can detect parameter changes.
+  const referenceSimId = ref<string | null>(null);
+  const referencePayload = ref<SimulationRunRequest | null>(null);
+
+  /** True when the current parameters match the last saved/loaded simulation. */
+  const paramsMatchSaved = computed(() => {
+    if (!referencePayload.value) return false;
+    return _payloadKey(buildPayload()) === _payloadKey(referencePayload.value);
+  });
+
+  function setReference(id: string | null, payload: SimulationRunRequest | null) {
+    referenceSimId.value = id;
+    referencePayload.value = payload ? { ...payload } : null;
+  }
 
   // ─── Live simulation helpers ──────────────────────────────────────────────────
 
@@ -223,6 +251,8 @@ export const useSimulationStore = defineStore("simulation", () => {
     _supplyEntries.value = [];
     _demandEntries.value = [];
     _networkEntries.value = [];
+    referenceSimId.value = null;
+    referencePayload.value = null;
   }
 
   function loadFromScenario(scenario: ScenarioExport, name: string) {
@@ -318,6 +348,10 @@ export const useSimulationStore = defineStore("simulation", () => {
     setOverride,
     clearOverrides,
     hasOverrides,
+    // Reference sim tracking
+    referenceSimId,
+    paramsMatchSaved,
+    setReference,
     // Actions — simulation
     runFullSimulation,
     buildPayload,

@@ -23,6 +23,27 @@
       </template>
     </UModal>
 
+    <!-- Save choice modal: Replace or New -->
+    <UModal v-model:open="showSaveChoiceModal">
+      <template #header>
+        <h3 class="text-base font-semibold text-white">Save simulation</h3>
+      </template>
+      <template #body>
+        <p class="text-sm text-gray-300">
+          The parameters have changed since the last simulation was saved.
+          Do you want to <span class="font-semibold text-white">replace</span> the existing simulation
+          or save as a <span class="font-semibold text-white">new one</span>?
+        </p>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton label="Cancel" color="neutral" variant="ghost" @click="showSaveChoiceModal = false" />
+          <UButton label="New simulation" color="neutral" variant="outline" :loading="store.isSaving" @click="handleSaveNew" />
+          <UButton label="Replace" color="primary" :loading="store.isSaving" @click="handleSaveReplace" />
+        </div>
+      </template>
+    </UModal>
+
     <!-- Solver helper modal -->
     <UModal v-model:open="showSolverHelpModal">
       <template #header>
@@ -105,7 +126,7 @@
           color="primary"
           :label="store.isSaving ? 'Saving…' : 'Save'"
           :loading="store.isSaving"
-          :disabled="store.isSaving || !store.isLiveMode || !store.hasMinimumAssets || !referential.backendAvailable"
+          :disabled="store.isSaving || !store.isLiveMode || !store.hasMinimumAssets || !referential.backendAvailable || store.paramsMatchSaved"
           size="sm"
           @click="handleSave"
         />
@@ -827,17 +848,19 @@ const handleHeaderRename = async () => {
 
 // ─── Save handler ──────────────────────────────────────────────────────────────
 
-const handleSave = async () => {
-  if (!referential.backendAvailable) {
-    toast.add({ title: 'Backend unavailable', description: 'Start the API server first', color: 'warning' })
-    return
-  }
-  if (!store.hasMinimumAssets) {
-    toast.add({ title: 'Incomplete selection', description: 'Select at least one supply and one demand', color: 'warning' })
-    return
-  }
+const showSaveChoiceModal = ref(false)
+
+function _buildSavePayload() {
+  return { ...store.buildPayload(), name: store.scenarioName || undefined }
+}
+
+async function _doSave(payload: ReturnType<typeof _buildSavePayload>) {
   try {
-    const result = await saveSimulation({ ...store.buildPayload(), name: store.scenarioName || undefined })
+    const result = await saveSimulation(payload)
+    // Point to the newly saved simulation so the selector stays consistent
+    history.currentResult = result
+    history.selectedSimulationId = result.id
+    store.selectedHistoryId = result.id
     if (result.status === 'error') {
       const errorType = result.result_json?.error_type
       const solver = result.result_json?.solver ?? store.solver
@@ -856,6 +879,51 @@ const handleSave = async () => {
   } catch {
     toast.add({ title: 'Save error', description: store.error ?? 'Failed to save simulation', color: 'error' })
   }
+}
+
+const handleSave = () => {
+  if (!referential.backendAvailable) {
+    toast.add({ title: 'Backend unavailable', description: 'Start the API server first', color: 'warning' })
+    return
+  }
+  if (!store.hasMinimumAssets) {
+    toast.add({ title: 'Incomplete selection', description: 'Select at least one supply and one demand', color: 'warning' })
+    return
+  }
+  // If a reference sim exists, ask Replace or New
+  if (store.referenceSimId !== null) {
+    showSaveChoiceModal.value = true
+    return
+  }
+  _doSave(_buildSavePayload())
+}
+
+const handleSaveReplace = async () => {
+  showSaveChoiceModal.value = false
+  // Delete the old simulation first, then save with same payload
+  try {
+    await history.deleteEntry(store.referenceSimId!)
+  } catch { /* already deleted or not found — proceed anyway */ }
+  await _doSave(_buildSavePayload())
+}
+
+function _generateCopyName(baseName: string): string {
+  const existingNames = new Set(history.simulationHistory.map(s => s.name))
+  const candidate = `${baseName} (copy)`
+  if (!existingNames.has(candidate)) return candidate
+  let i = 2
+  while (existingNames.has(`${baseName} (#${i})`)) i++
+  return `${baseName} (#${i})`
+}
+
+const handleSaveNew = async () => {
+  showSaveChoiceModal.value = false
+  const payload = _buildSavePayload()
+  if (payload.name) {
+    payload.name = _generateCopyName(payload.name)
+    store.scenarioName = payload.name
+  }
+  await _doSave(payload)
 }
 
 // ─── Sidebar state ─────────────────────────────────────────────────────────────
@@ -1043,6 +1111,7 @@ const selectedAssetsList = computed<Array<Supply | Demand | NetworkComponent>>((
 const handleAddAsset = (val: string | { value: string } | null) => {
   const id = val && typeof val === 'object' ? val.value : val
   if (!id) return
+  if (!store.isLiveMode) store.selectedHistoryId = null  // switch to live mode on edit
   if (activeGroup.value === 'Supply') store.addSupplyToSelection(id)
   else if (activeGroup.value === 'Demand') store.addDemandToSelection(id)
   else store.addNetworkToSelection(id)
@@ -1051,6 +1120,7 @@ const handleAddAsset = (val: string | { value: string } | null) => {
 
 const removeFromSelection = (id: string) => {
   if (expandedAssetId.value === id) expandedAssetId.value = null
+  if (!store.isLiveMode) store.selectedHistoryId = null  // switch to live mode on edit
   if (activeGroup.value === 'Supply') store.removeSupplyFromSelection(id)
   else if (activeGroup.value === 'Demand') store.removeDemandFromSelection(id)
   else store.removeNetworkFromSelection(id)
@@ -1105,7 +1175,10 @@ function getOverrideValue(id: string, field: string, defaultVal: number): number
 
 function setOverrideValue(id: string, field: string, rawValue: string | number) {
   const value = typeof rawValue === 'string' ? parseFloat(rawValue) : rawValue
-  if (!isNaN(value)) store.setOverride(currentGroupType(), id, field, value)
+  if (!isNaN(value)) {
+    if (!store.isLiveMode) store.selectedHistoryId = null  // switch to live mode on edit
+    store.setOverride(currentGroupType(), id, field, value)
+  }
 }
 
 function clearOverridesFor(id: string) {

@@ -68,7 +68,11 @@ class SimulationRepositoryImpl(ISimulationPersistenceRepository):
         row = await self.get_result_by_id(result_id)
         if row is None:
             return False
-        req = await self.get_request_by_id(row.request_id)
+        request_id = row.request_id
+        # Delete result first to release the FK reference, then delete the request
+        await self._session.delete(row)
+        await self._session.flush()
+        req = await self.get_request_by_id(request_id)
         if req is not None:
             await self._session.delete(req)
             await self._session.flush()

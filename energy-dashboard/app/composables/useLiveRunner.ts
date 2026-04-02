@@ -38,11 +38,15 @@ export function useLiveRunner() {
       const response = await runSimulation(payload)
       // Update live result with the saved response so the summary table shows real ID/timestamp
       simStore.currentLiveResult = response
+      // Track this as the new reference so we can detect future changes
+      simStore.setReference(response.id, payload)
       // Prepend to saved history list
       historyStore.simulationHistory.unshift({
         id: response.id,
         request_id: response.request_id,
         status: response.status,
+        solver: response.solver,
+        name: response.name ?? null,
         supply_ids: payload.supply_ids,
         demand_ids: payload.demand_ids,
         network_ids: payload.network_ids,
