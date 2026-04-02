@@ -26,6 +26,7 @@ from sqlmodel import select
 from app.domain.wind.entities import PowerCurvePoint, WindMeasurement, WindTurbineAsset, WindTurbineModel
 from app.infrastructure.db.models.asset_parameters_model import AssetParametersModel
 from app.infrastructure.db.models.supply_model import SupplyModel
+from app.infrastructure.db.models.weather_profile_model import WeatherProfileModel
 from app.infrastructure.wind.models import WindMeasurementORM
 
 _log = logging.getLogger(__name__)
@@ -177,22 +178,25 @@ class WindTurbineRepositoryImpl:
         return asset
 
     # ── Wind Measurements ─────────────────────────────────────────────────────
+    # Reads from weather_profile (unified 30-min table, Groningen Eelde only).
+    # station_code is accepted for interface compatibility but ignored — the table
+    # is single-station by design.
 
     async def get_wind_measurements(
         self, station_code: str, start: datetime, end: datetime
     ) -> list[WindMeasurement]:
         result = await self._session.execute(
-            select(WindMeasurementORM)
+            select(WeatherProfileModel)
             .where(
-                WindMeasurementORM.station_code == station_code,
-                WindMeasurementORM.timestamp >= start,
-                WindMeasurementORM.timestamp <= end,
+                WeatherProfileModel.timestamp >= start,
+                WeatherProfileModel.timestamp <= end,
             )
-            .order_by(WindMeasurementORM.timestamp)
+            .order_by(WeatherProfileModel.timestamp)
         )
-        return [self._measurement_to_domain(row) for row in result.scalars().all()]
+        return [self._weather_profile_to_domain(row) for row in result.scalars().all()]
 
     async def bulk_insert_measurements(self, measurements: list[WindMeasurement]) -> int:
+        """Insert into legacy wind_measurement table (used by ingest_knmi_wind.py)."""
         if not measurements:
             return 0
         rows = [self._measurement_to_dict(m) for m in measurements]
@@ -211,9 +215,7 @@ class WindTurbineRepositoryImpl:
         self, station_code: str
     ) -> Optional[datetime]:
         result = await self._session.execute(
-            select(func.max(WindMeasurementORM.timestamp)).where(
-                WindMeasurementORM.station_code == station_code
-            )
+            select(func.max(WeatherProfileModel.timestamp))
         )
         return result.scalar_one_or_none()
 
@@ -272,6 +274,19 @@ class WindTurbineRepositoryImpl:
             is_active=p.get("is_active", True),
             created_at=supply.created_at,
             updated_at=supply.updated_at,
+        )
+
+    @staticmethod
+    def _weather_profile_to_domain(row: WeatherProfileModel) -> WindMeasurement:
+        """Map a WeatherProfileModel row to the WindMeasurement domain entity."""
+        return WindMeasurement(
+            station_code="06280",
+            station_name="Groningen Eelde",
+            timestamp=row.timestamp,
+            wind_speed_ms=row.wind_speed_ms,
+            wind_direction_deg=row.wind_dir_deg,
+            temperature_c=row.temperature_c,
+            air_pressure_hpa=row.air_pressure_hpa,
         )
 
     @staticmethod

@@ -179,6 +179,11 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
 _executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="pypsa")
 
 
+# Groningen Eelde — the single station backing the weather_profile table.
+# Used as a named constant so the hardcoded value is explicit and easy to locate.
+_WEATHER_STATION = "06280"
+
+
 class PyPSANetworkBuilder(ISimulationRepository):
     """Runs PyPSA inside a ThreadPoolExecutor so the async loop stays free."""
 
@@ -241,7 +246,7 @@ class PyPSANetworkBuilder(ISimulationRepository):
                     result = await wind_use_case.execute(
                         CalculatePowerRequest(
                             asset_id=supply.id,
-                            station_code="06280",
+                            station_code=_WEATHER_STATION,
                             start=run_input.start_date,
                             end=run_input.end_date,
                         )
