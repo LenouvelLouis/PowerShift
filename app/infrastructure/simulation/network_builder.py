@@ -74,7 +74,27 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
                 # nuclear_params already contains p_min_pu, marginal_cost, etc.
                 # Do NOT set p_max_pu — nuclear dispatches freely up to p_nom
 
-            params.update(config.pypsa_params.get(supply.name, {}))
+            # Adjust marginal cost based on optimization objective
+            carrier = supply.get_carrier()
+            supply_overrides = config.pypsa_params.get(supply.name, {})
+            if config.optimization_objective == "min_emissions":
+                # Use emissions_factor from pypsa_params if provided, else 0 for renewables / 1 for others
+                emissions_factor = supply_overrides.get("emissions_factor", None)
+                if emissions_factor is not None:
+                    params["marginal_cost"] = float(emissions_factor)
+                elif carrier in ("wind", "solar"):
+                    params["marginal_cost"] = 0.0
+                else:
+                    params["marginal_cost"] = 1.0
+            elif config.optimization_objective == "max_renewable":
+                # Force solver to prefer renewables by making non-renewables very expensive
+                if carrier in ("wind", "solar"):
+                    params["marginal_cost"] = 0.0
+                else:
+                    params["marginal_cost"] = 1000.0
+
+            # Apply user overrides last, excluding internal keys not meant for PyPSA
+            params.update({k: v for k, v in supply_overrides.items() if k != "emissions_factor"})
             n.add("Generator", supply.name, **params)
 
         for demand in config.demands:
