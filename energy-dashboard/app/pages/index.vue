@@ -124,15 +124,27 @@
 
     <!-- Running: skeleton -->
     <template v-else-if="sim.isLiveRunning || sim.isRunning">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div v-for="i in 4" :key="i" class="bg-[#0F172A] p-6 rounded-xl border border-[#1E293B]">
-          <div class="h-3 bg-gray-700/50 rounded animate-pulse w-20 mb-3" />
-          <div class="h-8 bg-gray-700/50 rounded animate-pulse w-28" />
+      <div class="relative overflow-hidden bg-[#0F172A] rounded-xl border border-[#1E293B] p-8">
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-[#334155]/30 to-transparent -translate-x-full animate-[shimmer_1.4s_infinite]" />
+        <div class="relative">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="h-8 w-8 rounded-full border-2 border-[#3C83F8]/60 border-t-[#7DD3FC] animate-spin" />
+            <div>
+              <p class="text-white font-semibold">Optimising your scenario</p>
+              <p class="text-sm text-gray-400">Running the simulation, results coming shortly...</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div v-for="i in 4" :key="`kpi-${i}`" class="bg-[#020617] p-5 rounded-xl border border-[#1E293B]">
+              <div class="h-3 w-20 rounded bg-slate-700/50 mb-3" />
+              <div class="h-8 w-28 rounded bg-slate-700/40" />
+            </div>
+          </div>
+          <div class="bg-[#020617] rounded-xl border border-[#1E293B] p-6">
+            <div class="h-5 w-48 rounded bg-slate-700/50 mb-4" />
+            <div class="h-64 rounded-lg bg-slate-700/30" />
+          </div>
         </div>
-      </div>
-      <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8">
-        <div class="h-5 bg-gray-700/50 rounded animate-pulse w-40 mb-6" />
-        <div class="h-72 bg-gray-700/30 rounded-lg animate-pulse" />
       </div>
     </template>
 
@@ -141,7 +153,7 @@
 
       <!-- Error banner -->
       <div
-        v-if="result.status === 'error'"
+        v-if="result.status === 'error' || result.status === 'infeasible'"
         class="px-5 py-4 bg-red-900/20 border border-red-700/60 rounded-xl flex items-start gap-3"
       >
         <span class="text-red-400 text-xl leading-none mt-0.5">✗</span>
@@ -453,15 +465,21 @@ const searchScenarioOptions = (query: string): ScenarioOption[] => {
 const result = computed(() => sim.displayedResult)
 
 const errorHeadline = computed(() => {
-  if (result.value?.status !== 'error') return 'Simulation error'
-  if (result.value.result_json?.error_type === 'solver_error') return 'Solver unavailable'
+  const status = result.value?.status
+  if (status !== 'error' && status !== 'infeasible') return 'Simulation error'
+  if (status === 'infeasible') return 'Simulation infaisable'
+  if (result.value?.result_json?.error_type === 'solver_error') return 'Solver unavailable'
   return 'Simulation error'
 })
 
 const errorDescription = computed(() => {
-  if (result.value?.status !== 'error') return ''
-  const details = result.value.result_json?.error
-  if (result.value.result_json?.error_type === 'solver_error') {
+  const status = result.value?.status
+  if (status !== 'error' && status !== 'infeasible') return ''
+  const details = result.value?.result_json?.error
+  if (status === 'infeasible') {
+    return details ?? "L'optimisation PyPSA n'a pas trouvé de solution avec les assets sélectionnés. Vérifiez que la capacité de production couvre la demande."
+  }
+  if (result.value?.result_json?.error_type === 'solver_error') {
     const solver = result.value.result_json?.solver ?? 'selected solver'
     return details
       ? `The solver '${solver}' is unavailable or misconfigured. ${details}`

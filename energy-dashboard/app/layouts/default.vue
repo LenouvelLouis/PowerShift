@@ -828,6 +828,7 @@ watch(
   () => JSON.stringify(store.buildPayload()),
   () => {
     if (!referential.backendAvailable || !store.hasMinimumAssets) return
+    if (!store.isLiveMode) return
     runPreview(store.buildPayload())
   },
 )
