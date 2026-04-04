@@ -155,39 +155,22 @@
       <!-- Row 2: Hours + Solver + Scenario name + Import + Live indicator -->
       <div class="flex items-center gap-3 px-4 h-10 border-t border-[#1E293B] bg-[#020617]/40">
 
-        <!-- Date range picker -->
-        <div class="flex items-center gap-1.5">
-          <label class="text-xs text-gray-500 shrink-0">From</label>
-          <input
-            v-model="store.startDate"
-            type="date"
-            min="2023-01-01"
-            max="2023-12-31"
-            class="h-6 rounded px-1.5 text-xs bg-[#0F172A] border border-[#334155] text-white focus:outline-none focus:border-[#3C83F8] w-32"
-          />
-          <label class="text-xs text-gray-500 shrink-0">To</label>
-          <input
-            v-model="store.endDate"
-            type="date"
-            min="2023-01-01"
-            max="2023-12-31"
-            class="h-6 rounded px-1.5 text-xs bg-[#0F172A] border border-[#334155] text-white focus:outline-none focus:border-[#3C83F8] w-32"
-          />
-          <span
-            v-if="store.startDate && store.endDate"
-            class="text-xs text-emerald-400 shrink-0 font-mono"
-          >{{ store.snapshotHours }}h</span>
+        <!-- Duration mode toggle -->
+        <div class="flex items-center gap-0 rounded border border-[#334155] overflow-hidden shrink-0">
           <button
-            v-if="store.startDate || store.endDate"
-            class="text-xs text-gray-500 hover:text-gray-300 shrink-0"
-            title="Clear dates"
-            @click="store.startDate = ''; store.endDate = ''"
-          >✕</button>
+            class="px-2.5 h-6 text-xs transition-colors"
+            :class="dateMode === 'hours' ? 'bg-[#1E293B] text-white' : 'bg-transparent text-gray-500 hover:text-gray-300'"
+            @click="setDateMode('hours')"
+          >Hours</button>
+          <button
+            class="px-2.5 h-6 text-xs transition-colors border-l border-[#334155]"
+            :class="dateMode === 'dates' ? 'bg-[#1E293B] text-white' : 'bg-transparent text-gray-500 hover:text-gray-300'"
+            @click="setDateMode('dates')"
+          >Date range</button>
         </div>
 
-        <!-- Hours selector (manual fallback when no dates) -->
-        <div v-if="!store.startDate && !store.endDate" class="flex items-center gap-1.5">
-          <label class="text-xs text-gray-500">Hours</label>
+        <!-- Hours selector -->
+        <div v-if="dateMode === 'hours'" class="flex items-center gap-1.5">
           <USelect
             v-model="store.snapshotHours"
             :items="[
@@ -199,6 +182,29 @@
             class="w-24"
             size="xs"
           />
+        </div>
+
+        <!-- Date range picker -->
+        <div v-else class="flex items-center gap-0 rounded border border-[#334155] overflow-hidden">
+          <input
+            v-model="store.startDate"
+            type="date"
+            min="2023-01-01"
+            max="2023-12-31"
+            class="h-6 px-1.5 text-xs bg-[#0F172A] text-white focus:outline-none focus:bg-[#0F172A]/80 w-32 border-0"
+          />
+          <span class="text-xs text-gray-600 px-1 shrink-0 border-x border-[#334155]">→</span>
+          <input
+            v-model="store.endDate"
+            type="date"
+            min="2023-01-01"
+            max="2023-12-31"
+            class="h-6 px-1.5 text-xs bg-[#0F172A] text-white focus:outline-none focus:bg-[#0F172A]/80 w-32 border-0"
+          />
+          <span
+            v-if="store.startDate && store.endDate"
+            class="text-xs text-emerald-400 font-mono px-1.5 border-l border-[#334155] shrink-0"
+          >{{ store.snapshotHours }}h</span>
         </div>
 
         <!-- Solver selector with availability -->
@@ -858,6 +864,24 @@ const referential = useReferentialStore()
 const history = useHistoryStore()
 const toast = useToast()
 
+// ─── Date mode toggle (Hours vs Date Range) ────────────────────────────────────
+
+const dateMode = ref<'hours' | 'dates'>('hours')
+
+const DEFAULT_START = '2023-06-01'
+const DEFAULT_END = '2023-06-07'
+
+function setDateMode(mode: 'hours' | 'dates') {
+  dateMode.value = mode
+  if (mode === 'dates') {
+    if (!store.startDate) store.startDate = DEFAULT_START
+    if (!store.endDate) store.endDate = DEFAULT_END
+  } else {
+    store.startDate = ''
+    store.endDate = ''
+  }
+}
+
 // ─── Live simulation ───────────────────────────────────────────────────────────
 
 const { runPreview, saveSimulation } = useLiveRunner()
@@ -1080,6 +1104,8 @@ const handleImport = (event: Event) => {
     try {
       const scenario = JSON.parse(e.target?.result as string) as ScenarioExport
       store.loadFromScenario(scenario, file.name.replace('.json', ''))
+      // Restore date mode based on loaded scenario
+      dateMode.value = (scenario.start_date && scenario.end_date) ? 'dates' : 'hours'
       toast.add({ title: 'Scenario loaded', color: 'success' })
     } catch {
       toast.add({ title: 'Invalid file', color: 'error' })
