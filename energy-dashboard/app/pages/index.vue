@@ -163,180 +163,250 @@
         </div>
       </div>
 
-      <!-- Two-column layout -->
-      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-
-        <!-- ── LEFT column: KPIs + summary + capacity factors ── -->
-        <div class="flex flex-col gap-6">
-
-          <!-- KPI cards 2×2 -->
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-[#0F172A] p-5 rounded-xl border border-[#1E293B]">
-              <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Status</p>
-              <span class="text-xl font-bold" :class="result.status === 'optimal' ? 'text-emerald-400' : 'text-red-400'">
-                {{ result.status === 'optimal' ? 'Optimal' : 'Infeasible' }}
-              </span>
-            </div>
-            <div class="bg-[#0F172A] p-5 rounded-xl border border-[#1E293B]">
-              <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Power Balance</p>
-              <p class="text-2xl font-bold" :class="balanceColor">
-                {{ result.status === 'error' ? '—' : formatVal(result.balance_mwh) }}
-              </p>
-              <p class="text-xs text-gray-500 mt-1">MWh</p>
-            </div>
-            <div class="bg-[#0F172A] p-5 rounded-xl border border-[#1E293B]">
-              <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Total Supply</p>
-              <p class="text-2xl font-bold text-white">
-                {{ result.status === 'error' ? '—' : formatVal(result.total_supply_mwh) }}
-              </p>
-              <p class="text-xs text-gray-500 mt-1">MWh</p>
-            </div>
-            <div class="bg-[#0F172A] p-5 rounded-xl border border-[#1E293B]">
-              <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Total Demand</p>
-              <p class="text-2xl font-bold text-white">
-                {{ result.status === 'error' ? '—' : formatVal(result.total_demand_mwh) }}
-              </p>
-              <p class="text-xs text-gray-500 mt-1">MWh</p>
-            </div>
-          </div>
-
-          <!-- Simulation summary table -->
-          <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
-            <h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Simulation Summary</h3>
-            <div class="space-y-2.5 text-sm">
-              <div class="flex justify-between items-center">
-                <span class="text-gray-400">ID</span>
-                <span class="font-mono text-gray-300 text-xs">{{ result.id.slice(-8) }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-gray-400">Status</span>
-                <span class="font-semibold" :class="result.status === 'optimal' ? 'text-emerald-400' : 'text-red-400'">
-                  {{ result.status === 'optimal' ? 'Optimal' : 'Infeasible' }}
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-gray-400">Supply</span>
-                <span class="text-white font-mono">{{ result.status === 'error' ? '—' : `${formatVal(result.total_supply_mwh)} MWh` }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-gray-400">Demand</span>
-                <span class="text-white font-mono">{{ result.status === 'error' ? '—' : `${formatVal(result.total_demand_mwh)} MWh` }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-gray-400">Balance</span>
-                <span class="font-mono" :class="balanceColor">{{ result.status === 'error' ? '—' : `${formatVal(result.balance_mwh)} MWh` }}</span>
-              </div>
-              <div class="flex justify-between items-center border-t border-[#1E293B] pt-2.5 mt-1">
-                <span class="text-gray-400">Created</span>
-                <span class="font-mono text-gray-300 text-xs">{{ new Date(result.created_at).toLocaleString() }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Capacity factors -->
-          <div v-if="capacityFactors.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
-            <h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Capacity Factors</h3>
-            <div class="space-y-3">
-              <div v-for="{ name, cf, color } in capacityFactors" :key="name">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="text-xs text-gray-400 truncate mr-2 flex items-center gap-1" :title="name">
-                    <UIcon :name="generatorIcon(name)" class="w-3 h-3 shrink-0" />
-                    {{ name }}
-                  </span>
-                  <span class="font-mono text-white text-xs shrink-0">{{ (cf * 100).toFixed(1) }}%</span>
-                </div>
-                <div class="w-full bg-[#1E293B] rounded-full h-1.5">
-                  <div
-                    class="h-1.5 rounded-full transition-all duration-700"
-                    :style="{ width: `${Math.min(cf * 100, 100)}%`, backgroundColor: color }"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+      <!-- KPI cards — always visible above tabs -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-[#0F172A] p-5 rounded-xl border border-[#1E293B]">
+          <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Status</p>
+          <span class="text-xl font-bold" :class="result.status === 'optimal' ? 'text-emerald-400' : 'text-red-400'">
+            {{ result.status === 'optimal' ? 'Optimal' : 'Infeasible' }}
+          </span>
         </div>
+        <div class="bg-[#0F172A] p-5 rounded-xl border border-[#1E293B]">
+          <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Power Balance</p>
+          <p class="text-2xl font-bold" :class="balanceColor">
+            {{ result.status === 'error' ? '—' : formatVal(result.balance_mwh) }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">MWh</p>
+        </div>
+        <div class="bg-[#0F172A] p-5 rounded-xl border border-[#1E293B]">
+          <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Total Supply</p>
+          <p class="text-2xl font-bold text-white">
+            {{ result.status === 'error' ? '—' : formatVal(result.total_supply_mwh) }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">MWh</p>
+        </div>
+        <div class="bg-[#0F172A] p-5 rounded-xl border border-[#1E293B]">
+          <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Total Demand</p>
+          <p class="text-2xl font-bold text-white">
+            {{ result.status === 'error' ? '—' : formatVal(result.total_demand_mwh) }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">MWh</p>
+        </div>
+      </div>
 
-        <!-- ── RIGHT column: charts ── -->
-        <div class="flex flex-col gap-6">
-          <template v-if="result.status === 'optimal' && hasChartData">
+      <!-- Tabs: Résultats / Graphiques -->
+      <UTabs :items="[{ label: 'Résultats', slot: 'results' }, { label: 'Graphiques', slot: 'charts' }]" class="w-full">
 
-            <!-- Energy summary bar chart -->
-            <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Energy Summary</h2>
-                <span class="text-xs text-gray-500">MWh</span>
+        <!-- ── Tab Résultats ── -->
+        <template #results>
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start pt-4">
+
+            <!-- LEFT: summary table + capacity factors -->
+            <div class="flex flex-col gap-6">
+
+              <!-- Simulation summary table -->
+              <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                <h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Simulation Summary</h3>
+                <div class="space-y-2.5 text-sm">
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-400">ID</span>
+                    <span class="font-mono text-gray-300 text-xs">{{ result.id.slice(-8) }}</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-400">Status</span>
+                    <span class="font-semibold" :class="result.status === 'optimal' ? 'text-emerald-400' : 'text-red-400'">
+                      {{ result.status === 'optimal' ? 'Optimal' : 'Infeasible' }}
+                    </span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-400">Supply</span>
+                    <span class="text-white font-mono">{{ result.status === 'error' ? '—' : `${formatVal(result.total_supply_mwh)} MWh` }}</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-400">Demand</span>
+                    <span class="text-white font-mono">{{ result.status === 'error' ? '—' : `${formatVal(result.total_demand_mwh)} MWh` }}</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-400">Balance</span>
+                    <span class="font-mono" :class="balanceColor">{{ result.status === 'error' ? '—' : `${formatVal(result.balance_mwh)} MWh` }}</span>
+                  </div>
+                  <div class="flex justify-between items-center border-t border-[#1E293B] pt-2.5 mt-1">
+                    <span class="text-gray-400">Created</span>
+                    <span class="font-mono text-gray-300 text-xs">{{ new Date(result.created_at).toLocaleString() }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="h-52">
-                <Bar :data="energyBarChartData" :options="barChartOptions" />
+
+              <!-- Capacity factors progress bars -->
+              <div v-if="capacityFactors.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                <h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Capacity Factors</h3>
+                <div class="space-y-3">
+                  <div v-for="{ name, cf, color } in capacityFactors" :key="name">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs text-gray-400 truncate mr-2 flex items-center gap-1" :title="name">
+                        <UIcon :name="generatorIcon(name)" class="w-3 h-3 shrink-0" />
+                        {{ name }}
+                      </span>
+                      <span class="font-mono text-white text-xs shrink-0">{{ (cf * 100).toFixed(1) }}%</span>
+                    </div>
+                    <div class="w-full bg-[#1E293B] rounded-full h-1.5">
+                      <div
+                        class="h-1.5 rounded-full transition-all duration-700"
+                        :style="{ width: `${Math.min(cf * 100, 100)}%`, backgroundColor: color }"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Energy summary bar chart -->
+              <div v-if="hasChartData" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                <div class="flex items-center justify-between mb-4">
+                  <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Energy Summary</h2>
+                  <span class="text-xs text-gray-500">MWh</span>
+                </div>
+                <div class="h-52">
+                  <Bar :data="energyBarChartData" :options="barChartOptions" />
+                </div>
               </div>
             </div>
 
-            <!-- Capacity factors bar chart -->
-            <div v-if="capacityFactorBarData.labels.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Capacity Factors</h2>
-                <span class="text-xs text-gray-500">% utilization</span>
+            <!-- RIGHT: main production line chart -->
+            <div class="flex flex-col gap-6">
+              <template v-if="result.status === 'optimal' && hasChartData">
+                <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                  <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Production by Generator</h2>
+                    <span class="text-xs text-gray-500">MW / hour</span>
+                  </div>
+                  <div class="h-72">
+                    <Line :data="productionChartData" :options="chartOptions" />
+                  </div>
+                </div>
+                <div v-if="consumptionChartData.datasets.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                  <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Consumption by Load</h2>
+                    <span class="text-xs text-gray-500">MW / hour</span>
+                  </div>
+                  <div class="h-72">
+                    <Line :data="consumptionChartData" :options="chartOptions" />
+                  </div>
+                </div>
+              </template>
+              <div
+                v-else
+                class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 flex items-center justify-center h-72 text-gray-600 text-sm"
+              >
+                {{ result.status === 'error' ? 'No production data — infeasible simulation' : 'No time-series data available' }}
               </div>
-              <div class="h-52">
-                <Bar :data="capacityFactorBarData" :options="capacityFactorBarOptions" />
+            </div>
+          </div>
+        </template>
+
+        <!-- ── Tab Graphiques ── -->
+        <template #charts>
+          <div v-if="result.status === 'optimal' && hasChartData" class="flex flex-col gap-8 pt-4">
+
+            <!-- Section Production -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">Production</p>
+              <div class="flex flex-col gap-6">
+                <!-- Line: production by generator -->
+                <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                  <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Production by Generator</h2>
+                    <span class="text-xs text-gray-500">MW / hour</span>
+                  </div>
+                  <div class="h-72">
+                    <Line :data="productionChartData" :options="chartOptions" />
+                  </div>
+                </div>
+                <!-- Row: capacity factors + peak power + production mix -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div v-if="capacityFactorBarData.labels.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                    <div class="flex items-center justify-between mb-4">
+                      <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Capacity Factors</h2>
+                      <span class="text-xs text-gray-500">%</span>
+                    </div>
+                    <div class="h-52">
+                      <Bar :data="capacityFactorBarData" :options="capacityFactorBarOptions" />
+                    </div>
+                  </div>
+                  <div v-if="peakPowerData.labels.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                    <div class="flex items-center justify-between mb-4">
+                      <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Peak Power</h2>
+                      <span class="text-xs text-gray-500">MW max</span>
+                    </div>
+                    <div class="h-52">
+                      <Bar :data="peakPowerData" :options="peakPowerOptions" />
+                    </div>
+                  </div>
+                  <div v-if="productionMixData.datasets.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                    <div class="flex items-center justify-between mb-4">
+                      <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Production Mix</h2>
+                      <span class="text-xs text-gray-500">MWh stacked</span>
+                    </div>
+                    <div class="h-52">
+                      <Bar :data="productionMixData" :options="productionMixOptions" />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Production mix stacked bar chart -->
-            <div v-if="productionMixData.datasets.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Production Mix</h2>
-                <span class="text-xs text-gray-500">MWh stacked</span>
-              </div>
-              <div class="h-52">
-                <Bar :data="productionMixData" :options="productionMixOptions" />
-              </div>
-            </div>
-
-            <!-- Peak power bar chart -->
-            <div v-if="peakPowerData.labels.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Peak Power</h2>
-                <span class="text-xs text-gray-500">MW max</span>
-              </div>
-              <div class="h-52">
-                <Bar :data="peakPowerData" :options="peakPowerOptions" />
+            <!-- Section Demande -->
+            <div v-if="consumptionChartData.datasets.length">
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">Demande</p>
+              <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                <div class="flex items-center justify-between mb-4">
+                  <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Consumption by Load</h2>
+                  <span class="text-xs text-gray-500">MW / hour</span>
+                </div>
+                <div class="h-72">
+                  <Line :data="consumptionChartData" :options="chartOptions" />
+                </div>
               </div>
             </div>
 
-            <!-- Production time-series chart -->
-            <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Production by Generator</h2>
-                <span class="text-xs text-gray-500">MW / hour</span>
-              </div>
-              <div class="h-72">
-                <Line :data="productionChartData" :options="chartOptions" />
+            <!-- Section Bilan -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">Bilan</p>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Supply vs Demand time-series -->
+                <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                  <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Supply vs Demand</h2>
+                    <span class="text-xs text-gray-500">MW / hour</span>
+                  </div>
+                  <div class="h-64">
+                    <Line :data="supplyDemandBalanceData" :options="chartOptions" />
+                  </div>
+                </div>
+                <!-- Energy summary bar -->
+                <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+                  <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Energy Summary</h2>
+                    <span class="text-xs text-gray-500">MWh</span>
+                  </div>
+                  <div class="h-64">
+                    <Bar :data="energyBarChartData" :options="barChartOptions" />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Consumption time-series chart -->
-            <div v-if="consumptionChartData.datasets.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Consumption by Load</h2>
-                <span class="text-xs text-gray-500">MW / hour</span>
-              </div>
-              <div class="h-72">
-                <Line :data="consumptionChartData" :options="chartOptions" />
-              </div>
-            </div>
+          </div>
 
-          </template>
-
-          <!-- No chart data: infeasible or empty -->
+          <!-- No chart data -->
           <div
             v-else
-            class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 flex items-center justify-center h-72 text-gray-600 text-sm"
+            class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 flex items-center justify-center h-72 text-gray-600 text-sm mt-4"
           >
             {{ result.status === 'error' ? 'No production data — infeasible simulation' : 'No time-series data available' }}
           </div>
-        </div>
-      </div>
+        </template>
+      </UTabs>
+
     </template>
 
     <!-- Empty state -->
@@ -773,6 +843,43 @@ const timeLabels = computed(() => {
   const firstGen = Object.values(generatorsT.value)[0]
   const n = firstGen?.p?.length ?? 0
   return Array.from({ length: n }, (_, i) => `H${i}`)
+})
+
+// ─── Line chart — supply vs demand per hour (bilan) ──────────────────────────
+
+const supplyDemandBalanceData = computed(() => {
+  const hours = timeLabels.value.length
+  const supplyPerHour = Array.from({ length: hours }, (_, i) =>
+    Object.values(generatorsT.value).reduce((sum, gen) => sum + ((gen as { p: number[] }).p[i] ?? 0), 0),
+  )
+  const demandPerHour = Array.from({ length: hours }, (_, i) =>
+    Object.values(loadsT.value).reduce((sum, load) => sum + ((load as { p: number[] }).p[i] ?? 0), 0),
+  )
+  return {
+    labels: timeLabels.value,
+    datasets: [
+      {
+        label: 'Total Supply',
+        data: supplyPerHour.map(v => +v.toFixed(3)),
+        borderColor: '#10B981',
+        backgroundColor: '#10B98118',
+        fill: true,
+        tension: 0.4,
+        pointRadius: timeLabels.value.length > 48 ? 0 : 2,
+        borderWidth: 2,
+      },
+      {
+        label: 'Total Demand',
+        data: demandPerHour.map(v => +v.toFixed(3)),
+        borderColor: '#EF4444',
+        backgroundColor: '#EF444418',
+        fill: true,
+        tension: 0.4,
+        pointRadius: timeLabels.value.length > 48 ? 0 : 2,
+        borderWidth: 2,
+      },
+    ],
+  }
 })
 
 const productionChartData = computed(() => ({
