@@ -260,27 +260,72 @@
         <div class="flex flex-col gap-6">
           <template v-if="result.status === 'optimal' && hasChartData">
 
-            <!-- Production chart -->
+            <!-- Energy summary bar chart -->
+            <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Energy Summary</h2>
+                <span class="text-xs text-gray-500">MWh</span>
+              </div>
+              <div class="h-52">
+                <Bar :data="energyBarChartData" :options="barChartOptions" />
+              </div>
+            </div>
+
+            <!-- Capacity factors bar chart -->
+            <div v-if="capacityFactorBarData.labels.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Capacity Factors</h2>
+                <span class="text-xs text-gray-500">% utilization</span>
+              </div>
+              <div class="h-52">
+                <Bar :data="capacityFactorBarData" :options="capacityFactorBarOptions" />
+              </div>
+            </div>
+
+            <!-- Production mix stacked bar chart -->
+            <div v-if="productionMixData.datasets.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Production Mix</h2>
+                <span class="text-xs text-gray-500">MWh stacked</span>
+              </div>
+              <div class="h-52">
+                <Bar :data="productionMixData" :options="productionMixOptions" />
+              </div>
+            </div>
+
+            <!-- Peak power bar chart -->
+            <div v-if="peakPowerData.labels.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Peak Power</h2>
+                <span class="text-xs text-gray-500">MW max</span>
+              </div>
+              <div class="h-52">
+                <Bar :data="peakPowerData" :options="peakPowerOptions" />
+              </div>
+            </div>
+
+            <!-- Production time-series chart -->
             <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
               <div class="flex items-center justify-between mb-4">
                 <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Production by Generator</h2>
-                <span class="text-xs text-gray-500">MW</span>
+                <span class="text-xs text-gray-500">MW / hour</span>
               </div>
               <div class="h-72">
                 <Line :data="productionChartData" :options="chartOptions" />
               </div>
             </div>
 
-            <!-- Consumption chart -->
+            <!-- Consumption time-series chart -->
             <div v-if="consumptionChartData.datasets.length" class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
               <div class="flex items-center justify-between mb-4">
                 <h2 class="text-sm font-semibold text-white uppercase tracking-wider">Consumption by Load</h2>
-                <span class="text-xs text-gray-500">MW</span>
+                <span class="text-xs text-gray-500">MW / hour</span>
               </div>
               <div class="h-72">
                 <Line :data="consumptionChartData" :options="chartOptions" />
               </div>
             </div>
+
           </template>
 
           <!-- No chart data: infeasible or empty -->
@@ -305,6 +350,7 @@
 
 <script setup lang="ts">
 import {
+  BarElement,
   CategoryScale,
   Chart as ChartJS,
   Filler,
@@ -316,13 +362,13 @@ import {
   Tooltip,
 } from 'chart.js'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
-import { Line } from 'vue-chartjs'
+import { Bar, Line } from 'vue-chartjs'
 import { fetchScenarioExport } from '~/composables/api'
 import { useHistoryStore } from '~/stores/history'
 import { useReferentialStore } from '~/stores/referential'
 import { useSimulationStore } from '~/stores/simulation'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler)
 
 const sim = useSimulationStore()
 const referential = useReferentialStore()
@@ -511,6 +557,217 @@ const balanceColor = computed(() => {
 const generatorsT = computed(() => result.value?.result_json?.generators_t ?? {})
 const loadsT = computed(() => result.value?.result_json?.loads_t ?? {})
 const hasChartData = computed(() => Object.keys(generatorsT.value).length > 0)
+
+// ─── Bar chart — total MWh per asset ──────────────────────────────────────────
+
+const energyBarChartData = computed(() => {
+  const supplyLabels = Object.keys(generatorsT.value)
+  const demandLabels = Object.keys(loadsT.value)
+  const labels = [...supplyLabels, ...demandLabels]
+
+  const supplyTotals = supplyLabels.map(name =>
+    ((generatorsT.value[name] as { p: number[] }).p.reduce((a, b) => a + b, 0)),
+  )
+  const demandTotals = demandLabels.map(name =>
+    ((loadsT.value[name] as { p: number[] }).p.reduce((a, b) => a + b, 0)),
+  )
+
+  const colors = labels.map((name, i) => {
+    if (demandLabels.includes(name)) return '#EF4444'
+    return generatorColor(name, i)
+  })
+
+  return {
+    labels,
+    datasets: [{
+      label: 'Total Energy (MWh)',
+      data: [...supplyTotals, ...demandTotals],
+      backgroundColor: colors.map(c => c + 'CC'),
+      borderColor: colors,
+      borderWidth: 1,
+      borderRadius: 4,
+    }],
+  }
+})
+
+const barChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#0F172A',
+      titleColor: '#E2E8F0',
+      bodyColor: '#94A3B8',
+      borderColor: '#1E293B',
+      borderWidth: 1,
+      callbacks: {
+        label: (ctx: { parsed: { y: number } }) => ` ${ctx.parsed.y.toFixed(2)} MWh`,
+      },
+    },
+  },
+  scales: {
+    x: {
+      ticks: { color: '#64748B', font: { size: 10 } },
+      grid: { color: '#1E293B' },
+    },
+    y: {
+      beginAtZero: true,
+      ticks: { color: '#64748B', font: { size: 10 } },
+      grid: { color: '#1E293B' },
+      title: { display: true, text: 'MWh', color: '#64748B', font: { size: 11 } },
+    },
+  },
+}
+
+// ─── Bar chart — capacity factors (%) ─────────────────────────────────────────
+
+const capacityFactorBarData = computed(() => {
+  const labels = capacityFactors.value.map(d => d.name)
+  const data = capacityFactors.value.map(d => +(d.cf * 100).toFixed(1))
+  const colors = capacityFactors.value.map(d => d.color)
+  return {
+    labels,
+    datasets: [{
+      label: 'Capacity Factor (%)',
+      data,
+      backgroundColor: colors.map(c => c + 'CC'),
+      borderColor: colors,
+      borderWidth: 1,
+      borderRadius: 4,
+    }],
+  }
+})
+
+const capacityFactorBarOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#0F172A',
+      titleColor: '#E2E8F0',
+      bodyColor: '#94A3B8',
+      borderColor: '#1E293B',
+      borderWidth: 1,
+      callbacks: {
+        label: (ctx: { parsed: { y: number } }) => ` ${ctx.parsed.y.toFixed(1)} %`,
+      },
+    },
+  },
+  scales: {
+    x: { ticks: { color: '#64748B', font: { size: 10 } }, grid: { color: '#1E293B' } },
+    y: {
+      beginAtZero: true,
+      max: 100,
+      ticks: { color: '#64748B', font: { size: 10 }, callback: (v: number | string) => `${v}%` },
+      grid: { color: '#1E293B' },
+      title: { display: true, text: '%', color: '#64748B', font: { size: 11 } },
+    },
+  },
+}
+
+// ─── Bar chart — production mix (stacked) ─────────────────────────────────────
+
+const productionMixData = computed(() => {
+  const gens = Object.keys(generatorsT.value)
+  // One dataset per generator → stacked
+  return {
+    labels: ['Production Mix'],
+    datasets: gens.map((name, i) => {
+      const total = (generatorsT.value[name] as { p: number[] }).p.reduce((a, b) => a + b, 0)
+      const color = generatorColor(name, i)
+      return {
+        label: name,
+        data: [+total.toFixed(2)],
+        backgroundColor: color + 'CC',
+        borderColor: color,
+        borderWidth: 1,
+        borderRadius: 4,
+      }
+    }),
+  }
+})
+
+const productionMixOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: true,
+      labels: { color: '#94A3B8', font: { size: 10 }, padding: 10, boxWidth: 10 },
+    },
+    tooltip: {
+      backgroundColor: '#0F172A',
+      titleColor: '#E2E8F0',
+      bodyColor: '#94A3B8',
+      borderColor: '#1E293B',
+      borderWidth: 1,
+      callbacks: {
+        label: (ctx: { dataset: { label: string }, parsed: { y: number } }) =>
+          ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} MWh`,
+      },
+    },
+  },
+  scales: {
+    x: { stacked: true, ticks: { color: '#64748B', font: { size: 10 } }, grid: { color: '#1E293B' } },
+    y: {
+      stacked: true,
+      beginAtZero: true,
+      ticks: { color: '#64748B', font: { size: 10 } },
+      grid: { color: '#1E293B' },
+      title: { display: true, text: 'MWh', color: '#64748B', font: { size: 11 } },
+    },
+  },
+}
+
+// ─── Bar chart — peak power (MW max per generator) ────────────────────────────
+
+const peakPowerData = computed(() => {
+  const labels = Object.keys(generatorsT.value)
+  const data = labels.map(name =>
+    +Math.max(...(generatorsT.value[name] as { p: number[] }).p).toFixed(2),
+  )
+  const colors = labels.map((name, i) => generatorColor(name, i))
+  return {
+    labels,
+    datasets: [{
+      label: 'Peak Power (MW)',
+      data,
+      backgroundColor: colors.map(c => c + 'CC'),
+      borderColor: colors,
+      borderWidth: 1,
+      borderRadius: 4,
+    }],
+  }
+})
+
+const peakPowerOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#0F172A',
+      titleColor: '#E2E8F0',
+      bodyColor: '#94A3B8',
+      borderColor: '#1E293B',
+      borderWidth: 1,
+      callbacks: {
+        label: (ctx: { parsed: { y: number } }) => ` ${ctx.parsed.y.toFixed(2)} MW`,
+      },
+    },
+  },
+  scales: {
+    x: { ticks: { color: '#64748B', font: { size: 10 } }, grid: { color: '#1E293B' } },
+    y: {
+      beginAtZero: true,
+      ticks: { color: '#64748B', font: { size: 10 } },
+      grid: { color: '#1E293B' },
+      title: { display: true, text: 'MW', color: '#64748B', font: { size: 11 } },
+    },
+  },
+}
 
 const timeLabels = computed(() => {
   const firstGen = Object.values(generatorsT.value)[0]
