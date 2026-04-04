@@ -3,6 +3,59 @@ import { previewSimulation, runSimulation, type SimulationRunRequest } from '~/c
 import { useHistoryStore } from '~/stores/history'
 import { useSimulationStore } from '~/stores/simulation'
 
+/** Extract a human-readable message from any thrown error (FetchError, Error, unknown). */
+function _extractErrorMessage(error: unknown): { title: string; description: string } {
+  // $fetch throws a FetchError with a `data` field containing the backend JSON body
+  if (error && typeof error === 'object' && 'data' in error) {
+    const data = (error as { data?: unknown; status?: number }).data
+    const status = (error as { status?: number }).status
+
+    // Pydantic 422 — detail is an array of validation errors
+    if (status === 422 && Array.isArray((data as { detail?: unknown })?.detail)) {
+      const detail = (data as { detail: Array<{ msg: string; loc?: string[] }> }).detail
+      const messages = detail.map(d => {
+        const field = d.loc?.slice(1).join(' → ') ?? 'field'
+        return `${field}: ${d.msg}`
+      })
+      return {
+        title: 'Validation error (422)',
+        description: messages.join('\n'),
+      }
+    }
+
+    // Pydantic 422 — detail is a plain string
+    if (status === 422 && typeof (data as { detail?: unknown })?.detail === 'string') {
+      return {
+        title: 'Validation error (422)',
+        description: (data as { detail: string }).detail,
+      }
+    }
+
+    // Other HTTP errors with a detail field
+    if ((data as { detail?: unknown })?.detail) {
+      return {
+        title: `Request error (${status ?? '?'})`,
+        description: String((data as { detail: unknown }).detail),
+      }
+    }
+
+    // Generic HTTP error
+    if (status) {
+      return {
+        title: `HTTP ${status}`,
+        description: typeof data === 'string' ? data : JSON.stringify(data ?? {}),
+      }
+    }
+  }
+
+  // Standard JS Error
+  if (error instanceof Error) {
+    return { title: 'Preview error', description: error.message }
+  }
+
+  return { title: 'Preview error', description: 'An unknown error occurred.' }
+}
+
 /**
  * Live simulation runner.
  *
@@ -16,6 +69,7 @@ import { useSimulationStore } from '~/stores/simulation'
 export function useLiveRunner() {
   const historyStore = useHistoryStore()
   const simStore = useSimulationStore()
+  const toast = useToast()
 
   async function runPreview(payload: SimulationRunRequest) {
     simStore.isLiveRunning = true
@@ -25,7 +79,14 @@ export function useLiveRunner() {
       simStore.currentLiveResult = response
     }
     catch (error: unknown) {
-      simStore.liveError = error instanceof Error ? error.message : 'Live preview failed'
+      const { title, description } = _extractErrorMessage(error)
+      simStore.liveError = `${title}: ${description}`
+      toast.add({
+        title,
+        description,
+        color: 'error',
+        duration: 6000,
+      })
     }
     finally {
       simStore.isLiveRunning = false

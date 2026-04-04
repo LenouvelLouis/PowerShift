@@ -155,8 +155,38 @@
       <!-- Row 2: Hours + Solver + Scenario name + Import + Live indicator -->
       <div class="flex items-center gap-3 px-4 h-10 border-t border-[#1E293B] bg-[#020617]/40">
 
-        <!-- Hours selector -->
+        <!-- Date range picker -->
         <div class="flex items-center gap-1.5">
+          <label class="text-xs text-gray-500 shrink-0">From</label>
+          <input
+            v-model="store.startDate"
+            type="date"
+            min="2023-01-01"
+            max="2023-12-31"
+            class="h-6 rounded px-1.5 text-xs bg-[#0F172A] border border-[#334155] text-white focus:outline-none focus:border-[#3C83F8] w-32"
+          />
+          <label class="text-xs text-gray-500 shrink-0">To</label>
+          <input
+            v-model="store.endDate"
+            type="date"
+            min="2023-01-01"
+            max="2023-12-31"
+            class="h-6 rounded px-1.5 text-xs bg-[#0F172A] border border-[#334155] text-white focus:outline-none focus:border-[#3C83F8] w-32"
+          />
+          <span
+            v-if="store.startDate && store.endDate"
+            class="text-xs text-emerald-400 shrink-0 font-mono"
+          >{{ store.snapshotHours }}h</span>
+          <button
+            v-if="store.startDate || store.endDate"
+            class="text-xs text-gray-500 hover:text-gray-300 shrink-0"
+            title="Clear dates"
+            @click="store.startDate = ''; store.endDate = ''"
+          >✕</button>
+        </div>
+
+        <!-- Hours selector (manual fallback when no dates) -->
+        <div v-if="!store.startDate && !store.endDate" class="flex items-center gap-1.5">
           <label class="text-xs text-gray-500">Hours</label>
           <USelect
             v-model="store.snapshotHours"

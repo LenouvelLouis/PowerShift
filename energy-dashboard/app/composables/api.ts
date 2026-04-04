@@ -183,6 +183,8 @@ export interface ScenarioExport {
   scenario_version: string;
   snapshot_hours: number;
   solver: string;
+  start_date?: string | null;
+  end_date?: string | null;
   supply_ids: string[];
   demand_ids: string[];
   network_ids: string[];

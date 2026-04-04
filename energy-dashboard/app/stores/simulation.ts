@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { watch } from "vue";
 import {
   runSimulation,
   type SimulationResult,
@@ -18,6 +19,8 @@ function _payloadKey(p: SimulationRunRequest): string {
     network_ids: [...p.network_ids].sort(),
     snapshot_hours: p.snapshot_hours,
     solver: p.solver,
+    start_date: p.start_date ?? null,
+    end_date: p.end_date ?? null,
     asset_overrides: p.asset_overrides ?? null,
   });
 }
@@ -92,6 +95,20 @@ export const useSimulationStore = defineStore("simulation", () => {
   const snapshotHours = ref(24);
   const solver = ref("highs");
   const scenarioName = ref("");
+  const startDate = ref<string>("");
+  const endDate = ref<string>("");
+
+  // Auto-compute snapshotHours from date range when both dates are filled.
+  // Backend uses inclusive bounds: (end - start).days + 1 days total.
+  // e.g. June 1 → June 8 = 8 days = 192h (not 7 days).
+  watch([startDate, endDate], ([start, end]) => {
+    if (!start || !end) return;
+    const diffDays = Math.round(
+      (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const hours = (diffDays + 1) * 24;
+    if (hours > 0) snapshotHours.value = hours;
+  });
 
   // ─── Référence de simulation sauvegardée ─────────────────────────────────────
   // Tracks the last saved/loaded simulation so we can detect parameter changes.
@@ -131,6 +148,8 @@ export const useSimulationStore = defineStore("simulation", () => {
       network_ids: selectedNetworkIds.value,
       snapshot_hours: snapshotHours.value,
       solver: solver.value,
+      start_date: startDate.value || undefined,
+      end_date: endDate.value || undefined,
       asset_overrides:
         Object.keys(assetOverrides).length > 0 ? assetOverrides : undefined,
     };
@@ -248,6 +267,8 @@ export const useSimulationStore = defineStore("simulation", () => {
 
   function clearScenario() {
     scenarioName.value = "";
+    startDate.value = "";
+    endDate.value = "";
     _supplyEntries.value = [];
     _demandEntries.value = [];
     _networkEntries.value = [];
@@ -259,6 +280,8 @@ export const useSimulationStore = defineStore("simulation", () => {
     clearScenario();
     scenarioName.value = name;
     snapshotHours.value = scenario.snapshot_hours;
+    startDate.value = scenario.start_date ?? "";
+    endDate.value = scenario.end_date ?? "";
     const overrides = scenario.asset_overrides ?? {};
     for (const id of scenario.supply_ids)
       _supplyEntries.value.push({
@@ -330,6 +353,8 @@ export const useSimulationStore = defineStore("simulation", () => {
     snapshotHours,
     solver,
     scenarioName,
+    startDate,
+    endDate,
     // Live mode
     currentLiveResult,
     selectedHistoryId,
