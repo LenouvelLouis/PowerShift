@@ -271,7 +271,7 @@ class CalculateWindPowerUseCase:
 
     Supports two input modes:
     - **Inline**: wind data provided directly in the request body.
-    - **DB**: station_code + start + end — fetches from ``wind_measurement`` table.
+    - **DB**: station_code + start + end — fetches from ``weather_profile`` table.
     """
 
     def __init__(self, repo: WindTurbineRepositoryImpl) -> None:
@@ -300,7 +300,7 @@ class CalculateWindPowerUseCase:
                 for pt in body.wind_data
             ]
         else:
-            # Option B: fetch from wind_measurement table
+            # Option B: fetch from weather_profile table
             assert body.station_code and body.start and body.end
             measurements = await self._repo.get_wind_measurements(
                 body.station_code, body.start, body.end

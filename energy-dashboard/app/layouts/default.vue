@@ -120,6 +120,15 @@
 
         <div class="flex-1" />
 
+        <!-- Weather station indicator -->
+        <div
+          class="hidden sm:flex items-center gap-1 text-xs text-gray-500 border border-[#1E293B] rounded px-2 h-6 shrink-0"
+          title="Weather data source: KNMI station 06280 — Groningen Eelde. Covers Oct 2024 → Oct 2025."
+        >
+          <UIcon name="i-heroicons-map-pin" class="w-3 h-3 text-gray-600" />
+          <span>KNMI · Groningen Eelde</span>
+        </div>
+
         <!-- Save button — only active in live mode -->
         <UButton
           icon="i-heroicons-cloud-arrow-up"
@@ -876,6 +885,14 @@ async function _doSave(payload: ReturnType<typeof _buildSavePayload>) {
       })
     } else {
       toast.add({ title: 'Simulation saved', description: `Status: ${result.status}`, color: 'success' })
+      for (const msg of result.result_json?.warnings ?? []) {
+        toast.add({
+          title: 'Weather data warning',
+          description: msg,
+          color: 'warning',
+          duration: 8000,
+        })
+      }
     }
   } catch {
     toast.add({ title: 'Save error', description: store.error ?? 'Failed to save simulation', color: 'error' })

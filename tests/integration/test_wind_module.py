@@ -24,7 +24,6 @@ from sqlmodel import SQLModel
 # Ensure all ORM models are registered in SQLModel.metadata before create_all
 from app.infrastructure.db.models.asset_parameters_model import AssetParametersModel  # noqa: F401
 from app.infrastructure.db.models.supply_model import SupplyModel  # noqa: F401
-from app.infrastructure.wind.models import WindMeasurementORM  # noqa: F401
 
 from app.application.wind.schemas import (
     CalculatePowerRequest,

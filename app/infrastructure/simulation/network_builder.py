@@ -6,6 +6,8 @@ import asyncio
 import re
 from concurrent.futures import ThreadPoolExecutor
 
+import logging
+
 from app.application.wind.schemas import CalculatePowerRequest
 from app.application.wind.use_cases import CalculateWindPowerUseCase
 from app.domain.interfaces.load_profile_provider import ILoadProfileProvider
@@ -15,12 +17,15 @@ from app.domain.interfaces.simulation_repository import (
     SimulationRunInput,
     SimulationRunOutput,
 )
+from app.domain.wind.exceptions import WindAssetNotFoundError, WindTurbineError
 from app.infrastructure.simulation.pypsa_adapter import (
     AbstractGridSimulation,
     AdapterOutput,
     SimulationConfig,
 )
 from app.infrastructure.wind.repository import WindTurbineRepositoryImpl
+
+_log = logging.getLogger(__name__)
 
 
 class _DefaultPyPSASimulation(AbstractGridSimulation):
@@ -220,7 +225,10 @@ class PyPSANetworkBuilder(ISimulationRepository):
             if demand_id in run_input.hourly_load_overrides:
                 load_profiles[demand.name] = run_input.hourly_load_overrides[demand_id]
 
-        # Fetch solar irradiance profiles from pv_hourly table
+        # Collect data-quality warnings to surface in result_json
+        profile_warnings: list[str] = []
+
+        # Fetch solar irradiance profiles from weather_profile table
         solar_profiles: dict[str, list[float]] = {}
         if (
             self._pv_profile_repo is not None
@@ -229,9 +237,17 @@ class PyPSANetworkBuilder(ISimulationRepository):
         ):
             for supply in supplies:
                 if supply.get_carrier() == "solar":
-                    solar_profiles[supply.name] = await self._pv_profile_repo.get_solar_profile(
+                    profile = await self._pv_profile_repo.get_solar_profile(
                         run_input.start_date, run_input.end_date
                     )
+                    solar_profiles[supply.name] = profile
+                    if all(v == 0.0 for v in profile):
+                        msg = (
+                            f"Solar asset '{supply.name}': no irradiance data found for "
+                            f"{run_input.start_date} → {run_input.end_date}. "
+                            "Profile is all-zero — check weather_profile table coverage."
+                        )
+                        profile_warnings.append(msg)
 
         # Compute wind power profiles from KNMI measurements
         wind_profiles: dict[str, list[float]] = {}
@@ -243,19 +259,37 @@ class PyPSANetworkBuilder(ISimulationRepository):
             for supply in supplies:
                 if supply.get_carrier() == "wind":
                     wind_use_case = CalculateWindPowerUseCase(self._wind_repo)
-                    result = await wind_use_case.execute(
-                        CalculatePowerRequest(
-                            asset_id=supply.id,
-                            station_code=_WEATHER_STATION,
-                            start=run_input.start_date,
-                            end=run_input.end_date,
+                    try:
+                        result = await wind_use_case.execute(
+                            CalculatePowerRequest(
+                                asset_id=supply.id,
+                                station_code=_WEATHER_STATION,
+                                start=run_input.start_date,
+                                end=run_input.end_date,
+                            )
                         )
-                    )
-                    rated_kw = supply.capacity_mw * 1000
-                    wind_profiles[supply.name] = [
-                        min(pt.power_kw / rated_kw, 1.0) if rated_kw > 0 else 0.0
-                        for pt in result.power_series
-                    ]
+                        rated_kw = supply.capacity_mw * 1000
+                        wind_profile = [
+                            min(pt.power_kw / rated_kw, 1.0) if rated_kw > 0 else 0.0
+                            for pt in result.power_series
+                        ]
+                        wind_profiles[supply.name] = wind_profile
+                        if not result.power_series or all(v == 0.0 for v in wind_profile):
+                            msg = (
+                                f"Wind asset '{supply.name}': no measurement data found for "
+                                f"{run_input.start_date} → {run_input.end_date}. "
+                                "Running at rated capacity (p_nom)."
+                            )
+                            profile_warnings.append(msg)
+                    except (WindAssetNotFoundError, WindTurbineError) as exc:
+                        _log.warning(
+                            "Wind profile unavailable for '%s': %s — running at p_nom.",
+                            supply.name, exc,
+                        )
+                        profile_warnings.append(
+                            f"Wind asset '{supply.name}': profile unavailable ({exc}). "
+                            "Running at rated capacity (p_nom)."
+                        )
 
         config = SimulationConfig(
             snapshot_hours=run_input.snapshot_hours,
@@ -275,6 +309,9 @@ class PyPSANetworkBuilder(ISimulationRepository):
             self._simulation.run_sync,
             config,
         )
+        if profile_warnings:
+            result.result_json["warnings"] = profile_warnings
+
         return SimulationRunOutput(
             total_supply_mwh=result.total_supply_mwh,
             total_demand_mwh=result.total_demand_mwh,

@@ -11,8 +11,9 @@ async def init_db() -> None:
     import app.infrastructure.db.models.asset_parameters_model  # noqa: F401
     import app.infrastructure.db.models.simulation_request_model  # noqa: F401
     import app.infrastructure.db.models.simulation_result_model  # noqa: F401
-    import app.infrastructure.db.models.pv_hourly_model  # noqa: F401
-    import app.infrastructure.db.models.weather_snapshot_model  # noqa: F401
+    # Note: pv_hourly table (2023 static solar data) exists in DB as archive
+    # but is no longer managed here — solar profiles now come from weather_profile.
+    import app.infrastructure.db.models.weather_profile_model  # noqa: F401
 
     from sqlmodel import SQLModel
     from sqlalchemy import text

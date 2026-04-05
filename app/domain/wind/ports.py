@@ -48,13 +48,6 @@ class WindTurbineRepository(Protocol):
         """Return measurements ordered by timestamp ASC within the given range."""
         ...
 
-    async def bulk_insert_measurements(self, measurements: list[WindMeasurement]) -> int:
-        """Batch-insert measurements, skipping duplicates (ON CONFLICT DO NOTHING).
-
-        Returns the number of rows actually inserted.
-        """
-        ...
-
     async def get_latest_measurement_timestamp(
         self, station_code: str
     ) -> Optional[datetime]:

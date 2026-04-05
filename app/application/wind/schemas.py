@@ -106,7 +106,7 @@ class CalculatePowerRequest(BaseModel):
     asset_id: uuid.UUID
     # Option A: provide wind data inline
     wind_data: Optional[list[WindDataPointSchema]] = None
-    # Option B: pull from the wind_measurement table
+    # Option B: pull from the weather_profile table
     station_code: Optional[str] = None
     start: Optional[datetime] = None
     end: Optional[datetime] = None

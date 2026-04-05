@@ -98,6 +98,7 @@ export interface SimulationResultJson {
   error?: string;
   error_type?: "solver_error" | "runtime_error";
   solver?: string;
+  warnings?: string[];
 }
 
 export interface SimulationResult {

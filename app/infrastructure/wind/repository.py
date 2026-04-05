@@ -1,9 +1,8 @@
 """Concrete wind turbine repository backed by async SQLAlchemy.
 
 Turbine models and assets are stored in the generic ``supplies`` +
-``asset_parameters`` tables to stay consistent with the rest of the project.
-Wind measurements use their own ``wind_measurement`` table (time-series data
-with no equivalent in the supply/asset schema).
+``asset_parameters`` tables. Wind measurements are read from the unified
+``weather_profile`` table (30-min KNMI data, station 06280 Groningen Eelde).
 
 type values
 -----------
@@ -19,7 +18,6 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import func
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -27,7 +25,6 @@ from app.domain.wind.entities import PowerCurvePoint, WindMeasurement, WindTurbi
 from app.infrastructure.db.models.asset_parameters_model import AssetParametersModel
 from app.infrastructure.db.models.supply_model import SupplyModel
 from app.infrastructure.db.models.weather_profile_model import WeatherProfileModel
-from app.infrastructure.wind.models import WindMeasurementORM
 
 _log = logging.getLogger(__name__)
 
@@ -193,23 +190,14 @@ class WindTurbineRepositoryImpl:
             )
             .order_by(WeatherProfileModel.timestamp)
         )
-        return [self._weather_profile_to_domain(row) for row in result.scalars().all()]
-
-    async def bulk_insert_measurements(self, measurements: list[WindMeasurement]) -> int:
-        """Insert into legacy wind_measurement table (used by ingest_knmi_wind.py)."""
+        measurements = [self._weather_profile_to_domain(row) for row in result.scalars().all()]
         if not measurements:
-            return 0
-        rows = [self._measurement_to_dict(m) for m in measurements]
-        stmt = (
-            pg_insert(WindMeasurementORM)
-            .values(rows)
-            .on_conflict_do_nothing(constraint="uq_wind_measurement_station_ts")
-        )
-        result = await self._session.execute(stmt)
-        await self._session.flush()
-        inserted: int = result.rowcount if result.rowcount >= 0 else 0
-        _log.debug("Bulk insert: %d rows in, %d inserted", len(rows), inserted)
-        return inserted
+            _log.warning(
+                "No weather_profile data for station %s between %s and %s "
+                "— wind turbine will run at rated capacity (p_nom).",
+                station_code, start, end,
+            )
+        return measurements
 
     async def get_latest_measurement_timestamp(
         self, station_code: str
@@ -289,32 +277,3 @@ class WindTurbineRepositoryImpl:
             air_pressure_hpa=row.air_pressure_hpa,
         )
 
-    @staticmethod
-    def _measurement_to_domain(row: WindMeasurementORM) -> WindMeasurement:
-        return WindMeasurement(
-            station_code=row.station_code,
-            station_name=row.station_name,
-            timestamp=row.timestamp,
-            wind_speed_ms=row.wind_speed_ms,
-            wind_direction_deg=row.wind_direction_deg,
-            temperature_c=row.temperature_c,
-            air_pressure_hpa=row.air_pressure_hpa,
-            latitude=row.latitude,
-            longitude=row.longitude,
-        )
-
-    @staticmethod
-    def _measurement_to_dict(m: WindMeasurement) -> dict:
-        from uuid import uuid4 as _uuid4  # noqa: PLC0415
-        return {
-            "id": _uuid4(),
-            "station_code": m.station_code,
-            "station_name": m.station_name,
-            "timestamp": m.timestamp,
-            "wind_speed_ms": m.wind_speed_ms,
-            "wind_direction_deg": m.wind_direction_deg,
-            "temperature_c": m.temperature_c,
-            "air_pressure_hpa": m.air_pressure_hpa,
-            "latitude": m.latitude,
-            "longitude": m.longitude,
-        }

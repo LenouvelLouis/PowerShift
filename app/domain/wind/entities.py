@@ -58,8 +58,6 @@ class WindMeasurement:
     wind_direction_deg: Optional[float]
     temperature_c: Optional[float]
     air_pressure_hpa: Optional[float]
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
 
 
 @dataclass
