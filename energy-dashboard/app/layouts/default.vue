@@ -189,16 +189,16 @@
           <input
             v-model="store.startDate"
             type="date"
-            min="2023-01-01"
-            max="2023-12-31"
+            min="2024-10-01"
+            max="2025-10-31"
             class="h-6 px-1.5 text-xs bg-[#0F172A] text-white focus:outline-none focus:bg-[#0F172A]/80 w-32 border-0"
           />
           <span class="text-xs text-gray-600 px-1 shrink-0 border-x border-[#334155]">→</span>
           <input
             v-model="store.endDate"
             type="date"
-            min="2023-01-01"
-            max="2023-12-31"
+            min="2024-10-01"
+            max="2025-10-31"
             class="h-6 px-1.5 text-xs bg-[#0F172A] text-white focus:outline-none focus:bg-[#0F172A]/80 w-32 border-0"
           />
           <span
@@ -868,8 +868,8 @@ const toast = useToast()
 
 const dateMode = ref<'hours' | 'dates'>('hours')
 
-const DEFAULT_START = '2023-06-01'
-const DEFAULT_END = '2023-06-07'
+const DEFAULT_START = '2024-10-01'
+const DEFAULT_END = '2024-10-07'
 
 function setDateMode(mode: 'hours' | 'dates') {
   dateMode.value = mode
@@ -894,6 +894,28 @@ watch(
     if (!store.isLiveMode) return
     runPreview(store.buildPayload())
   },
+)
+
+// Warn once when solar/wind assets are selected but no dates are set
+const _noDateWarnShown = ref(false)
+watch(
+  () => ({ ids: store.selectedSupplyIds, start: store.startDate }),
+  ({ ids, start }) => {
+    if (start) { _noDateWarnShown.value = false; return }
+    if (_noDateWarnShown.value) return
+    const hasWeatherAsset = store.selectedSupplies.some(
+      (s) => s.type === 'solar_panel' || s.type === 'wind_turbine',
+    )
+    if (!hasWeatherAsset) return
+    _noDateWarnShown.value = true
+    toast.add({
+      title: 'No date range selected',
+      description: 'Solar and wind assets will run at rated capacity (p_nom) without a real weather profile. Select a date range for realistic results.',
+      color: 'warning',
+      duration: 8000,
+    })
+  },
+  { deep: false },
 )
 
 // ─── Header: rename selected scenario ─────────────────────────────────────────
