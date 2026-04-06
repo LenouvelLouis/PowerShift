@@ -156,7 +156,7 @@ export function useEChartsTheme() {
         name: s.name,
         type: 'bar' as const,
         data: s.colors
-          ? s.data.map((v, i) => ({ value: v, itemStyle: { color: s.colors![i] } }))
+          ? s.data.map((v, i) => ({ value: v, itemStyle: { color: s.colors![i], borderRadius: [4, 4, 0, 0] } }))
           : s.data,
         stack: opts.stacked ? 'total' : undefined,
         itemStyle: { borderRadius: [4, 4, 0, 0], ...(s.color ? { color: s.color } : {}) },
