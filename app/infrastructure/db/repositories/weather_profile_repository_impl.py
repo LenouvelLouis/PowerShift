@@ -1,4 +1,4 @@
-"""Solar profile repository — reads radiation data from weather_profile table."""
+"""Weather profile repository — reads data from the weather_profile table."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from app.infrastructure.db.models.weather_profile_model import WeatherProfileMod
 _log = logging.getLogger(__name__)
 
 
-class PVHourlyRepositoryImpl(IPVProfileRepository):
+class WeatherProfileRepositoryImpl(IPVProfileRepository):
     """Fetches normalized solar irradiance profiles from the weather_profile table.
 
     Source column: radiation_wm2 (KNMI variable qg — global solar radiation, W/m²).

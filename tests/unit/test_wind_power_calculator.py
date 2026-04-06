@@ -223,7 +223,7 @@ class TestExtrapolateWindSpeed:
 
 class TestCalculatePowerSeries:
     def _make_wind_data(self, speeds: list[float]) -> list[WindDataPoint]:
-        base = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        base = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
         return [
             WindDataPoint(
                 timestamp=base.replace(hour=i % 24),

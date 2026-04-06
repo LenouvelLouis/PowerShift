@@ -123,7 +123,7 @@
         <!-- Weather station indicator -->
         <div
           class="hidden sm:flex items-center gap-1 text-xs text-gray-500 border border-[#1E293B] rounded px-2 h-6 shrink-0"
-          title="Weather data source: KNMI station 06280 — Groningen Eelde. Covers Oct 2024 → Oct 2025."
+          title="Weather data source: KNMI station 06280 — Groningen Eelde. Covers Jan 2025 → Dec 2025."
         >
           <UIcon name="i-heroicons-map-pin" class="w-3 h-3 text-gray-600" />
           <span>KNMI · Groningen Eelde</span>
@@ -189,16 +189,16 @@
           <input
             v-model="store.startDate"
             type="date"
-            min="2024-10-01"
-            max="2025-10-31"
+            min="2025-01-01"
+            max="2025-12-31"
             class="h-6 px-1.5 text-xs bg-[#0F172A] text-white focus:outline-none focus:bg-[#0F172A]/80 w-32 border-0"
           />
           <span class="text-xs text-gray-600 px-1 shrink-0 border-x border-[#334155]">→</span>
           <input
             v-model="store.endDate"
             type="date"
-            min="2024-10-01"
-            max="2025-10-31"
+            min="2025-01-01"
+            max="2025-12-31"
             class="h-6 px-1.5 text-xs bg-[#0F172A] text-white focus:outline-none focus:bg-[#0F172A]/80 w-32 border-0"
           />
           <span
@@ -868,8 +868,10 @@ const toast = useToast()
 
 const dateMode = ref<'hours' | 'dates'>('hours')
 
-const DEFAULT_START = '2024-10-01'
-const DEFAULT_END = '2024-10-07'
+
+const todayMonthDay = new Date().toISOString().slice(5, 10) // "MM-DD"
+const DEFAULT_START = `2025-${todayMonthDay}`
+const DEFAULT_END = `2025-${todayMonthDay}`
 
 function setDateMode(mode: 'hours' | 'dates') {
   dateMode.value = mode

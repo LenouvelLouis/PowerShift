@@ -197,7 +197,7 @@ class TestCreateWindAssetUseCase:
 
 def _make_wind_request(asset_id: uuid.UUID, speeds: list[float]) -> CalculatePowerRequest:
     """Build a CalculatePowerRequest with simple wind data."""
-    base = datetime(2024, 6, 15, 0, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 15, 0, 0, 0, tzinfo=timezone.utc)
     return CalculatePowerRequest(
         asset_id=asset_id,
         wind_data=[

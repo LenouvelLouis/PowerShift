@@ -15,7 +15,7 @@ from app.domain.use_cases.run_simulation import RunSimulationUseCase
 from app.infrastructure.db.connection import get_db
 from app.infrastructure.db.repositories.demand_repository_impl import DemandRepositoryImpl
 from app.infrastructure.db.repositories.network_repository_impl import NetworkRepositoryImpl
-from app.infrastructure.db.repositories.pv_hourly_repository_impl import PVHourlyRepositoryImpl
+from app.infrastructure.db.repositories.weather_profile_repository_impl import WeatherProfileRepositoryImpl
 from app.infrastructure.db.repositories.simulation_repository_impl import SimulationRepositoryImpl
 from app.infrastructure.db.repositories.supply_repository_impl import SupplyRepositoryImpl
 from app.infrastructure.external.open_meteo_provider import OpenMeteoLoadProfileProvider
@@ -45,8 +45,8 @@ def get_simulation_persistence_repository(db: DbSession) -> SimulationRepository
     return SimulationRepositoryImpl(db)
 
 
-def get_pv_profile_repository(db: DbSession) -> PVHourlyRepositoryImpl:
-    return PVHourlyRepositoryImpl(db)
+def get_pv_profile_repository(db: DbSession) -> WeatherProfileRepositoryImpl:
+    return WeatherProfileRepositoryImpl(db)
 
 
 def get_wind_repository(db: DbSession) -> WindTurbineRepositoryImpl:
@@ -76,7 +76,7 @@ def get_simulation_use_case(
     demand_repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
     network_repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
     persistence: Annotated[SimulationRepositoryImpl, Depends(get_simulation_persistence_repository)],
-    pv_repo: Annotated[PVHourlyRepositoryImpl, Depends(get_pv_profile_repository)],
+    pv_repo: Annotated[WeatherProfileRepositoryImpl, Depends(get_pv_profile_repository)],
     wind_repo: Annotated[WindTurbineRepositoryImpl, Depends(get_wind_repository)],
     nuclear_repo: Annotated[NuclearRepositoryImpl, Depends(get_nuclear_repository)],
 ) -> RunSimulationUseCase:
@@ -98,7 +98,7 @@ def get_preview_simulation_use_case(
     supply_repo: Annotated[SupplyRepositoryImpl, Depends(get_supply_repository)],
     demand_repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
     network_repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
-    pv_repo: Annotated[PVHourlyRepositoryImpl, Depends(get_pv_profile_repository)],
+    pv_repo: Annotated[WeatherProfileRepositoryImpl, Depends(get_pv_profile_repository)],
     wind_repo: Annotated[WindTurbineRepositoryImpl, Depends(get_wind_repository)],
 ) -> PreviewSimulationUseCase:
     return PreviewSimulationUseCase(
