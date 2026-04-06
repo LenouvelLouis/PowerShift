@@ -4,7 +4,8 @@ import type {
   GridComponentOption,
   TooltipComponentOption,
   LegendComponentOption,
-  DataZoomComponentOption
+  DataZoomComponentOption,
+  TitleComponentOption
 } from 'echarts/components'
 
 export type ECOption = ComposeOption<
@@ -14,6 +15,7 @@ export type ECOption = ComposeOption<
   | TooltipComponentOption
   | LegendComponentOption
   | DataZoomComponentOption
+  | TitleComponentOption
 >
 
 const BG = '#0F172A'
@@ -131,7 +133,8 @@ export function useEChartsTheme() {
               const lines = (Array.isArray(params) ? params : [params]).map(
                 (p: any) => `<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color};margin-right:4px"></span>${p.seriesName}: ${Number(p.value).toFixed(2)}${opts.tooltipSuffix}`
               )
-              return `<div style="font-size:11px">${(Array.isArray(params) ? params[0].name : params.name)}<br/>${lines.join('<br/>')}</div>`
+              const title = Array.isArray(params) ? (params[0]?.name ?? '') : (params as any).name
+              return `<div style="font-size:11px">${title}<br/>${lines.join('<br/>')}</div>`
             }
           : undefined
       },
@@ -153,10 +156,10 @@ export function useEChartsTheme() {
         name: s.name,
         type: 'bar' as const,
         data: s.colors
-          ? s.data.map((v, i) => ({ value: v, itemStyle: { color: s.colors![i], borderRadius: [4, 4, 0, 0] } }))
-          : s.data.map(v => ({ value: v, itemStyle: { color: s.color, borderRadius: [4, 4, 0, 0] } })),
+          ? s.data.map((v, i) => ({ value: v, itemStyle: { color: s.colors![i] } }))
+          : s.data,
         stack: opts.stacked ? 'total' : undefined,
-        itemStyle: s.colors || s.color ? undefined : { borderRadius: [4, 4, 0, 0] },
+        itemStyle: { borderRadius: [4, 4, 0, 0], ...(s.color ? { color: s.color } : {}) },
         barMaxWidth: 48
       }))
     }
