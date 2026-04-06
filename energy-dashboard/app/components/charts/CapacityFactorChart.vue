@@ -1,0 +1,44 @@
+<template>
+  <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-semibold text-white uppercase tracking-wider">
+        Capacity Factors
+      </h2>
+      <span class="text-xs text-gray-500">%</span>
+    </div>
+    <BaseBarChart
+      :data="chartData"
+      :options="chartOptions"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { SimulationResult } from '~/composables/api'
+
+const props = defineProps<{ result: SimulationResult }>()
+const { barChartOptions } = useChartTheme()
+
+const capacityFactors = computed(() => {
+  const cf = props.result.result_json?.capacity_factors ?? {}
+  return Object.entries(cf).map(([name, value], i) => ({
+    name,
+    cf: value as number,
+    color: generatorColor(name, i)
+  }))
+})
+
+const chartData = computed(() => ({
+  labels: capacityFactors.value.map(d => d.name),
+  datasets: [{
+    label: 'Capacity Factor (%)',
+    data: capacityFactors.value.map(d => +(d.cf * 100).toFixed(1)),
+    backgroundColor: capacityFactors.value.map(d => d.color + 'CC'),
+    borderColor: capacityFactors.value.map(d => d.color),
+    borderWidth: 1,
+    borderRadius: 4
+  }]
+}))
+
+const chartOptions = barChartOptions({ yTitle: '%', yMax: 100, tooltipSuffix: ' %' })
+</script>

@@ -1,6 +1,14 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import Aura from '@primeuix/themes/aura'
 export default defineNuxtConfig({
+  components: {
+    dirs: [
+      { path: '~/components/ui', prefix: 'Ui' },
+      { path: '~/components/features/sidebar', prefix: 'Sidebar' },
+      { path: '~/components', pathPrefix: false }
+    ]
+  },
+
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',

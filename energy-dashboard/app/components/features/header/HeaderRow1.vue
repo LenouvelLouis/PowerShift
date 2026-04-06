@@ -1,0 +1,87 @@
+<template>
+  <div class="flex items-center gap-2 px-4 h-14">
+    <UButton
+      variant="ghost"
+      icon="i-heroicons-bars-3"
+      color="neutral"
+      @click="$emit('toggle-sidebar')"
+    />
+
+    <img
+      src="/logo.png"
+      alt="EnergyDash"
+      class="h-8 w-auto"
+    >
+
+    <span class="font-semibold text-base text-white hidden sm:block">
+      Energy Network Simulator 2026
+    </span>
+
+    <!-- Backend status badge -->
+    <span
+      class="text-xs px-2 py-1 rounded-full ml-2"
+      :class="referential.backendAvailable === true
+        ? 'bg-emerald-900/40 text-emerald-400'
+        : referential.backendAvailable === false
+          ? 'bg-red-900/40 text-red-400'
+          : 'bg-gray-800 text-gray-500'"
+    >
+      {{ referential.backendAvailable === true ? '● Connected' : referential.backendAvailable === false ? '● Offline' : '● …' }}
+    </span>
+
+    <div class="flex-1" />
+
+    <!-- Weather station indicator -->
+    <div
+      class="hidden sm:flex items-center gap-1 text-xs text-gray-500 border border-[#1E293B] rounded px-2 h-6 shrink-0"
+      title="Weather data source: KNMI station 06280 — Groningen Eelde. Covers Jan 2025 → Dec 2025."
+    >
+      <UIcon
+        name="i-heroicons-map-pin"
+        class="w-3 h-3 text-gray-600"
+      />
+      <span>KNMI · Groningen Eelde</span>
+    </div>
+
+    <UButton
+      icon="i-heroicons-cloud-arrow-up"
+      color="primary"
+      :label="store.isSaving ? 'Saving…' : 'Save'"
+      :loading="store.isSaving"
+      :disabled="!canSave"
+      size="sm"
+      @click="$emit('save')"
+    />
+
+    <UButton
+      icon="i-heroicons-arrow-down-tray"
+      label="Export"
+      size="sm"
+      color="neutral"
+      variant="outline"
+      :disabled="!canExport"
+      @click="$emit('export')"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useSimulationStore } from '~/stores/simulation'
+import { useReferentialStore } from '~/stores/referential'
+import { useHistoryStore } from '~/stores/history'
+
+defineProps<{
+  canSave: boolean
+  canExport: boolean
+}>()
+
+defineEmits<{
+  'toggle-sidebar': []
+  'save': []
+  'export': []
+}>()
+
+const store = useSimulationStore()
+const referential = useReferentialStore()
+const history = useHistoryStore()
+</script>

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import re
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date, timedelta
 
 import logging
 
@@ -225,12 +226,28 @@ class PyPSANetworkBuilder(ISimulationRepository):
         demands: list,
         network_components: list,
     ) -> SimulationRunOutput:
+        # Resolve effective date range for weather-profile lookups.
+        # If the user did not supply explicit dates, derive them from snapshot_hours
+        # anchored to today's month/day in 2025 (the year covered by the weather_profile table).
+        effective_start = run_input.start_date
+        effective_end = run_input.end_date
+        if effective_start is None or effective_end is None:
+            today = date.today()
+            try:
+                anchor = date(2025, today.month, today.day)
+            except ValueError:
+                # Feb 29 doesn't exist in 2025 — fall back to Feb 28
+                anchor = date(2025, today.month, 28)
+            days_needed = max(1, (run_input.snapshot_hours + 23) // 24)
+            effective_start = anchor
+            effective_end = anchor + timedelta(days=days_needed - 1)
+
         # Fetch load profiles async (before entering the sync thread executor)
         load_profiles: dict[str, list[float]] = {}
         if self._load_profile_provider is not None:
             for demand in demands:
                 load_profiles[demand.name] = await self._load_profile_provider.get_profile(
-                    demand.get_type(), run_input.snapshot_hours, run_input.start_date
+                    demand.get_type(), run_input.snapshot_hours, effective_start
                 )
 
         # Hourly load overrides replace auto-generated profiles (keyed by demand UUID)
@@ -244,15 +261,11 @@ class PyPSANetworkBuilder(ISimulationRepository):
 
         # Fetch solar irradiance profiles from weather_profile table
         solar_profiles: dict[str, list[float]] = {}
-        if (
-            self._pv_profile_repo is not None
-            and run_input.start_date is not None
-            and run_input.end_date is not None
-        ):
+        if self._pv_profile_repo is not None:
             for supply in supplies:
                 if supply.get_carrier() == "solar":
                     profile = await self._pv_profile_repo.get_solar_profile(
-                        run_input.start_date, run_input.end_date
+                        effective_start, effective_end
                     )
                     solar_profiles[supply.name] = profile
                     if all(v == 0.0 for v in profile):
@@ -265,11 +278,7 @@ class PyPSANetworkBuilder(ISimulationRepository):
 
         # Compute wind power profiles from KNMI measurements
         wind_profiles: dict[str, list[float]] = {}
-        if (
-            self._wind_repo is not None
-            and run_input.start_date is not None
-            and run_input.end_date is not None
-        ):
+        if self._wind_repo is not None:
             for supply in supplies:
                 if supply.get_carrier() == "wind":
                     wind_use_case = CalculateWindPowerUseCase(self._wind_repo)
@@ -278,8 +287,8 @@ class PyPSANetworkBuilder(ISimulationRepository):
                             CalculatePowerRequest(
                                 asset_id=supply.id,
                                 station_code=_WEATHER_STATION,
-                                start=run_input.start_date,
-                                end=run_input.end_date,
+                                start=effective_start,
+                                end=effective_end,
                             )
                         )
                         rated_kw = supply.capacity_mw * 1000
