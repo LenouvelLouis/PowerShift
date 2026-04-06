@@ -6,10 +6,7 @@
       </h2>
       <span class="text-xs text-gray-500">MWh stacked</span>
     </div>
-    <BaseBarChart
-      :data="chartData"
-      :options="chartOptions"
-    />
+    <BaseChart :option="chartOption" />
   </div>
 </template>
 
@@ -17,25 +14,22 @@
 import type { SimulationResult } from '~/composables/api'
 
 const props = defineProps<{ result: SimulationResult }>()
-const { barChartOptions } = useChartTheme()
+const { barOption } = useEChartsTheme()
 
 const generatorsT = computed(() => props.result.result_json?.generators_t ?? {})
 
-const chartData = computed(() => ({
-  labels: ['Production Mix'],
-  datasets: Object.entries(generatorsT.value).map(([name, data], i) => {
-    const total = (data as { p: number[] }).p.reduce((a, b) => a + b, 0)
-    const color = generatorColor(name, i)
-    return {
-      label: name,
-      data: [+total.toFixed(2)],
-      backgroundColor: color + 'CC',
-      borderColor: color,
-      borderWidth: 1,
-      borderRadius: 4
-    }
+const chartOption = computed(() =>
+  barOption({
+    labels: ['Production Mix'],
+    series: Object.entries(generatorsT.value).map(([name, data], i) => ({
+      name,
+      data: [+(data as { p: number[] }).p.reduce((a, b) => a + b, 0).toFixed(2)],
+      color: generatorColor(name, i)
+    })),
+    yTitle: 'MWh',
+    stacked: true,
+    showLegend: true,
+    tooltipSuffix: ' MWh'
   })
-}))
-
-const chartOptions = barChartOptions({ yTitle: 'MWh', stacked: true, showLegend: true, tooltipSuffix: ' MWh' })
+)
 </script>

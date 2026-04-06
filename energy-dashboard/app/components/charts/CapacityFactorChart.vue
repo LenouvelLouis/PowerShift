@@ -6,10 +6,7 @@
       </h2>
       <span class="text-xs text-gray-500">%</span>
     </div>
-    <BaseBarChart
-      :data="chartData"
-      :options="chartOptions"
-    />
+    <BaseChart :option="chartOption" />
   </div>
 </template>
 
@@ -17,7 +14,7 @@
 import type { SimulationResult } from '~/composables/api'
 
 const props = defineProps<{ result: SimulationResult }>()
-const { barChartOptions } = useChartTheme()
+const { barOption } = useEChartsTheme()
 
 const capacityFactors = computed(() => {
   const cf = props.result.result_json?.capacity_factors ?? {}
@@ -28,17 +25,17 @@ const capacityFactors = computed(() => {
   }))
 })
 
-const chartData = computed(() => ({
-  labels: capacityFactors.value.map(d => d.name),
-  datasets: [{
-    label: 'Capacity Factor (%)',
-    data: capacityFactors.value.map(d => +(d.cf * 100).toFixed(1)),
-    backgroundColor: capacityFactors.value.map(d => d.color + 'CC'),
-    borderColor: capacityFactors.value.map(d => d.color),
-    borderWidth: 1,
-    borderRadius: 4
-  }]
-}))
-
-const chartOptions = barChartOptions({ yTitle: '%', yMax: 100, tooltipSuffix: ' %' })
+const chartOption = computed(() =>
+  barOption({
+    labels: capacityFactors.value.map(d => d.name),
+    series: [{
+      name: 'Capacity Factor (%)',
+      data: capacityFactors.value.map(d => +(d.cf * 100).toFixed(1)),
+      colors: capacityFactors.value.map(d => d.color)
+    }],
+    yTitle: '%',
+    yMax: 100,
+    tooltipSuffix: ' %'
+  })
+)
 </script>

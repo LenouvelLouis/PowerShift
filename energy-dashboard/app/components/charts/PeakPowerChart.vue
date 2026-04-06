@@ -6,10 +6,7 @@
       </h2>
       <span class="text-xs text-gray-500">MW max</span>
     </div>
-    <BaseBarChart
-      :data="chartData"
-      :options="chartOptions"
-    />
+    <BaseChart :option="chartOption" />
   </div>
 </template>
 
@@ -17,26 +14,19 @@
 import type { SimulationResult } from '~/composables/api'
 
 const props = defineProps<{ result: SimulationResult }>()
-const { barChartOptions } = useChartTheme()
+const { barOption } = useEChartsTheme()
 
 const generatorsT = computed(() => props.result.result_json?.generators_t ?? {})
 
-const chartData = computed(() => {
+const chartOption = computed(() => {
   const labels = Object.keys(generatorsT.value)
   const data = labels.map(name => +Math.max(...(generatorsT.value[name] as { p: number[] }).p).toFixed(2))
   const colors = labels.map((name, i) => generatorColor(name, i))
-  return {
+  return barOption({
     labels,
-    datasets: [{
-      label: 'Peak Power (MW)',
-      data,
-      backgroundColor: colors.map(c => c + 'CC'),
-      borderColor: colors,
-      borderWidth: 1,
-      borderRadius: 4
-    }]
-  }
+    series: [{ name: 'Peak Power (MW)', data, colors }],
+    yTitle: 'MW',
+    tooltipSuffix: ' MW'
+  })
 })
-
-const chartOptions = barChartOptions({ yTitle: 'MW', tooltipSuffix: ' MW' })
 </script>
