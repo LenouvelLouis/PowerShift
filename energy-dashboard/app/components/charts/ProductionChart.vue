@@ -6,11 +6,7 @@
       </h2>
       <span class="text-xs text-gray-500">MW / hour</span>
     </div>
-    <BaseLineChart
-      :data="chartData"
-      :options="chartOptions"
-      height="h-72"
-    />
+    <BaseChart :option="chartOption" height="h-72" />
   </div>
 </template>
 
@@ -18,7 +14,7 @@
 import type { SimulationResult } from '~/composables/api'
 
 const props = defineProps<{ result: SimulationResult }>()
-const { lineChartOptions } = useChartTheme()
+const { lineOption } = useEChartsTheme()
 
 const generatorsT = computed(() => props.result.result_json?.generators_t ?? {})
 const timeLabels = computed(() => {
@@ -26,20 +22,15 @@ const timeLabels = computed(() => {
   return Array.from({ length: n }, (_, i) => `H${i}`)
 })
 
-const chartData = computed(() => ({
-  labels: timeLabels.value,
-  datasets: Object.entries(generatorsT.value).map(([name, data], i) => ({
-    label: name,
-    data: (data as { p: number[] }).p,
-    borderColor: generatorColor(name, i),
-    backgroundColor: generatorColor(name, i) + '26',
-    fill: false,
-    tension: 0.4,
-    pointRadius: timeLabels.value.length > 48 ? 0 : 2,
-    pointHoverRadius: 5,
-    borderWidth: 2
-  }))
-}))
-
-const chartOptions = lineChartOptions({ yTitle: 'MW', xMaxTicks: 24 })
+const chartOption = computed(() =>
+  lineOption({
+    labels: timeLabels.value,
+    series: Object.entries(generatorsT.value).map(([name, data], i) => ({
+      name,
+      data: (data as { p: number[] }).p,
+      color: generatorColor(name, i)
+    })),
+    yTitle: 'MW'
+  })
+)
 </script>
