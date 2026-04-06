@@ -25,7 +25,10 @@ const chartOption = computed(() => {
   const labels = [...supplyLabels, ...demandLabels]
   const supplyTotals = supplyLabels.map(name => (generatorsT.value[name] as { p: number[] }).p.reduce((a, b) => a + b, 0))
   const demandTotals = demandLabels.map(name => (loadsT.value[name] as { p: number[] }).p.reduce((a, b) => a + b, 0))
-  const colors = labels.map((name, i) => demandLabels.includes(name) ? '#EF4444' : generatorColor(name, i))
+  const colors = [
+    ...supplyLabels.map((name, i) => generatorColor(name, i)),
+    ...demandLabels.map(() => '#EF4444')
+  ]
   return barOption({
     labels,
     series: [{ name: 'Total Energy (MWh)', data: [...supplyTotals, ...demandTotals], colors }],

@@ -24,7 +24,7 @@ const chartOption = computed(() =>
     series: Object.entries(generatorsT.value).map(([name, data], i) => ({
       name,
       data: [+(data as { p: number[] }).p.reduce((a, b) => a + b, 0).toFixed(2)],
-      color: generatorColor(name, i)
+      colors: [generatorColor(name, i)]
     })),
     yTitle: 'MWh',
     stacked: true,
