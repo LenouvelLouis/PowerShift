@@ -6,11 +6,7 @@
       </h2>
       <span class="text-xs text-gray-500">MW / hour</span>
     </div>
-    <BaseLineChart
-      :data="chartData"
-      :options="chartOptions"
-      height="h-64"
-    />
+    <BaseChart :option="chartOption" height="h-64" />
   </div>
 </template>
 
@@ -18,7 +14,7 @@
 import type { SimulationResult } from '~/composables/api'
 
 const props = defineProps<{ result: SimulationResult }>()
-const { lineChartOptions } = useChartTheme()
+const { lineOption } = useEChartsTheme()
 
 const generatorsT = computed(() => props.result.result_json?.generators_t ?? {})
 const loadsT = computed(() => props.result.result_json?.loads_t ?? {})
@@ -27,7 +23,7 @@ const timeLabels = computed(() => {
   return Array.from({ length: n }, (_, i) => `H${i}`)
 })
 
-const chartData = computed(() => {
+const chartOption = computed(() => {
   const hours = timeLabels.value.length
   const supplyPerHour = Array.from({ length: hours }, (_, i) =>
     Object.values(generatorsT.value).reduce((sum, gen) => sum + ((gen as { p: number[] }).p[i] ?? 0), 0)
@@ -35,32 +31,13 @@ const chartData = computed(() => {
   const demandPerHour = Array.from({ length: hours }, (_, i) =>
     Object.values(loadsT.value).reduce((sum, load) => sum + ((load as { p: number[] }).p[i] ?? 0), 0)
   )
-  return {
+  return lineOption({
     labels: timeLabels.value,
-    datasets: [
-      {
-        label: 'Total Supply',
-        data: supplyPerHour.map(v => +v.toFixed(3)),
-        borderColor: '#10B981',
-        backgroundColor: '#10B98118',
-        fill: true,
-        tension: 0.4,
-        pointRadius: timeLabels.value.length > 48 ? 0 : 2,
-        borderWidth: 2
-      },
-      {
-        label: 'Total Demand',
-        data: demandPerHour.map(v => +v.toFixed(3)),
-        borderColor: '#EF4444',
-        backgroundColor: '#EF444418',
-        fill: true,
-        tension: 0.4,
-        pointRadius: timeLabels.value.length > 48 ? 0 : 2,
-        borderWidth: 2
-      }
-    ]
-  }
+    series: [
+      { name: 'Total Supply', data: supplyPerHour.map(v => +v.toFixed(3)), color: '#10B981' },
+      { name: 'Total Demand', data: demandPerHour.map(v => +v.toFixed(3)), color: '#EF4444' }
+    ],
+    yTitle: 'MW'
+  })
 })
-
-const chartOptions = lineChartOptions({ yTitle: 'MW', xMaxTicks: 24 })
 </script>
