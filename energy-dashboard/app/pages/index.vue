@@ -194,10 +194,10 @@
         </div>
       </div>
 
-      <!-- Tabs: Résultats / Graphiques -->
-      <UTabs :items="[{ label: 'Résultats', slot: 'results' }, { label: 'Graphiques', slot: 'charts' }]" class="w-full">
+      <!-- Tabs: Results / Graphics -->
+      <UTabs :items="[{ label: 'Results', slot: 'results' }, { label: 'Graphics', slot: 'charts' }]" class="w-full">
 
-        <!-- ── Tab Résultats ── -->
+        <!-- ── Tab Results ── -->
         <template #results>
           <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start pt-4">
 

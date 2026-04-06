@@ -75,7 +75,7 @@ export const useSimulationStore = defineStore("simulation", () => {
   const error = ref<string | null>(null);
   const liveError = ref<string | null>(null);
 
-  // ─── Résultats ───────────────────────────────────────────────────────────────
+  // ─── Results ───────────────────────────────────────────────────────────────
   // currentLiveResult — the result from the latest live preview (not saved)
   const currentLiveResult = ref<SimulationResult | null>(null);
 
