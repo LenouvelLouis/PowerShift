@@ -23,21 +23,21 @@ router = APIRouter(prefix="/simulation", tags=["Simulation"])
 
 
 @router.post(
-    "/run",
+    "/save",
     response_model=SimulationRunResponse,
-    summary="Run a grid simulation",
+    summary="Run and save a grid simulation",
     response_description="Simulation result with energy balance and objective value.",
 )
-async def run_simulation(
+async def save_simulation(
     body: SimulationRunRequest,
     service: Annotated[SimulationService, Depends(get_simulation_service)],
 ) -> SimulationRunResponse:
     """Run a PyPSA optimal power flow simulation and persist the result.
 
-    Pass the UUIDs of the supply, demand, and network components to include.
-    Use `GET /api/v1/referential` to retrieve available asset IDs.
+    Uses the same PyPSA execution path as POST /preview (LP, no unit-commitment),
+    then writes the request and result to the database.
     """
-    return await service.run(body)
+    return await service.save(body)
 
 
 @router.get(
@@ -110,7 +110,7 @@ async def import_scenario(
         hourly_load_overrides=body.hourly_load_overrides,
         optimization_objective=body.optimization_objective,
     )
-    return await service.run(run_request)
+    return await service.save(run_request)
 
 
 @router.delete(
