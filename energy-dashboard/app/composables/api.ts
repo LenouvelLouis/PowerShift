@@ -197,8 +197,8 @@ export interface ScenarioExport {
 
 // ─── Simulation ───────────────────────────────────────────────────────────────
 
-export const runSimulation = (params: SimulationRunRequest) =>
-  $fetch<SimulationResult>("/api/v1/simulation/run", {
+export const saveSimulation = (params: SimulationRunRequest) =>
+  $fetch<SimulationResult>("/api/v1/simulation/save", {
     method: "POST",
     body: params,
   });
