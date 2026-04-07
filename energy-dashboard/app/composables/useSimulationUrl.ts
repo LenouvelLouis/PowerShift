@@ -25,8 +25,7 @@ export function useSimulationUrl() {
       try {
         await history.loadSimulationById(sim)
       } catch {
-        // Simulation not found — silently ignore, URL will be cleaned by the watcher
-        // when selectedSimulationId stays null
+        // Simulation not found — silently ignore
       }
     }
   })
