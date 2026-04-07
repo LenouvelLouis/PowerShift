@@ -22,7 +22,7 @@ export function useSimulationUrl() {
     const sim = route.query.sim
     if (typeof sim === 'string' && sim) {
       try {
-        await history.loadHistory()
+        if (!history.simulationHistory.length) await history.loadHistory()
         await history.loadSimulationById(sim)
       } catch {
         // Simulation not found — silently ignore
