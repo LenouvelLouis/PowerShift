@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { watch } from "vue";
 import {
-  runSimulation,
+  saveSimulation,
   type SimulationResult,
   type SimulationRunRequest,
   type DemandCreate,
@@ -233,7 +233,7 @@ export const useSimulationStore = defineStore("simulation", () => {
         }
       }
 
-      const result = await runSimulation({
+      const result = await saveSimulation({
         ...buildPayload(),
         name: scenarioName.value || undefined,
       });
