@@ -1,5 +1,5 @@
 import { useDebounceFn } from '@vueuse/core'
-import { previewSimulation, runSimulation, type SimulationRunRequest } from '~/composables/api'
+import { previewSimulation, saveSimulation as apiSaveSimulation, type SimulationRunRequest } from '~/composables/api'
 import { useHistoryStore } from '~/stores/history'
 import { useSimulationStore } from '~/stores/simulation'
 
@@ -63,7 +63,7 @@ function _extractErrorMessage(error: unknown): { title: string; description: str
  *               Updates store.currentLiveResult for immediate display.
  *
  * saveSimulation — called explicitly on Save button click,
- *                  calls POST /simulation/run (writes to DB),
+ *                  calls POST /simulation/save (writes to DB),
  *                  prepends to history, updates currentLiveResult with saved IDs.
  */
 export function useLiveRunner() {
@@ -97,7 +97,7 @@ export function useLiveRunner() {
   async function saveSimulation(payload: SimulationRunRequest) {
     simStore.isSaving = true
     try {
-      const response = await runSimulation(payload)
+      const response = await apiSaveSimulation(payload)
       // Update live result with the saved response so the summary table shows real ID/timestamp
       simStore.currentLiveResult = response
       // Track this as the new reference so we can detect future changes
