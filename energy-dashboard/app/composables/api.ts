@@ -82,6 +82,7 @@ export interface SimulationRunRequest {
   network_ids: string[];
   snapshot_hours: number;
   solver: string;
+  optimization_objective: "min_cost" | "min_emissions" | "max_renewable";
   name?: string;
   start_date?: string;
   end_date?: string;
@@ -107,6 +108,8 @@ export interface SimulationResult {
   status: string;
   solver: string;
   name?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
   total_supply_mwh: number | null;
   total_demand_mwh: number | null;
   balance_mwh: number | null;
@@ -189,7 +192,7 @@ export interface ScenarioExport {
   demand_ids: string[];
   network_ids: string[];
   asset_overrides?: Record<string, Record<string, number>> | null;
-  optimization_objective: string;
+  optimization_objective: "min_cost" | "min_emissions" | "max_renewable";
 }
 
 // ─── Simulation ───────────────────────────────────────────────────────────────

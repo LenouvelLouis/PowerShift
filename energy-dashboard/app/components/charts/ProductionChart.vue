@@ -6,21 +6,19 @@
       </h2>
       <span class="text-xs text-gray-500">MW / hour</span>
     </div>
-    <BaseChart :option="chartOption" height="h-72" />
+    <BaseChart :option="chartOption" height="h-72" title="Production by Generator" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SimulationResult } from '~/composables/api'
 
-const props = defineProps<{ result: SimulationResult }>()
+const props = defineProps<{ result: SimulationResult; startDate?: string | null }>()
 const { lineOption } = useEChartsTheme()
+const { buildLabels, axisLabelFormatter, tooltipLabelFormatter } = useTimeLabels(() => props.startDate)
 
 const generatorsT = computed(() => props.result.result_json?.generators_t ?? {})
-const timeLabels = computed(() => {
-  const n = Object.values(generatorsT.value)[0]?.p?.length ?? 0
-  return Array.from({ length: n }, (_, i) => `H${i}`)
-})
+const timeLabels = computed(() => buildLabels(Object.values(generatorsT.value)[0]?.p?.length ?? 0))
 
 const chartOption = computed(() =>
   lineOption({
@@ -30,7 +28,9 @@ const chartOption = computed(() =>
       data: (data as { p: number[] }).p,
       color: generatorColor(name, i)
     })),
-    yTitle: 'MW'
+    yTitle: 'MW',
+    axisLabelFormatter,
+    tooltipLabelFormatter
   })
 )
 </script>

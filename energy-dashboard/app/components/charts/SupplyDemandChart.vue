@@ -6,22 +6,20 @@
       </h2>
       <span class="text-xs text-gray-500">MW / hour</span>
     </div>
-    <BaseChart :option="chartOption" height="h-64" />
+    <BaseChart :option="chartOption" height="h-64" title="Supply vs Demand" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SimulationResult } from '~/composables/api'
 
-const props = defineProps<{ result: SimulationResult }>()
+const props = defineProps<{ result: SimulationResult; startDate?: string | null }>()
 const { lineOption } = useEChartsTheme()
+const { buildLabels, axisLabelFormatter, tooltipLabelFormatter } = useTimeLabels(() => props.startDate)
 
 const generatorsT = computed(() => props.result.result_json?.generators_t ?? {})
 const loadsT = computed(() => props.result.result_json?.loads_t ?? {})
-const timeLabels = computed(() => {
-  const n = Object.values(generatorsT.value)[0]?.p?.length ?? 0
-  return Array.from({ length: n }, (_, i) => `H${i}`)
-})
+const timeLabels = computed(() => buildLabels(Object.values(generatorsT.value)[0]?.p?.length ?? 0))
 
 const chartOption = computed(() => {
   const hours = timeLabels.value.length
@@ -37,7 +35,9 @@ const chartOption = computed(() => {
       { name: 'Total Supply', data: supplyPerHour.map(v => +v.toFixed(3)), color: '#10B981' },
       { name: 'Total Demand', data: demandPerHour.map(v => +v.toFixed(3)), color: '#EF4444' }
     ],
-    yTitle: 'MW'
+    yTitle: 'MW',
+    axisLabelFormatter,
+    tooltipLabelFormatter
   })
 })
 </script>

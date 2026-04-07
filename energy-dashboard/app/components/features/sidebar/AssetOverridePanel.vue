@@ -82,7 +82,6 @@ function getVal(field: string, defaultVal: number): number {
 function setVal(field: string, rawValue: string | number) {
   const value = typeof rawValue === 'string' ? parseFloat(rawValue) : rawValue
   if (!isNaN(value)) {
-    if (!store.isLiveMode) store.selectedHistoryId = null
     store.setOverride(props.groupType, props.asset.id, field, value)
   }
 }

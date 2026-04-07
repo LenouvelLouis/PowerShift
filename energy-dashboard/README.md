@@ -1,60 +1,60 @@
-# Nuxt Starter Template
+# Energy Dashboard — Frontend
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+Nuxt 3 dashboard for the Energy Grid Simulation Platform.
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+---
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+## Stack
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png" width="830" height="466">
-  </picture>
-</a>
+| Technology | Role |
+|---|---|
+| Nuxt 3 | Vue meta-framework |
+| Vue 3 + TypeScript | UI components |
+| @nuxt/ui | Component library |
+| Pinia | Global state management |
+| TanStack Query | Server-state / API calls |
 
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
+---
 
-## Quick Start
-
-```bash [Terminal]
-npm create nuxt@latest -- -t ui
-```
-
-## Deploy your own
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
-
-## Setup
-
-Make sure to install the dependencies:
+## Dev commands
 
 ```bash
-pnpm install
+pnpm install         # install dependencies
+pnpm dev             # start dev server at http://localhost:3000
+pnpm typecheck       # TypeScript type check
+pnpm lint            # lint
+pnpm build           # production build
+pnpm preview         # locally preview production build
 ```
 
-## Development Server
+---
 
-Start the development server on `http://localhost:3000`:
+## Structure
 
-```bash
-pnpm dev
+```
+app/
+├── components/
+│   ├── features/       # Feature-level components (header, simulation panels, …)
+│   └── ui/             # Generic reusable UI primitives
+├── composables/
+│   └── api.ts          # All API calls via TanStack Query
+├── stores/
+│   └── simulation.ts   # Pinia store for simulation state
+└── pages/              # Nuxt pages
 ```
 
-## Production
+---
 
-Build the application for production:
+## Conventions
 
-```bash
-pnpm build
-```
+- All API calls go through composables in `composables/api.ts` using TanStack Query — no raw `fetch` in components.
+- Pinia stores (`stores/`) are for truly global state only.
+- Page components contain no business logic — delegate to composables and stores.
+- `pnpm typecheck` must pass before committing.
 
-Locally preview production build:
+---
 
-```bash
-pnpm preview
-```
+## Backend
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+The dashboard talks to the FastAPI backend running at `http://localhost:8000`.
+See the root `README.md` for backend setup instructions.

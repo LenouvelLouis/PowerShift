@@ -6,7 +6,7 @@
       </h2>
       <span class="text-xs text-gray-500">%</span>
     </div>
-    <BaseChart :option="chartOption" />
+    <BaseChart :option="chartOption" title="Capacity Factors" />
   </div>
 </template>
 

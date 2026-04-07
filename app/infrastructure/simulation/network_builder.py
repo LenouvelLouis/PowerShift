@@ -5,12 +5,10 @@ from __future__ import annotations
 import asyncio
 import re
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import logging
 
-from app.application.wind.schemas import CalculatePowerRequest
-from app.application.wind.use_cases import CalculateWindPowerUseCase
 from app.domain.interfaces.load_profile_provider import ILoadProfileProvider
 from app.domain.interfaces.pv_profile_repository import IPVProfileRepository
 from app.domain.interfaces.simulation_repository import (
@@ -18,13 +16,12 @@ from app.domain.interfaces.simulation_repository import (
     SimulationRunInput,
     SimulationRunOutput,
 )
-from app.domain.wind.exceptions import WindAssetNotFoundError, WindTurbineError
+from app.infrastructure.simulation.objectives import get_strategy
 from app.infrastructure.simulation.pypsa_adapter import (
     AbstractGridSimulation,
     AdapterOutput,
     SimulationConfig,
 )
-from app.infrastructure.wind.repository import WindTurbineRepositoryImpl
 from app.infrastructure.nuclear.repository import NuclearRepositoryImpl
 from app.domain.nuclear.services import NuclearConstraintsBuilder
 
@@ -78,21 +75,8 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
             # Adjust marginal cost based on optimization objective
             carrier = supply.get_carrier()
             supply_overrides = config.pypsa_params.get(supply.name, {})
-            if config.optimization_objective == "min_emissions":
-                # Use emissions_factor from pypsa_params if provided, else 0 for renewables / 1 for others
-                emissions_factor = supply_overrides.get("emissions_factor", None)
-                if emissions_factor is not None:
-                    params["marginal_cost"] = float(emissions_factor)
-                elif carrier in ("wind", "solar"):
-                    params["marginal_cost"] = 0.0
-                else:
-                    params["marginal_cost"] = 1.0
-            elif config.optimization_objective == "max_renewable":
-                # Force solver to prefer renewables by making non-renewables very expensive
-                if carrier in ("wind", "solar"):
-                    params["marginal_cost"] = 0.0
-                else:
-                    params["marginal_cost"] = 1000.0
+            strategy = get_strategy(config.optimization_objective)
+            params = strategy.apply_marginal_cost(params, carrier, supply_overrides)
 
             # Apply user overrides last, excluding internal keys not meant for PyPSA
             params.update({k: v for k, v in supply_overrides.items() if k != "emissions_factor"})
@@ -210,13 +194,11 @@ class PyPSANetworkBuilder(ISimulationRepository):
         simulation: AbstractGridSimulation | None = None,
         load_profile_provider: ILoadProfileProvider | None = None,
         pv_profile_repo: IPVProfileRepository | None = None,
-        wind_repo: WindTurbineRepositoryImpl | None = None,
         nuclear_repo: NuclearRepositoryImpl | None = None,
     ) -> None:
         self._simulation = simulation or _DefaultPyPSASimulation()
         self._load_profile_provider = load_profile_provider
         self._pv_profile_repo = pv_profile_repo
-        self._wind_repo = wind_repo
         self._nuclear_repo = nuclear_repo
 
     async def run(
@@ -278,40 +260,17 @@ class PyPSANetworkBuilder(ISimulationRepository):
 
         # Compute wind power profiles from KNMI measurements
         wind_profiles: dict[str, list[float]] = {}
-        if self._wind_repo is not None:
+        if self._pv_profile_repo is not None:
             for supply in supplies:
                 if supply.get_carrier() == "wind":
-                    wind_use_case = CalculateWindPowerUseCase(self._wind_repo)
-                    try:
-                        result = await wind_use_case.execute(
-                            CalculatePowerRequest(
-                                asset_id=supply.id,
-                                station_code=_WEATHER_STATION,
-                                start=effective_start,
-                                end=effective_end,
-                            )
-                        )
-                        rated_kw = supply.capacity_mw * 1000
-                        wind_profile = [
-                            min(pt.power_kw / rated_kw, 1.0) if rated_kw > 0 else 0.0
-                            for pt in result.power_series
-                        ]
-                        wind_profiles[supply.name] = wind_profile
-                        if not result.power_series or all(v == 0.0 for v in wind_profile):
-                            msg = (
-                                f"Wind asset '{supply.name}': no measurement data found for "
-                                f"{run_input.start_date} → {run_input.end_date}. "
-                                "Running at rated capacity (p_nom)."
-                            )
-                            profile_warnings.append(msg)
-                    except (WindAssetNotFoundError, WindTurbineError) as exc:
-                        _log.warning(
-                            "Wind profile unavailable for '%s': %s — running at p_nom.",
-                            supply.name, exc,
-                        )
+                    profile = await self._pv_profile_repo.get_wind_profile(
+                        effective_start, effective_end
+                    )
+                    wind_profiles[supply.name] = profile
+                    if all(v == 0.0 for v in profile):
                         profile_warnings.append(
-                            f"Wind asset '{supply.name}': profile unavailable ({exc}). "
-                            "Running at rated capacity (p_nom)."
+                            f"Wind asset '{supply.name}': no KNMI data for "
+                            f"{effective_start} → {effective_end}. Running at rated capacity (p_nom)."
                         )
 
         # Build nuclear operational constraints

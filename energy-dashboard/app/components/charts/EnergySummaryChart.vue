@@ -6,7 +6,7 @@
       </h2>
       <span class="text-xs text-gray-500">MWh</span>
     </div>
-    <BaseChart :option="chartOption" :height="height" />
+    <BaseChart :option="chartOption" :height="height" title="Energy Summary" />
   </div>
 </template>
 

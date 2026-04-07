@@ -60,6 +60,8 @@ export function useEChartsTheme() {
     labels: string[]
     series: { name: string; data: number[]; color: string }[]
     yTitle?: string
+    axisLabelFormatter?: (v: string) => string
+    tooltipLabelFormatter?: (v: string) => string
   }): ECOption {
     const useDataZoom = opts.labels.length > 48
 
@@ -71,7 +73,17 @@ export function useEChartsTheme() {
       },
       tooltip: {
         ...baseTooltip,
-        trigger: 'axis'
+        trigger: 'axis',
+        formatter: opts.tooltipLabelFormatter
+          ? (params: any) => {
+              const items = Array.isArray(params) ? params : [params]
+              const title = opts.tooltipLabelFormatter!(items[0]?.name ?? '')
+              const lines = items.map((p: any) =>
+                `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};margin-right:4px"></span>${p.seriesName}: ${Number(p.value).toFixed(2)}`
+              )
+              return `<div style="font-size:11px">${title}<br/>${lines.join('<br/>')}</div>`
+            }
+          : undefined
       },
       legend: baseLegend,
       xAxis: {
@@ -80,7 +92,20 @@ export function useEChartsTheme() {
         data: opts.labels,
         axisLabel: {
           ...baseXAxis.axisLabel,
-          interval: opts.labels.length > 48 ? Math.floor(opts.labels.length / 24) - 1 : 'auto'
+          interval: opts.labels.length > 48 ? Math.floor(opts.labels.length / 24) - 1 : 'auto',
+          formatter: opts.axisLabelFormatter
+            ? (value: string) => {
+                const label = opts.axisLabelFormatter!(value)
+                // Midnight label (date format) — highlight in brighter color
+                if (!value.startsWith('H') && new Date(value).getUTCHours() === 0) {
+                  return `{day|${label}}`
+                }
+                return label
+              }
+            : undefined,
+          rich: {
+            day: { color: '#CBD5E1', fontWeight: 'bold', fontSize: 10 }
+          }
         }
       },
       yAxis: {

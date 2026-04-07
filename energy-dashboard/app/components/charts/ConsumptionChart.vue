@@ -6,21 +6,19 @@
       </h2>
       <span class="text-xs text-gray-500">MW / hour</span>
     </div>
-    <BaseChart :option="chartOption" height="h-72" />
+    <BaseChart :option="chartOption" height="h-72" title="Consumption by Load" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SimulationResult } from '~/composables/api'
 
-const props = defineProps<{ result: SimulationResult }>()
+const props = defineProps<{ result: SimulationResult; startDate?: string | null }>()
 const { lineOption } = useEChartsTheme()
+const { buildLabels, axisLabelFormatter, tooltipLabelFormatter } = useTimeLabels(() => props.startDate)
 
 const loadsT = computed(() => props.result.result_json?.loads_t ?? {})
-const timeLabels = computed(() => {
-  const n = Object.values(loadsT.value)[0]?.p?.length ?? 0
-  return Array.from({ length: n }, (_, i) => `H${i}`)
-})
+const timeLabels = computed(() => buildLabels(Object.values(loadsT.value)[0]?.p?.length ?? 0))
 
 const chartOption = computed(() =>
   lineOption({
@@ -30,7 +28,9 @@ const chartOption = computed(() =>
       data: (data as { p: number[] }).p,
       color: PALETTE[(i + 4) % PALETTE.length] as string
     })),
-    yTitle: 'MW'
+    yTitle: 'MW',
+    axisLabelFormatter,
+    tooltipLabelFormatter
   })
 )
 </script>

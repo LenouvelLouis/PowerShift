@@ -149,14 +149,12 @@ const sections = [
 // ─── Actions ────────────────────────────────────────────────────────────────
 
 function handleAdd(storeType: 'supply' | 'demand' | 'network', id: string) {
-  if (!store.isLiveMode) store.selectedHistoryId = null
   if (storeType === 'supply') store.addSupplyToSelection(id)
   else if (storeType === 'demand') store.addDemandToSelection(id)
   else store.addNetworkToSelection(id)
 }
 
 function handleRemove(storeType: 'supply' | 'demand' | 'network', id: string) {
-  if (!store.isLiveMode) store.selectedHistoryId = null
   if (storeType === 'supply') store.removeSupplyFromSelection(id)
   else if (storeType === 'demand') store.removeDemandFromSelection(id)
   else store.removeNetworkFromSelection(id)

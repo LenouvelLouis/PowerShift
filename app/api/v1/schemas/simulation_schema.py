@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
@@ -37,6 +37,22 @@ class SimulationRunRequest(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def resolve_dates_from_snapshot_hours(self) -> SimulationRunRequest:
+        """When no dates are provided, derive start/end from today mapped to 2025.
+        If the range overflows past 2025-12-31, wrap around to 2025-01-01."""
+        if self.start_date is None or self.end_date is None:
+            today = datetime.now().date()
+            start = date(2025, today.month, today.day)
+            days_needed = self.snapshot_hours // 24
+            end = start + timedelta(days=days_needed - 1)
+            if end > date(2025, 12, 31):
+                end = date(2025, 12, 31)
+            self.start_date = start
+            self.end_date = end
+            self.snapshot_hours = (end - start).days * 24 + 24
+        return self
+
+    @model_validator(mode="after")
     def validate_date_range_vs_snapshot_hours(self) -> SimulationRunRequest:
         """Validate that date range matches snapshot_hours (assuming 24 hourly snapshots per day)."""
         if self.start_date is None or self.end_date is None:
@@ -59,6 +75,8 @@ class SimulationRunResponse(BaseModel):
     status: str
     solver: str
     name: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
     total_supply_mwh: Optional[float]
     total_demand_mwh: Optional[float]
     balance_mwh: Optional[float]

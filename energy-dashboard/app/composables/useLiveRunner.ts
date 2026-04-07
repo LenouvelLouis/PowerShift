@@ -77,6 +77,7 @@ export function useLiveRunner() {
     try {
       const response = await previewSimulation(payload)
       simStore.currentLiveResult = response
+      historyStore.currentResult = response
     }
     catch (error: unknown) {
       const { title, description } = _extractErrorMessage(error)

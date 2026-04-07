@@ -45,7 +45,7 @@ const { handleExport } = useScenarioIO()
 // ─── Computed ─────────────────────────────────────────────────────────────────
 
 const canSave = computed(() =>
-  !store.isSaving && store.isLiveMode && store.hasMinimumAssets
+  !store.isSaving && store.hasMinimumAssets
   && !!referential.backendAvailable && !store.paramsMatchSaved
 )
 const canExport = computed(() => !!(history.currentResult || history.selectedSimulationId))
@@ -53,13 +53,24 @@ const canExport = computed(() => !!(history.currentResult || history.selectedSim
 // ─── Live preview watcher ─────────────────────────────────────────────────────
 
 watch(
-  () => JSON.stringify(store.buildPayload()),
+  () => [
+    store.selectedSupplyIds.join(),
+    store.selectedDemandIds.join(),
+    store.selectedNetworkIds.join(),
+    store.snapshotHours,
+    store.solver,
+    store.optimizationObjective,
+    store.startDate,
+    store.endDate,
+    JSON.stringify(store.buildPayload().asset_overrides),
+  ],
   () => {
+    if (store.isLoadingScenario) return
     if (!referential.backendAvailable || !store.hasMinimumAssets) return
-    if (!store.isLiveMode) return
     runPreview(store.buildPayload())
   }
 )
+
 
 // Warn when solar/wind assets are selected without a date range
 const _noDateWarnShown = ref(false)

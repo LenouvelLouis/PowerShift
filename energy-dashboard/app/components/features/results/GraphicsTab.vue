@@ -9,7 +9,7 @@
         Production
       </p>
       <div class="flex flex-col gap-6">
-        <ProductionChart :result="result" />
+        <ProductionChart :result="result" :start-date="startDate" />
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <CapacityFactorChart
             v-if="hasCapacityFactors"
@@ -32,7 +32,7 @@
       <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">
         Demand
       </p>
-      <ConsumptionChart :result="result" />
+      <ConsumptionChart :result="result" :start-date="startDate" />
     </div>
 
     <!-- Bilan section -->
@@ -41,7 +41,7 @@
         Bilan
       </p>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SupplyDemandChart :result="result" />
+        <SupplyDemandChart :result="result" :start-date="startDate" />
         <EnergySummaryChart
           :result="result"
           height="h-64"
@@ -62,6 +62,7 @@
 import type { SimulationResult } from '~/composables/api'
 
 const props = defineProps<{ result: SimulationResult }>()
+const startDate = computed(() => props.result.start_date || null)
 
 const generatorsT = computed(() => props.result.result_json?.generators_t ?? {})
 const loadsT = computed(() => props.result.result_json?.loads_t ?? {})

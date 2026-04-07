@@ -85,6 +85,17 @@
       />
     </div>
 
+    <!-- Optimization Objective selector -->
+    <div class="flex items-center gap-1.5">
+      <label class="text-xs text-gray-500">Objective</label>
+      <USelect
+        v-model="store.optimizationObjective"
+        :items="objectiveSelectItems"
+        class="w-44"
+        size="xs"
+      />
+    </div>
+
     <!-- Scenario name + rename -->
     <div class="flex items-center gap-1">
       <UInput
@@ -123,11 +134,8 @@
 
     <div class="flex-1" />
 
-    <!-- Live indicator / Saved sim badge -->
-    <div
-      v-if="store.isLiveMode"
-      class="flex items-center gap-1.5 select-none"
-    >
+    <!-- Live indicator -->
+    <div class="flex items-center gap-1.5 select-none">
       <span class="relative flex h-2 w-2">
         <span
           v-if="store.isLiveRunning"
@@ -153,16 +161,6 @@
         {{ store.isLiveRunning ? 'Running…' : store.hasMinimumAssets && referential.backendAvailable ? 'Live' : 'Idle' }}
       </span>
     </div>
-    <div
-      v-else
-      class="flex items-center gap-1.5 text-xs text-gray-500 select-none"
-    >
-      <UIcon
-        name="i-heroicons-archive-box"
-        class="w-3.5 h-3.5"
-      />
-      <span>Saved sim</span>
-    </div>
   </div>
 </template>
 
@@ -182,4 +180,11 @@ const history = useHistoryStore()
 
 const { dateMode, setDateMode, handleImport, fileInputRef } = useScenarioIO()
 const { solverSelectItems, solverAvailabilityLoading, selectedSolverTitle } = useSolverAvailability()
+
+const objectiveSelectItems = [
+  { label: 'Minimize Cost',       value: 'min_cost'       },
+  { label: 'Minimize Emissions',  value: 'min_emissions'  },
+  { label: 'Maximize Renewables', value: 'max_renewable'  },
+] as const
+
 </script>

@@ -21,7 +21,6 @@ from app.infrastructure.db.repositories.supply_repository_impl import SupplyRepo
 from app.infrastructure.external.open_meteo_provider import OpenMeteoLoadProfileProvider
 from app.infrastructure.nuclear.repository import NuclearRepositoryImpl
 from app.infrastructure.simulation.network_builder import PyPSANetworkBuilder
-from app.infrastructure.wind.repository import WindTurbineRepositoryImpl
 # ── DB session (shared by all repos via FastAPI deduplication) ───────────────
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
@@ -49,10 +48,6 @@ def get_pv_profile_repository(db: DbSession) -> WeatherProfileRepositoryImpl:
     return WeatherProfileRepositoryImpl(db)
 
 
-def get_wind_repository(db: DbSession) -> WindTurbineRepositoryImpl:
-    return WindTurbineRepositoryImpl(db)
-
-
 def get_nuclear_repository(db: DbSession) -> NuclearRepositoryImpl:
     return NuclearRepositoryImpl(db)
 
@@ -77,14 +72,12 @@ def get_simulation_use_case(
     network_repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
     persistence: Annotated[SimulationRepositoryImpl, Depends(get_simulation_persistence_repository)],
     pv_repo: Annotated[WeatherProfileRepositoryImpl, Depends(get_pv_profile_repository)],
-    wind_repo: Annotated[WindTurbineRepositoryImpl, Depends(get_wind_repository)],
     nuclear_repo: Annotated[NuclearRepositoryImpl, Depends(get_nuclear_repository)],
 ) -> RunSimulationUseCase:
     return RunSimulationUseCase(
         grid_simulation=PyPSANetworkBuilder(
             load_profile_provider=OpenMeteoLoadProfileProvider(),
             pv_profile_repo=pv_repo,
-            wind_repo=wind_repo,
             nuclear_repo=nuclear_repo,
         ),
         persistence=persistence,
@@ -99,13 +92,11 @@ def get_preview_simulation_use_case(
     demand_repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
     network_repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
     pv_repo: Annotated[WeatherProfileRepositoryImpl, Depends(get_pv_profile_repository)],
-    wind_repo: Annotated[WindTurbineRepositoryImpl, Depends(get_wind_repository)],
 ) -> PreviewSimulationUseCase:
     return PreviewSimulationUseCase(
         grid_simulation=PyPSANetworkBuilder(
             load_profile_provider=OpenMeteoLoadProfileProvider(),
             pv_profile_repo=pv_repo,
-            wind_repo=wind_repo,
         ),
         supply_repo=supply_repo,
         demand_repo=demand_repo,

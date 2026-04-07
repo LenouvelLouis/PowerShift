@@ -64,17 +64,7 @@
     />
 
     <span
-      v-if="sim.isLiveMode"
-      class="flex items-center gap-1.5 text-xs text-emerald-500 shrink-0"
-    >
-      <span
-        class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400"
-        :class="sim.isLiveRunning ? 'animate-pulse' : ''"
-      />
-      {{ sim.isLiveRunning ? 'Computing…' : 'Live' }}
-    </span>
-    <span
-      v-else-if="sim.displayedResult"
+      v-if="sim.displayedResult"
       class="text-xs text-gray-500 shrink-0"
     >
       {{ new Date(sim.displayedResult.created_at).toLocaleString() }}
@@ -109,13 +99,21 @@ watch(selectedScenario, async (val) => {
   const id = val.replace('api-', '')
   if (sim.referenceSimId === id && history.currentResult?.id === id) return
   loading.value = true
+  sim.isLoadingScenario = true
   try {
     const entry = (history.simulationHistory as SimulationListItem[]).find(s => s.id === id)
     await history.loadSimulationById(id)
     const exported = await fetchScenarioExport(id)
     sim.loadFromScenario(exported, entry?.name ?? '')
     sim.setReference(id, sim.buildPayload())
+  } catch (e) {
+    console.error('[ScenarioBar] load failed', e)
   } finally {
+    // Wait for Vue to flush the reactive updates from loadFromScenario before
+    // clearing the flag — otherwise the AppHeader watcher fires after the flag
+    // is already false and triggers an unwanted preview.
+    await nextTick()
+    sim.isLoadingScenario = false
     loading.value = false
   }
 })
