@@ -53,6 +53,8 @@ import { useReferentialStore } from '~/stores/referential'
 const sim = useSimulationStore()
 const referential = useReferentialStore()
 
+useSimulationUrl()
+
 const loadingScenario = ref(false)
 const result = computed(() => sim.displayedResult)
 
