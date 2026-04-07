@@ -71,6 +71,21 @@ class SimulationService:
         req = await self._persistence.get_request_by_id(row.request_id)
         return self._to_response(row, req)
 
+    async def save(self, body: SimulationRunRequest) -> SimulationRunResponse:
+        """Run PyPSA via the preview code path (LP, no nuclear unit-commitment) and persist the result.
+
+        Identical to preview() but writes request + result to the database.
+        """
+        if self._preview_use_case is None:
+            raise RuntimeError("PreviewSimulationUseCase not wired — check dependencies.py")
+        run_input = self._to_run_input(body)
+        output = await self._preview_use_case.execute(run_input)
+        request_id = await self._persistence.save_request(run_input)
+        result_row = await self._persistence.save_result(request_id, output)
+        row = await self._persistence.get_result_by_id(result_row.id)
+        req = await self._persistence.get_request_by_id(row.request_id)
+        return self._to_response(row, req)
+
     async def preview(self, body: SimulationRunRequest) -> SimulationRunResponse:
         """Run PyPSA without any database writes — for live frontend preview.
 
