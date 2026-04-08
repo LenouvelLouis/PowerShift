@@ -32,7 +32,49 @@ Full-stack energy grid simulation platform — Clean Architecture backend with P
 
 ## Installation
 
-### Backend
+### Docker (recommended)
+
+Requirements: [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/).
+
+```bash
+# 1. Clone the repo
+git clone <repo-url>
+cd <repo-name>
+
+# 2. Configure environment variables
+cp .env.example .env
+# Edit .env and set DATABASE_URL to your NeonDB connection string:
+# DATABASE_URL=postgresql+asyncpg://user:pass@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require
+
+# 3. Build and start all services
+docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| Frontend (Nuxt) | http://localhost:3000 |
+| Backend (FastAPI) | http://localhost:8000 |
+| Swagger UI | http://localhost:8000/docs |
+
+To stop all services:
+
+```bash
+docker compose down
+```
+
+In development, the backend supports hot-reload via `docker compose watch`:
+
+```bash
+docker compose watch
+```
+
+Changes in `app/` are synced into the container automatically without a rebuild.
+
+---
+
+### Manual installation
+
+#### Backend
 
 ```bash
 # 1. Clone the repo
@@ -44,7 +86,7 @@ python -m venv .venv
 source .venv/bin/activate        # Linux / macOS
 # .venv\Scripts\activate         # Windows
 
-# 3. Install dependencies (registers the app package in editable mode)
+# 3. Install dependencies
 pip install -e ".[dev]"
 
 # 4. Configure environment variables
@@ -58,7 +100,7 @@ uvicorn main:app --reload
 The API is available at [http://localhost:8000](http://localhost:8000).
 Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs).
 
-### Frontend
+#### Frontend
 
 ```bash
 cd energy-dashboard
