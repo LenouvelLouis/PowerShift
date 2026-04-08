@@ -32,6 +32,27 @@
           :class="balanceColor"
         >{{ result.status === 'error' ? '—' : `${fmt(result.balance_mwh)} MWh` }}</span>
       </div>
+      <template v-if="convergence">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400">Convergence</span>
+          <span
+            class="font-mono text-xs"
+            :class="convergence.all_converged ? 'text-emerald-400' : 'text-amber-400'"
+          >
+            {{ convergence.converged_count }}/{{ convergence.total_snapshots }} snapshots
+          </span>
+        </div>
+      </template>
+      <template v-if="gridExchange">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400">Grid Import</span>
+          <span class="font-mono text-blue-400">{{ fmt(gridExchange.total_import_mwh) }} MWh</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400">Grid Export</span>
+          <span class="font-mono text-emerald-400">{{ fmt(gridExchange.total_export_mwh) }} MWh</span>
+        </div>
+      </template>
       <div class="flex justify-between items-center border-t border-[#1E293B] pt-2.5 mt-1">
         <span class="text-gray-400">Created</span>
         <span class="font-mono text-gray-300 text-xs">{{ new Date(result.created_at).toLocaleString() }}</span>
@@ -53,4 +74,7 @@ const balanceColor = computed(() => {
   if (Math.abs(b) < 0.001) return 'text-emerald-400'
   return b > 0 ? 'text-blue-400' : 'text-red-400'
 })
+
+const convergence = computed(() => props.result.result_json?.convergence ?? null)
+const gridExchange = computed(() => props.result.result_json?.grid_exchange ?? null)
 </script>

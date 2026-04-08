@@ -12,13 +12,13 @@ export interface SolverOption {
 }
 
 export const SOLVER_OPTIONS: readonly SolverOption[] = [
-  { label: 'HiGHS', value: 'highs', description: 'Minimizes total operating cost — fast LP, open-source (default)', speed: 'Fast', license: 'Open-source', bestFor: 'Default choice for most LP economic dispatch simulations' },
-  { label: 'GLPK', value: 'glpk', description: 'Minimizes total cost — reliable LP/MIP but slower, open-source', speed: 'Slow', license: 'Open-source', bestFor: 'Simple runs and compatibility checks' },
-  { label: 'CBC', value: 'cbc', description: 'Optimizes ON/OFF unit commitment decisions — MIP open-source (COIN-OR)', speed: 'Medium', license: 'Open-source', bestFor: 'Mixed-integer problems with binary commitments' },
-  { label: 'SCIP', value: 'scip', description: 'Solves complex MIP problems with constraints — academic solver', speed: 'Medium', license: 'Academic', bestFor: 'Complex MIP formulations in research contexts' },
-  { label: 'Gurobi', value: 'gurobi', description: 'Minimizes cost or emissions ultra-fast — LP/MIP commercial', speed: 'Very fast', license: 'Commercial', bestFor: 'Large-scale industrial optimization with strict runtime targets' },
-  { label: 'CPLEX', value: 'cplex', description: 'Industrial-grade LP/MIP optimization — IBM, commercial', speed: 'Very fast', license: 'Commercial', bestFor: 'Enterprise-grade robust optimization workloads' },
-  { label: 'Xpress', value: 'xpress', description: 'Large-scale LP/MIP optimization — FICO, commercial', speed: 'Very fast', license: 'Commercial', bestFor: 'High-performance LP/MIP on large utility-scale systems' }
+  { label: 'HiGHS', value: 'highs', description: 'Open-source LP solver — fast and reliable (default). Reserved for DC power flow and future OPF modes. Current AC power flow uses Newton-Raphson regardless.', speed: 'Fast', license: 'Open-source', bestFor: 'Default choice — recommended for all current simulations' },
+  { label: 'GLPK', value: 'glpk', description: 'Open-source LP/MIP solver — slower alternative to HiGHS. Will be used for DC PF and future OPF modes.', speed: 'Slow', license: 'Open-source', bestFor: 'Compatibility checks and simple DC power flow' },
+  { label: 'CBC', value: 'cbc', description: 'COIN-OR open-source MIP solver — handles unit commitment in future hybrid AC/OPF modes.', speed: 'Medium', license: 'Open-source', bestFor: 'Future mixed-integer OPF with unit commitment' },
+  { label: 'SCIP', value: 'scip', description: 'Academic MIP/NLP solver — supports constrained and non-linear power flow formulations.', speed: 'Medium', license: 'Academic', bestFor: 'Research-grade constrained power flow problems' },
+  { label: 'Gurobi', value: 'gurobi', description: 'Commercial LP/MIP solver — ultra-fast for large-scale OPF. Requires a valid license.', speed: 'Very fast', license: 'Commercial', bestFor: 'Large-scale OPF with strict performance targets' },
+  { label: 'CPLEX', value: 'cplex', description: 'IBM commercial LP/MIP — enterprise-grade robustness for large OPF workloads. Requires a valid license.', speed: 'Very fast', license: 'Commercial', bestFor: 'Enterprise OPF on large utility-scale networks' },
+  { label: 'Xpress', value: 'xpress', description: 'FICO commercial LP/MIP — high-performance large-scale OPF. Requires a valid license.', speed: 'Very fast', license: 'Commercial', bestFor: 'High-performance OPF on large transmission networks' },
 ] as const
 
 export function useSolverAvailability() {

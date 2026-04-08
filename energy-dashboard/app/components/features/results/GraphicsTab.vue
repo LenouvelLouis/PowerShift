@@ -48,6 +48,17 @@
         />
       </div>
     </div>
+
+    <!-- Network section (PF-specific) -->
+    <div v-if="hasBusData || hasLineData">
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">
+        Network
+      </p>
+      <div class="flex flex-col gap-6">
+        <BusVoltageChart v-if="hasBusData" :result="result" :start-date="startDate" />
+        <LineLoadingBars v-if="hasLineData" :result="result" />
+      </div>
+    </div>
   </div>
 
   <div
@@ -69,4 +80,6 @@ const loadsT = computed(() => props.result.result_json?.loads_t ?? {})
 const hasChartData = computed(() => Object.keys(generatorsT.value).length > 0)
 const hasConsumptionData = computed(() => Object.keys(loadsT.value).length > 0)
 const hasCapacityFactors = computed(() => Object.keys(props.result.result_json?.capacity_factors ?? {}).length > 0)
+const hasBusData = computed(() => Object.keys(props.result.result_json?.buses_t ?? {}).length > 0)
+const hasLineData = computed(() => Object.keys(props.result.result_json?.lines_t ?? {}).length > 0)
 </script>

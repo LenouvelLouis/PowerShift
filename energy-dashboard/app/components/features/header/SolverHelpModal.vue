@@ -10,7 +10,7 @@
             Solver helper
           </h3>
           <p class="text-xs text-gray-400 mt-0.5">
-            Quick guide to choose the best optimization solver.
+            AC power flow uses Newton-Raphson. Solver selection applies to DC power flow and future OPF modes.
           </p>
         </div>
         <span class="text-xs px-2 py-1 rounded bg-[#1E293B] text-slate-300">

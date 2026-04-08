@@ -60,8 +60,7 @@
         <span class="flex items-center gap-1.5 font-mono">
           <span class="text-amber-400">{{ store.selectedSupplyIds.length }}S</span>
           <span
-            class="text-[10px] font-semibold px-1 py-0.5 rounded"
-            class="text-amber-300/70 bg-amber-950/40"
+            class="text-[10px] font-semibold px-1 py-0.5 rounded text-amber-300/70 bg-amber-950/40"
           >{{ totalSupplyMw }} MW</span>
           <span class="text-gray-600">·</span>
           <span class="text-emerald-400">{{ store.selectedDemandIds.length }}D</span>
