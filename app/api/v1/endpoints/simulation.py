@@ -32,7 +32,7 @@ async def save_simulation(
     body: SimulationRunRequest,
     service: Annotated[SimulationService, Depends(get_simulation_service)],
 ) -> SimulationRunResponse:
-    """Run a PyPSA optimal power flow simulation and persist the result.
+    """Run a PyPSA AC power flow simulation and persist the result.
 
     Uses the same PyPSA execution path as POST /preview (LP, no unit-commitment),
     then writes the request and result to the database.
@@ -76,7 +76,7 @@ async def preview_simulation(
     body: SimulationRunRequest,
     service: Annotated[SimulationService, Depends(get_simulation_service)],
 ) -> SimulationRunResponse:
-    """Run a PyPSA optimal power flow simulation without persisting the result.
+    """Run a PyPSA AC power flow simulation without persisting the result.
 
     Identical request body to POST /run.
     The response has the same format but the result is NOT stored in the database
@@ -108,7 +108,6 @@ async def import_scenario(
         network_ids=body.network_ids,
         pypsa_params=body.pypsa_params,
         hourly_load_overrides=body.hourly_load_overrides,
-        optimization_objective=body.optimization_objective,
     )
     return await service.save(run_request)
 

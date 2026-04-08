@@ -3,9 +3,9 @@
     <KpiCard label="Status">
       <span
         class="text-xl font-bold"
-        :class="result.status === 'optimal' ? 'text-emerald-400' : 'text-red-400'"
+        :class="result.status === 'converged' ? 'text-emerald-400' : 'text-red-400'"
       >
-        {{ result.status === 'optimal' ? 'Optimal' : 'Infeasible' }}
+        {{ result.status === 'converged' ? 'Converged' : result.status === 'non_converged' ? 'Non-converged' : 'Error' }}
       </span>
     </KpiCard>
     <KpiCard

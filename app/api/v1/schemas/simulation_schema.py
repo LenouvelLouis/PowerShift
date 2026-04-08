@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime, timedelta
-from typing import Literal, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -21,7 +21,6 @@ class SimulationRunRequest(BaseModel):
     pypsa_params: Optional[dict] = None
     asset_overrides: Optional[dict] = None
     hourly_load_overrides: Optional[dict[str, list[float]]] = None
-    optimization_objective: Literal["min_cost", "min_emissions", "max_renewable"] = "min_cost"
 
     @model_validator(mode="after")
     def validate_hourly_load_overrides(self) -> SimulationRunRequest:
@@ -117,7 +116,6 @@ class SimulationScenarioExport(BaseModel):
     asset_overrides: Optional[dict] = None
     pypsa_params: Optional[dict] = None
     hourly_load_overrides: Optional[dict[str, list[float]]] = None
-    optimization_objective: Literal["min_cost", "min_emissions", "max_renewable"] = "min_cost"
 
 
 class SimulationSolverInfo(BaseModel):

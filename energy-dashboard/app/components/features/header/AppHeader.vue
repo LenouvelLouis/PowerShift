@@ -59,7 +59,6 @@ watch(
     store.selectedNetworkIds.join(),
     store.snapshotHours,
     store.solver,
-    store.optimizationObjective,
     store.startDate,
     store.endDate,
     JSON.stringify(store.buildPayload().asset_overrides),
@@ -109,15 +108,16 @@ async function _doSave(payload: ReturnType<typeof _buildSavePayload>) {
     history.currentResult = result
     history.selectedSimulationId = result.id
     store.selectedHistoryId = result.id
-    if (result.status === 'error') {
+    if (result.status === 'error' || result.status === 'non_converged') {
       const errorType = result.result_json?.error_type
-      const solver = result.result_json?.solver ?? store.solver
       const backendError = result.result_json?.error
-      const description = errorType === 'solver_error'
-        ? `Solver '${solver}' unavailable or misconfigured.${backendError ? ` ${backendError}` : ''}`
-        : `${backendError ?? 'PyPSA did not find an optimal solution.'} (solver: ${solver})`
+      const description = result.status === 'non_converged'
+        ? `Power flow did not converge.${backendError ? ` ${backendError}` : ''}`
+        : errorType === 'convergence_error'
+          ? `Convergence error.${backendError ? ` ${backendError}` : ''}`
+          : `${backendError ?? 'Power flow simulation failed.'}`
       toast.add({
-        title: errorType === 'solver_error' ? 'Solver execution error' : 'Simulation failed',
+        title: result.status === 'non_converged' ? 'Non-converged' : 'Simulation error',
         description,
         color: 'error'
       })

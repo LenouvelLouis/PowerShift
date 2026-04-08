@@ -1,4 +1,4 @@
-"""PyPSA network builder — runs simulation in a thread-pool executor."""
+"""PyPSA network builder — runs AC power flow in a thread-pool executor."""
 
 from __future__ import annotations
 
@@ -16,7 +16,6 @@ from app.domain.interfaces.simulation_repository import (
     SimulationRunInput,
     SimulationRunOutput,
 )
-from app.infrastructure.simulation.objectives import get_strategy
 from app.infrastructure.simulation.pypsa_adapter import (
     AbstractGridSimulation,
     AdapterOutput,
@@ -29,13 +28,20 @@ _log = logging.getLogger(__name__)
 
 
 class _DefaultPyPSASimulation(AbstractGridSimulation):
-    """Concrete PyPSA backend.
+    """Concrete PyPSA backend using AC power flow (n.pf()).
 
-    PyPSA is synchronous and CPU/I/O-bound (calls C-extension GLPK/HiGHS),
-    so it must be run inside a ThreadPoolExecutor to avoid blocking the event loop.
+    PyPSA is synchronous and CPU/I/O-bound, so it runs inside a
+    ThreadPoolExecutor to avoid blocking the event loop.
+
+    Dispatch strategy (merit-order):
+      1. Renewables (solar/wind) are dispatched at their available profile capacity.
+      2. Conventional generators fill the residual demand proportionally to their rating.
+      3. A __grid_slack__ generator (large capacity, control='Slack') absorbs any
+         remaining imbalance — positive output = grid import, negative = grid export.
     """
 
     def run_sync(self, config: SimulationConfig) -> AdapterOutput:
+        import pandas as pd  # noqa: PLC0415
         import pypsa  # type: ignore[import-untyped]
 
         n = pypsa.Network()
@@ -43,119 +49,236 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
 
         # BUS CONVENTION (POC — Sprint 1):
         # All components connect to "main_bus" (single shared bus, v_nom=380).
-        # Future migration: Network group will introduce bus_mv / bus_lv topology.
-        # Each group only needs to update to_pypsa_params() in their own entity — nothing else changes.
         n.add("Bus", "main_bus", v_nom=380.0)
 
-        # Generic — each group controls their own PyPSA params via to_pypsa_params()
-        for supply in config.supplies:
-            params = supply.to_pypsa_params()
-
-            solar_profile = config.solar_profiles.get(supply.name)
-            if solar_profile is not None:
-                # PyPSA requires p_max_pu to be a pd.Series indexed on network snapshots
-                # to align the solar profile temporally with the optimization timesteps.
-                # Imported inline to avoid making pandas a hard dependency of the whole module.
-                import pandas as pd  # noqa: PLC0415
-
-                params["p_max_pu"] = pd.Series(solar_profile, index=n.snapshots)
-
-            wind_profile = config.wind_profiles.get(supply.name)
-            if wind_profile is not None:
-                import pandas as pd  # noqa: PLC0415
-
-                params["p_max_pu"] = pd.Series(wind_profile, index=n.snapshots)
-
-            nuclear_params = config.nuclear_constraints.get(supply.name)
-            if nuclear_params is not None:
-                params.update(nuclear_params)
-                # nuclear_params already contains p_min_pu, marginal_cost, etc.
-                # Do NOT set p_max_pu — nuclear dispatches freely up to p_nom
-
-            # Adjust marginal cost based on optimization objective
-            carrier = supply.get_carrier()
-            supply_overrides = config.pypsa_params.get(supply.name, {})
-            strategy = get_strategy(config.optimization_objective)
-            params = strategy.apply_marginal_cost(params, carrier, supply_overrides)
-
-            # Apply user overrides last, excluding internal keys not meant for PyPSA
-            params.update({k: v for k, v in supply_overrides.items() if k != "emissions_factor"})
-            n.add("Generator", supply.name, **params)
-
+        # ── 1. Add loads first (needed to compute residual for dispatch) ─────────
         for demand in config.demands:
             profile = config.load_profiles.get(demand.name)
             params = demand.to_pypsa_params(profile=profile)
-            # PyPSA requires p_set to be a pd.Series indexed on network snapshots.
-            # Imported inline to avoid making pandas a hard dependency of the whole module.
             if isinstance(params.get("p_set"), list):
-                import pandas as pd  # noqa: PLC0415
-
                 params["p_set"] = pd.Series(params["p_set"], index=n.snapshots)
             n.add("Load", demand.name, **params)
 
+        # Aggregate load profile across all loads
+        if not n.loads_t.p_set.empty:
+            load_total: pd.Series = n.loads_t.p_set.sum(axis=1)
+        else:
+            load_total = pd.Series(float(n.loads.p_set.sum()), index=n.snapshots)
+
+        # ── 2. Compute generator dispatch (merit-order: renewables first) ────────
+        gen_dispatch: dict[str, pd.Series] = {}
+        renewable_total = pd.Series(0.0, index=n.snapshots)
+
+        for supply in config.supplies:
+            p_nom = supply.capacity_mw  # asset_overrides already applied at use-case level
+            solar_profile = config.solar_profiles.get(supply.name)
+            wind_profile = config.wind_profiles.get(supply.name)
+
+            if solar_profile is not None:
+                ps = pd.Series([v * p_nom for v in solar_profile], index=n.snapshots)
+                gen_dispatch[supply.name] = ps
+                renewable_total = renewable_total.add(ps)
+            elif wind_profile is not None:
+                ps = pd.Series([v * p_nom for v in wind_profile], index=n.snapshots)
+                gen_dispatch[supply.name] = ps
+                renewable_total = renewable_total.add(ps)
+
+        # Residual demand not covered by renewables
+        residual = (load_total - renewable_total).clip(lower=0.0)
+
+        # Conventional generators: proportional dispatch up to their rated capacity
+        conv_supplies = [s for s in config.supplies if s.name not in gen_dispatch]
+        total_conv_nom = sum(s.capacity_mw for s in conv_supplies) if conv_supplies else 0.0
+
+        for supply in conv_supplies:
+            p_nom = supply.capacity_mw
+            if total_conv_nom > 0:
+                ps = (residual * (p_nom / total_conv_nom)).clip(upper=p_nom)
+            else:
+                ps = pd.Series(0.0, index=n.snapshots)
+            gen_dispatch[supply.name] = ps
+
+        # ── 3. Add generators with computed p_set ────────────────────────────────
+        for supply in config.supplies:
+            params = supply.to_pypsa_params()
+            # Set power-flow dispatch (p_set replaces p_max_pu from optimize mode)
+            params["p_set"] = gen_dispatch[supply.name]
+            # Remove optimize-only params if present
+            params.pop("p_max_pu", None)
+            # Apply user pypsa_params overrides (skip dispatch & optimize-only keys)
+            supply_overrides = config.pypsa_params.get(supply.name, {})
+            params.update({
+                k: v for k, v in supply_overrides.items()
+                if k not in ("emissions_factor", "p_max_pu", "p_set")
+            })
+            n.add("Generator", supply.name, **params)
+
+        # ── 4. Add network components (lines / transformers) ─────────────────────
         for component in config.network_components:
             pypsa_type = "Transformer" if component.get_network_type() == "transformer" else "Line"
             comp_params = component.to_pypsa_params()
             comp_params.update(config.pypsa_params.get(component.name, {}))
             n.add(pypsa_type, component.name, **comp_params)
 
+        # ── 5. Slack generator: absorbs any grid imbalance ───────────────────────
+        # Positive output → system imports from grid; negative → exports to grid.
+        n.add(
+            "Generator", "__grid_slack__",
+            bus="main_bus",
+            p_nom=1e9,
+            marginal_cost=0.0,
+            control="Slack",
+        )
+
+        # ── 6. Run AC power flow ─────────────────────────────────────────────────
         try:
-            optimize_result = n.optimize(solver_name=config.solver)
-            if isinstance(optimize_result, tuple) and optimize_result[1] == "infeasible":
-                status = "infeasible"
-                objective_value = 0.0
-                total_supply = total_demand = 0.0
-                result_json = {"error": "Optimization infeasible — supply cannot meet demand"}
+            pf_result = n.pf()
+
+            # Convergence
+            converged_df = pf_result.get("converged", pd.DataFrame())
+            if converged_df.empty:
+                all_converged = True
+                non_converged_snapshots: list[int] = []
             else:
-                status = "optimal"
-                objective_value = float(n.objective) if hasattr(n, "objective") else 0.0
-                generators_t = (
-                    {gen: {"p": n.generators_t.p[gen].tolist()} for gen in n.generators_t.p.columns}
-                    if not n.generators_t.p.empty
-                    else {}
+                snapshot_converged = converged_df.all(axis=1)
+                all_converged = bool(snapshot_converged.all())
+                non_converged_snapshots = [
+                    int(i) for i, ok in enumerate(snapshot_converged) if not ok
+                ]
+
+            status = "converged" if all_converged else "non_converged"
+
+            # Generator time-series (exclude internal slack)
+            generators_t: dict = {}
+            grid_import_export: list[float] = []
+            if not n.generators_t.p.empty:
+                for gen in n.generators_t.p.columns:
+                    if gen == "__grid_slack__":
+                        # PyPSA may return nan for the slack's active power in single-bus
+                        # surplus scenarios (NR convergence artefact). Coerce to 0.0 so
+                        # grid_exchange totals and balance_mwh stay finite.
+                        raw = n.generators_t.p[gen]
+                        grid_import_export = [v if v == v else 0.0 for v in raw]
+                        continue
+                    entry: dict = {"p": n.generators_t.p[gen].tolist()}
+                    if not n.generators_t.q.empty and gen in n.generators_t.q.columns:
+                        entry["q"] = n.generators_t.q[gen].tolist()
+                    generators_t[gen] = entry
+
+            # Load time-series — prefer actual p (post-PF) over p_set
+            loads_t: dict = {}
+            load_p_src = n.loads_t.p if not n.loads_t.p.empty else n.loads_t.p_set
+            for load in load_p_src.columns:
+                entry = {"p": load_p_src[load].tolist()}
+                if not n.loads_t.q.empty and load in n.loads_t.q.columns:
+                    entry["q"] = n.loads_t.q[load].tolist()
+                loads_t[load] = entry
+
+            # Bus voltages (v_mag_pu and voltage angle per snapshot)
+            buses_t: dict = {}
+            for bus in n.buses.index:
+                v_mag = (
+                    n.buses_t.v_mag_pu[bus].tolist()
+                    if not n.buses_t.v_mag_pu.empty and bus in n.buses_t.v_mag_pu.columns
+                    else [1.0] * config.snapshot_hours
                 )
-                loads_t = (
-                    {load: {"p": n.loads_t.p_set[load].tolist()} for load in n.loads_t.p_set.columns}
-                    if not n.loads_t.p_set.empty
-                    else {}
+                v_ang = (
+                    n.buses_t.v_ang[bus].tolist()
+                    if not n.buses_t.v_ang.empty and bus in n.buses_t.v_ang.columns
+                    else [0.0] * config.snapshot_hours
                 )
-                capacity_factors = {
-                    gen: float(
-                        n.generators_t.p[gen].sum()
-                        / (n.generators.at[gen, "p_nom"] * config.snapshot_hours)
+                buses_t[bus] = {"v_mag_pu": v_mag, "v_ang": v_ang}
+
+            # Line flows and loading
+            lines_t: dict = {}
+            for line in n.lines.index:
+                s_nom = float(n.lines.at[line, "s_nom"]) if "s_nom" in n.lines.columns else 0.0
+                p0 = (
+                    n.lines_t.p0[line].tolist()
+                    if not n.lines_t.p0.empty and line in n.lines_t.p0.columns
+                    else []
+                )
+                loading = (
+                    [abs(v) / s_nom * 100 if s_nom > 0 else 0.0 for v in p0]
+                    if p0 else []
+                )
+                lines_t[line] = {"p0": p0, "loading": loading}
+
+            # Capacity factors: actual generation / (p_nom × hours)
+            capacity_factors: dict = {}
+            for gen in n.generators.index:
+                if gen == "__grid_slack__":
+                    continue
+                p_nom_val = n.generators.at[gen, "p_nom"]
+                if gen in n.generators_t.p.columns and p_nom_val > 0:
+                    capacity_factors[gen] = float(
+                        n.generators_t.p[gen].sum() / (p_nom_val * config.snapshot_hours)
                     )
-                    for gen in n.generators.index
-                    if gen in n.generators_t.p.columns and n.generators.at[gen, "p_nom"] > 0
-                }
-                total_supply = float(n.generators_t.p.sum().sum()) if not n.generators_t.p.empty else 0.0
-                # p_set scalar → stored in n.loads (static), not n.loads_t (time-series)
-                if not n.loads_t.p_set.empty:
-                    total_demand = float(n.loads_t.p_set.sum().sum())
-                else:
-                    total_demand = float(n.loads.p_set.sum()) * config.snapshot_hours
-                result_json = {
-                    "generators_t": generators_t,
-                    "loads_t": loads_t,
-                    "capacity_factors": capacity_factors,
-                    "violations": {"overloads": [], "overvoltages": []},
-                    "objective_value": objective_value,
-                }
+
+            # Totals (exclude slack generator from supply)
+            total_supply = float(
+                sum(
+                    n.generators_t.p[gen].sum()
+                    for gen in n.generators_t.p.columns
+                    if gen != "__grid_slack__" and n.generators_t.p[gen].sum() > 0
+                )
+            ) if not n.generators_t.p.empty else 0.0
+
+            if not load_p_src.empty:
+                total_demand = float(load_p_src.sum().sum())
+            else:
+                total_demand = float(n.loads.p_set.sum()) * config.snapshot_hours
+
+            # Grid exchange summary
+            total_import = float(sum(v for v in grid_import_export if v > 0))
+            total_export = float(abs(sum(v for v in grid_import_export if v < 0)))
+
+            # Violations
+            overloaded_lines = [
+                line for line, data in lines_t.items()
+                if data["loading"] and max(data["loading"]) > 100
+            ]
+            overvoltage_buses = [
+                bus for bus, data in buses_t.items()
+                if data["v_mag_pu"] and max(data["v_mag_pu"]) > 1.05
+            ]
+
+            result_json = {
+                "generators_t": generators_t,
+                "loads_t": loads_t,
+                "buses_t": buses_t,
+                "lines_t": lines_t,
+                "capacity_factors": capacity_factors,
+                "convergence": {
+                    "all_converged": all_converged,
+                    "converged_count": config.snapshot_hours - len(non_converged_snapshots),
+                    "total_snapshots": config.snapshot_hours,
+                    "non_converged_snapshots": non_converged_snapshots,
+                },
+                "grid_exchange": {
+                    "import_export_mw": grid_import_export,
+                    "total_import_mwh": total_import,
+                    "total_export_mwh": total_export,
+                },
+                "violations": {
+                    "overloads": overloaded_lines,
+                    "overvoltages": overvoltage_buses,
+                },
+            }
+
+            objective_value = 0.0
+
         except Exception as e:
             error_message = str(e)
             lowered = error_message.lower()
-            solver_error_hints = (
-                "solver",
-                "not installed",
-                "not found",
-                "unknown solver",
-                "no executable",
-                "license",
-                "xpress",
-                "cplex",
-                "cbc",
-                "highs",
+            pf_error_hints = (
+                "convergence", "not converge", "singular", "nan", "infinity",
+                "jacobian", "power flow",
             )
-            error_type = "solver_error" if any(hint in lowered for hint in solver_error_hints) else "runtime_error"
+            if any(hint in lowered for hint in pf_error_hints):
+                error_type = "convergence_error"
+            else:
+                error_type = "runtime_error"
             compact_error = re.sub(r"\s+", " ", error_message).strip()
             status = "error"
             objective_value = 0.0
@@ -164,7 +287,6 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
             result_json = {
                 "error": compact_error,
                 "error_type": error_type,
-                "solver": config.solver,
             }
 
         balance = total_supply - total_demand
@@ -286,7 +408,6 @@ class PyPSANetworkBuilder(ISimulationRepository):
 
         config = SimulationConfig(
             snapshot_hours=run_input.snapshot_hours,
-            solver=run_input.solver,
             supplies=supplies,
             demands=demands,
             network_components=network_components,
@@ -295,7 +416,6 @@ class PyPSANetworkBuilder(ISimulationRepository):
             wind_profiles=wind_profiles,
             nuclear_constraints=nuclear_constraints,
             pypsa_params=run_input.pypsa_params or {},
-            optimization_objective=run_input.optimization_objective,
         )
         loop = asyncio.get_running_loop()
         result: AdapterOutput = await loop.run_in_executor(

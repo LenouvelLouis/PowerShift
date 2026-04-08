@@ -30,7 +30,7 @@ class SimulationRepositoryImpl(ISimulationPersistenceRepository):
             demand_ids=[str(i) for i in run_input.demand_ids],
             network_ids=[str(i) for i in run_input.network_ids],
             hourly_load_overrides=run_input.hourly_load_overrides or None,
-            optimization_objective=run_input.optimization_objective,
+            optimization_objective="pf",
         )
         self._session.add(row)
         await self._session.flush()

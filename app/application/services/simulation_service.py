@@ -59,7 +59,6 @@ class SimulationService:
             pypsa_params=body.pypsa_params or {},
             asset_overrides=body.asset_overrides or {},
             hourly_load_overrides=body.hourly_load_overrides or {},
-            optimization_objective=body.optimization_objective,
         )
 
     # ── Public methods ────────────────────────────────────────────────────────────
@@ -154,7 +153,6 @@ class SimulationService:
             asset_overrides=request_row.asset_overrides,
             pypsa_params=request_row.pypsa_params,
             hourly_load_overrides=request_row.hourly_load_overrides,
-            optimization_objective=request_row.optimization_objective,
         )
 
     async def list_solvers(self) -> list[SimulationSolverInfo]:

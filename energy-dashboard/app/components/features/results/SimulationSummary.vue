@@ -12,9 +12,9 @@
         <span class="text-gray-400">Status</span>
         <span
           class="font-semibold"
-          :class="result.status === 'optimal' ? 'text-emerald-400' : 'text-red-400'"
+          :class="result.status === 'converged' ? 'text-emerald-400' : 'text-red-400'"
         >
-          {{ result.status === 'optimal' ? 'Optimal' : 'Infeasible' }}
+          {{ result.status === 'converged' ? 'Converged' : result.status === 'non_converged' ? 'Non-converged' : 'Error' }}
         </span>
       </div>
       <div class="flex justify-between items-center">

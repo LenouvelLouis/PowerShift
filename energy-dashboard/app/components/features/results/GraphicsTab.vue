@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="result.status === 'optimal' && hasChartData"
+    v-if="result.status === 'converged' && hasChartData"
     class="flex flex-col gap-8 pt-4"
   >
     <!-- Production section -->
@@ -54,7 +54,7 @@
     v-else
     class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 flex items-center justify-center h-72 text-gray-600 text-sm mt-4"
   >
-    {{ result.status === 'error' ? 'No production data — infeasible simulation' : 'No time-series data available' }}
+    {{ result.status === 'error' ? 'No power flow data — simulation error' : result.status === 'non_converged' ? 'Power flow did not converge' : 'No time-series data available' }}
   </div>
 </template>
 

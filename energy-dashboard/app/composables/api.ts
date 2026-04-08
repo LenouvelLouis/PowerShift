@@ -82,7 +82,6 @@ export interface SimulationRunRequest {
   network_ids: string[];
   snapshot_hours: number;
   solver: string;
-  optimization_objective: "min_cost" | "min_emissions" | "max_renewable";
   name?: string;
   start_date?: string;
   end_date?: string;
@@ -91,21 +90,35 @@ export interface SimulationRunRequest {
 }
 
 export interface SimulationResultJson {
-  generators_t: Record<string, { p: number[] }>;
-  loads_t: Record<string, { p: number[] }>;
+  // Power flow time-series
+  generators_t: Record<string, { p: number[]; q?: number[] }>;
+  loads_t: Record<string, { p: number[]; q?: number[] }>;
+  buses_t?: Record<string, { v_mag_pu: number[]; v_ang: number[] }>;
+  lines_t?: Record<string, { p0: number[]; loading: number[] }>;
+  // Aggregates
   capacity_factors: Record<string, number>;
+  convergence?: {
+    all_converged: boolean;
+    converged_count: number;
+    total_snapshots: number;
+    non_converged_snapshots: number[];
+  };
+  grid_exchange?: {
+    import_export_mw: number[];
+    total_import_mwh: number;
+    total_export_mwh: number;
+  };
   violations?: { overloads: unknown[]; overvoltages: unknown[] };
-  objective_value?: number;
+  // Error fields
   error?: string;
-  error_type?: "solver_error" | "runtime_error";
-  solver?: string;
+  error_type?: "convergence_error" | "runtime_error";
   warnings?: string[];
 }
 
 export interface SimulationResult {
   id: string;
   request_id: string;
-  status: string;
+  status: 'converged' | 'non_converged' | 'error';
   solver: string;
   name?: string | null;
   start_date?: string | null;
@@ -121,7 +134,7 @@ export interface SimulationResult {
 export interface SimulationListItem {
   id: string;
   request_id: string;
-  status: string;
+  status: 'converged' | 'non_converged' | 'error';
   solver: string;
   name?: string | null;
   supply_ids: string[];
@@ -192,7 +205,6 @@ export interface ScenarioExport {
   demand_ids: string[];
   network_ids: string[];
   asset_overrides?: Record<string, Record<string, number>> | null;
-  optimization_objective: "min_cost" | "min_emissions" | "max_renewable";
 }
 
 // ─── Simulation ───────────────────────────────────────────────────────────────

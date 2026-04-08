@@ -16,7 +16,7 @@
 
     <!-- RIGHT: production + consumption line charts -->
     <div class="flex flex-col gap-6">
-      <template v-if="result.status === 'optimal' && hasChartData">
+      <template v-if="result.status === 'converged' && hasChartData">
         <ProductionChart :result="result" />
         <ConsumptionChart
           v-if="hasConsumptionData"
@@ -27,7 +27,7 @@
         v-else
         class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 flex items-center justify-center h-72 text-gray-600 text-sm"
       >
-        {{ result.status === 'error' ? 'No production data — infeasible simulation' : 'No time-series data available' }}
+        {{ result.status === 'error' ? 'No power flow data — simulation error' : result.status === 'non_converged' ? 'Power flow did not converge' : 'No time-series data available' }}
       </div>
     </div>
   </div>

@@ -18,13 +18,13 @@
     />
     <UiShimmerSkeleton
       v-else-if="sim.isLiveRunning || sim.isRunning"
-      headline="Optimising your scenario"
-      subtitle="Running the simulation, results coming shortly..."
+      headline="Computing power flow"
+      subtitle="Running AC power flow analysis, results coming shortly..."
     />
 
     <template v-else-if="result">
       <ErrorBanner
-        v-if="result.status === 'error' || result.status === 'infeasible'"
+        v-if="result.status === 'error' || result.status === 'non_converged'"
         :headline="errorHeadline"
         :description="errorDescription"
       />
@@ -49,9 +49,11 @@
 <script setup lang="ts">
 import { useSimulationStore } from '~/stores/simulation'
 import { useReferentialStore } from '~/stores/referential'
+import { useHistoryStore } from '~/stores/history'
 
 const sim = useSimulationStore()
 const referential = useReferentialStore()
+const history = useHistoryStore()
 
 useSimulationUrl()
 
@@ -60,26 +62,36 @@ const result = computed(() => sim.displayedResult)
 
 const errorHeadline = computed(() => {
   const status = result.value?.status
-  if (status !== 'error' && status !== 'infeasible') return 'Simulation error'
-  if (status === 'infeasible') return 'Simulation infaisable'
-  if (result.value?.result_json?.error_type === 'solver_error') return 'Solver unavailable'
+  if (status !== 'error' && status !== 'non_converged') return 'Simulation error'
+  if (status === 'non_converged') return 'Power flow did not converge'
+  if (result.value?.result_json?.error_type === 'convergence_error') return 'Convergence error'
   return 'Simulation error'
 })
 
 const errorDescription = computed(() => {
   const status = result.value?.status
-  if (status !== 'error' && status !== 'infeasible') return ''
+  if (status !== 'error' && status !== 'non_converged') return ''
   const details = result.value?.result_json?.error
-  if (status === 'infeasible') {
-    return details ?? 'L\'optimisation PyPSA n\'a pas trouvé de solution avec les assets sélectionnés. Vérifiez que la capacité de production couvre la demande.'
+  if (status === 'non_converged') {
+    const conv = result.value?.result_json?.convergence
+    const bad = conv?.non_converged_snapshots?.length ?? 0
+    return details ?? `The AC power flow did not converge for ${bad} snapshot(s). Check that generation can meet demand and that network parameters are physically consistent.`
   }
-  if (result.value?.result_json?.error_type === 'solver_error') {
-    const solver = result.value.result_json?.solver ?? 'selected solver'
-    return details
-      ? `The solver '${solver}' is unavailable or misconfigured. ${details}`
-      : `The solver '${solver}' is unavailable or misconfigured on the backend.`
+  if (result.value?.result_json?.error_type === 'convergence_error') {
+    return details ?? 'The power flow solver failed to converge. Ensure network parameters are valid.'
   }
-  return details ?? 'The optimization failed. Ensure production can cover demand and try again.'
+  return details ?? 'The power flow simulation failed. Check asset configurations and try again.'
+})
+
+onMounted(async () => {
+  try {
+    await referential.loadReferential()
+    if (referential.backendAvailable) {
+      await history.loadHistory()
+    }
+  } catch {
+    // non-critical — page still usable
+  }
 })
 </script>
 
