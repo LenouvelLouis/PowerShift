@@ -112,7 +112,8 @@ jobs:
             set -euo pipefail
             REPO_DIR=/home/azureuser/isep-app
             if [ -d \"\$REPO_DIR/.git\" ]; then
-              git -C \"\$REPO_DIR\" pull
+              git -C \"\$REPO_DIR\" fetch --all
+              git -C \"\$REPO_DIR\" reset --hard origin/main
             else
               git clone '$AUTH_URL' \"\$REPO_DIR\"
             fi
