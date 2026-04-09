@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -81,7 +81,7 @@ async def create_demand(
 
     Valid `type` values: `house`, `electric_vehicle`.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     entity = DemandRepositoryImpl.build_entity(
         body.type,
         id=uuid.uuid4(),
@@ -114,7 +114,7 @@ async def update_demand(
     if existing is None:
         raise HTTPException(status_code=404, detail="Demand not found")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     updated = DemandRepositoryImpl.build_entity(
         existing.get_type(),
         id=existing.id,

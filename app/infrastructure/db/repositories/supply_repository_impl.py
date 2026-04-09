@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -70,7 +70,7 @@ class SupplyRepositoryImpl(ISupplyRepository):
         row.status = supply.status
         row.unit = supply.unit
         row.description = supply.description
-        row.updated_at = datetime.now(timezone.utc)
+        row.updated_at = datetime.now(UTC)
 
         await self._session.flush()
         return self._to_domain(row)
@@ -111,7 +111,7 @@ class SupplyRepositoryImpl(ISupplyRepository):
 
     @staticmethod
     def _to_orm(supply: BaseSupply) -> SupplyModel:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return SupplyModel(
             id=supply.id,
             name=supply.name,

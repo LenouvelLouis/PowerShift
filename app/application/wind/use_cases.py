@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.application.wind.schemas import (
     CalculatePowerRequest,
@@ -22,12 +22,9 @@ from app.application.wind.schemas import (
     WindMeasurementResponse,
     WindMeasurementStatsResponse,
 )
-from datetime import datetime
-
 from app.domain.wind.entities import (
     PowerCurvePoint,
     WindDataPoint,
-    WindMeasurement,
     WindTurbineAsset,
     WindTurbineModel,
 )
@@ -108,7 +105,7 @@ class CreateTurbineModelUseCase:
         if body.power_curve:
             self._validate_power_curve(body)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         model = WindTurbineModel(
             id=uuid.uuid4(),
             manufacturer=body.manufacturer,
@@ -172,7 +169,7 @@ class CreateWindAssetUseCase:
         if turbine_model is None:
             raise TurbineModelNotFoundError(body.turbine_model_id)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         asset = WindTurbineAsset(
             id=uuid.uuid4(),
             name=body.name,

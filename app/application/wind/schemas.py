@@ -8,10 +8,8 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-
 
 # ── Power-curve ───────────────────────────────────────────────────────────────
 
@@ -60,8 +58,8 @@ class TurbineModelResponse(BaseModel):
     cut_out_speed_ms: float
     rated_speed_ms: float
     power_curve: list[PowerCurvePointSchema]
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 
@@ -71,9 +69,9 @@ class TurbineModelResponse(BaseModel):
 class WindAssetCreate(BaseModel):
     name: str = Field(..., min_length=1, examples=["Turbine North #1"])
     turbine_model_id: uuid.UUID
-    latitude: Optional[float] = Field(default=None, ge=-90, le=90)
-    longitude: Optional[float] = Field(default=None, ge=-180, le=180)
-    altitude_m: Optional[float] = Field(default=None, ge=0)
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    altitude_m: float | None = Field(default=None, ge=0)
     quantity: int = Field(default=1, ge=1, description="Number of identical turbines at this site")
     is_active: bool = True
 
@@ -82,13 +80,13 @@ class WindAssetResponse(BaseModel):
     id: uuid.UUID
     name: str
     turbine_model: TurbineModelResponse
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    altitude_m: Optional[float] = None
+    latitude: float | None = None
+    longitude: float | None = None
+    altitude_m: float | None = None
     quantity: int
     is_active: bool
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 
@@ -98,8 +96,8 @@ class WindAssetResponse(BaseModel):
 class WindDataPointSchema(BaseModel):
     timestamp: datetime
     wind_speed_ms: float = Field(..., ge=0, description="Wind speed at 10 m height in m/s")
-    wind_direction_deg: Optional[float] = Field(default=None, ge=0, lt=360)
-    temperature_c: Optional[float] = None
+    wind_direction_deg: float | None = Field(default=None, ge=0, lt=360)
+    temperature_c: float | None = None
 
 
 class CalculatePowerRequest(BaseModel):
@@ -113,7 +111,7 @@ class CalculatePowerRequest(BaseModel):
     availability: float = Field(default=0.97, ge=0.0, le=1.0)
 
     @model_validator(mode="after")
-    def check_input_mode(self) -> "CalculatePowerRequest":
+    def check_input_mode(self) -> CalculatePowerRequest:
         has_inline = bool(self.wind_data)
         has_db = self.station_code is not None and self.start is not None and self.end is not None
         if not has_inline and not has_db:
@@ -134,10 +132,10 @@ class WindMeasurementResponse(BaseModel):
     station_code: str
     station_name: str
     timestamp: datetime
-    wind_speed_ms: Optional[float] = None
-    wind_direction_deg: Optional[float] = None
-    temperature_c: Optional[float] = None
-    air_pressure_hpa: Optional[float] = None
+    wind_speed_ms: float | None = None
+    wind_direction_deg: float | None = None
+    temperature_c: float | None = None
+    air_pressure_hpa: float | None = None
 
     model_config = {"from_attributes": True}
 
@@ -145,12 +143,12 @@ class WindMeasurementResponse(BaseModel):
 class WindMeasurementStatsResponse(BaseModel):
     station_code: str
     count: int
-    start: Optional[datetime] = None
-    end: Optional[datetime] = None
-    avg_wind_speed_ms: Optional[float] = None
-    min_wind_speed_ms: Optional[float] = None
-    max_wind_speed_ms: Optional[float] = None
-    avg_temperature_c: Optional[float] = None
+    start: datetime | None = None
+    end: datetime | None = None
+    avg_wind_speed_ms: float | None = None
+    min_wind_speed_ms: float | None = None
+    max_wind_speed_ms: float | None = None
+    avg_temperature_c: float | None = None
     missing_wind_pct: float
 
 

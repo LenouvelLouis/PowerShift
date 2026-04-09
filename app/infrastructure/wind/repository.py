@@ -14,14 +14,18 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from app.domain.wind.entities import PowerCurvePoint, WindMeasurement, WindTurbineAsset, WindTurbineModel
+from app.domain.wind.entities import (
+    PowerCurvePoint,
+    WindMeasurement,
+    WindTurbineAsset,
+    WindTurbineModel,
+)
 from app.infrastructure.db.models.asset_parameters_model import AssetParametersModel
 from app.infrastructure.db.models.supply_model import SupplyModel
 from app.infrastructure.db.models.weather_profile_model import WeatherProfileModel
@@ -40,7 +44,7 @@ class WindTurbineRepositoryImpl:
 
     # ── Turbine Model (catalog) ───────────────────────────────────────────────
 
-    async def get_turbine_model(self, model_id: uuid.UUID) -> Optional[WindTurbineModel]:
+    async def get_turbine_model(self, model_id: uuid.UUID) -> WindTurbineModel | None:
         supply = await self._session.execute(
             select(SupplyModel).where(
                 SupplyModel.id == model_id,
@@ -67,7 +71,7 @@ class WindTurbineRepositoryImpl:
         return models
 
     async def create_turbine_model(self, model: WindTurbineModel) -> WindTurbineModel:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         supply = SupplyModel(
             id=model.id,
             name=f"{model.manufacturer} {model.model_name}",
@@ -103,7 +107,7 @@ class WindTurbineRepositoryImpl:
 
     # ── Wind Turbine Asset ────────────────────────────────────────────────────
 
-    async def get_asset(self, asset_id: uuid.UUID) -> Optional[WindTurbineAsset]:
+    async def get_asset(self, asset_id: uuid.UUID) -> WindTurbineAsset | None:
         supply = await self._session.execute(
             select(SupplyModel).where(
                 SupplyModel.id == asset_id,
@@ -144,7 +148,7 @@ class WindTurbineRepositoryImpl:
         return assets
 
     async def create_asset(self, asset: WindTurbineAsset) -> WindTurbineAsset:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         supply = SupplyModel(
             id=asset.id,
             name=asset.name,
@@ -201,7 +205,7 @@ class WindTurbineRepositoryImpl:
 
     async def get_latest_measurement_timestamp(
         self, station_code: str
-    ) -> Optional[datetime]:
+    ) -> datetime | None:
         result = await self._session.execute(
             select(func.max(WeatherProfileModel.timestamp))
         )
@@ -211,7 +215,7 @@ class WindTurbineRepositoryImpl:
 
     async def _get_params(
         self, asset_id: uuid.UUID, asset_type: str
-    ) -> Optional[AssetParametersModel]:
+    ) -> AssetParametersModel | None:
         result = await self._session.execute(
             select(AssetParametersModel).where(
                 AssetParametersModel.asset_id == asset_id,

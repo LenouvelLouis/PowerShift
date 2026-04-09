@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import sqlalchemy as sa
-from sqlalchemy import Column, DateTime, JSON
+from sqlalchemy import JSON, Column, DateTime
 from sqlmodel import Field, SQLModel
 
 
@@ -24,12 +23,12 @@ class SimulationResultModel(SQLModel, table=True):
         )
     )
     status: str
-    total_supply_mwh: Optional[float] = None
-    total_demand_mwh: Optional[float] = None
-    balance_mwh: Optional[float] = None
-    objective_value: Optional[float] = None
-    result_json: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    total_supply_mwh: float | None = None
+    total_demand_mwh: float | None = None
+    balance_mwh: float | None = None
+    objective_value: float | None = None
+    result_json: dict | None = Field(default=None, sa_column=Column(JSON, nullable=True))
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         sa_column=Column(DateTime(timezone=True)),
     )

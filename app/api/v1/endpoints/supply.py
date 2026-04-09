@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -83,7 +83,7 @@ async def create_supply(
 
     Valid `type` values: `wind_turbine`, `solar_panel`, `nuclear_plant`.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     entity = SupplyRepositoryImpl.build_entity(
         body.type,
         id=uuid.uuid4(),
@@ -117,7 +117,7 @@ async def update_supply(
     if existing is None:
         raise HTTPException(status_code=404, detail="Supply not found")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     updated = SupplyRepositoryImpl.build_entity(
         existing.get_type(),
         id=existing.id,

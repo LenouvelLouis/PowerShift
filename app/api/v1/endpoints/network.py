@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,7 +11,6 @@ from fastapi.responses import Response
 
 from app.api.v1.dependencies import get_network_repository
 from app.api.v1.schemas.network_schema import NetworkCreate, NetworkResponse, NetworkUpdate
-from app.domain.entities.base_component import ComponentStatus
 from app.domain.entities.network.base_network import BaseNetwork
 from app.domain.entities.network.cable import Cable
 from app.domain.entities.network.transformer import Transformer
@@ -51,7 +50,7 @@ def _to_response(component: BaseNetwork) -> NetworkResponse:
 
 def _create_body_to_entity(body: NetworkCreate) -> BaseNetwork:
     """Map a NetworkCreate schema to the appropriate domain entity."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     common = dict(
         id=uuid.uuid4(),
         name=body.name,
@@ -152,7 +151,7 @@ async def update_network_component(
         raise HTTPException(status_code=404, detail="Network component not found")
 
     # Build an updated entity by merging existing values with the patch
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     common = dict(
         id=existing.id,
         name=body.name if body.name is not None else existing.name,
@@ -174,11 +173,21 @@ async def update_network_component(
         )
     else:
         assert isinstance(existing, Cable)
+        res_ohm = (
+            body.resistance_ohm_per_km
+            if body.resistance_ohm_per_km is not None
+            else existing.resistance_ohm_per_km
+        )
+        react_ohm = (
+            body.reactance_ohm_per_km
+            if body.reactance_ohm_per_km is not None
+            else existing.reactance_ohm_per_km
+        )
         updated = Cable(
             **common,
             length_km=body.length_km if body.length_km is not None else existing.length_km,
-            resistance_ohm_per_km=body.resistance_ohm_per_km if body.resistance_ohm_per_km is not None else existing.resistance_ohm_per_km,
-            reactance_ohm_per_km=body.reactance_ohm_per_km if body.reactance_ohm_per_km is not None else existing.reactance_ohm_per_km,
+            resistance_ohm_per_km=res_ohm,
+            reactance_ohm_per_km=react_ohm,
         )
 
     saved = await repo.update(str(component_id), updated)

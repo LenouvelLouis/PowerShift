@@ -20,8 +20,8 @@ night trough at 03h–04h.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from app.domain.entities.demand.base_demand import BaseDemand
 

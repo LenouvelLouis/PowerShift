@@ -8,13 +8,28 @@ pr:
     include:
       - '*'
 
+schedules:
+  - cron: "0 7 * * *"
+    displayName: "Daily CI at 7:00 AM UTC"
+    branches:
+      include:
+        - test/bdd-automation
+        - main
+        - develop
+    always: true
+
 variables:
   - group: energy-grid-prod
+  - DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+  - APP_NAME: 'Energy Grid API'
+  - APP_VERSION: '0.1.0'
+  - ENVIRONMENT: testing
+  - DEBUG: 'false'
 
 jobs:
-  # ─── Tests ────────────────────────────────────────────────────────────────────
-  - job: test
-    displayName: 'Test'
+  # ── Stage 1: Unit + API + BDD tests ────────────────────────────────────────
+  - job: unit_api_bdd
+    displayName: 'Unit / API / BDD Tests'
     pool:
       vmImage: ubuntu-latest
     services:
@@ -43,18 +58,23 @@ jobs:
         displayName: 'Install dependencies'
 
       - script: |
-          pytest tests/ \
+          ruff check app
+        displayName: 'Ruff lint (app)'
+
+      - script: |
+          pytest tests/unit/ tests/api/ tests/bdd/ tests/simulation/ tests/integration/ \
+            --ignore=tests/ui \
             --cov=app \
             --cov-report=xml \
             --junitxml=test-results.xml \
             -v
-        displayName: 'Run tests'
+        displayName: 'Run Unit + API + BDD tests'
         env:
-          DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
-          APP_NAME: 'Energy Grid API'
-          APP_VERSION: '0.1.0'
-          ENVIRONMENT: testing
-          DEBUG: 'false'
+          DATABASE_URL: $(DATABASE_URL)
+          APP_NAME: $(APP_NAME)
+          APP_VERSION: $(APP_VERSION)
+          ENVIRONMENT: $(ENVIRONMENT)
+          DEBUG: $(DEBUG)
 
       - task: PublishTestResults@2
         inputs:
@@ -69,11 +89,67 @@ jobs:
         condition: always()
         displayName: 'Publish coverage'
 
+  # ── Stage 2: UI tests (Selenium) ───────────────────────────────────────────
+  - job: ui_tests
+    displayName: 'UI Tests (Selenium)'
+    dependsOn: unit_api_bdd
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-retries 5
+
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '$(PYTHON_VERSION)'
+        displayName: 'Setup Python $(PYTHON_VERSION)'
+
+      - script: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+        displayName: 'Install dependencies'
+
+      - script: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq chromium-browser chromium-chromedriver
+        displayName: 'Install Chrome + Chromedriver'
+
+      - script: |
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+          pytest tests/ui/ \
+            --junitxml=ui-test-results.xml \
+            -v
+        displayName: 'Start server and run Selenium tests'
+        env:
+          DATABASE_URL: $(DATABASE_URL)
+          APP_NAME: $(APP_NAME)
+          APP_VERSION: $(APP_VERSION)
+          ENVIRONMENT: $(ENVIRONMENT)
+          DEBUG: $(DEBUG)
+          TEST_BASE_URL: 'http://localhost:8000'
+
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: JUnit
+          testResultsFiles: ui-test-results.xml
+        condition: always()
+        displayName: 'Publish UI test results'
+
   # ─── Deploy ───────────────────────────────────────────────────────────────────
   - job: deploy
     displayName: 'Deploy to Azure VM'
-    dependsOn: test
-    condition: and(succeeded('test'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    dependsOn: unit_api_bdd && ui_tests
+    condition: and(succeeded('unit_api_bdd'), succeeded('ui_tests'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
     pool:
       vmImage: ubuntu-latest
 

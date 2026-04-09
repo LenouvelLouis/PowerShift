@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel  # noqa: F401 — re-exported so seed.py can use SQLModel.metadata
@@ -11,7 +11,7 @@ from app.infrastructure.secrets.settings import get_settings
 
 
 def _make_engine():
-    from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
+    from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
     url = get_settings().DATABASE_URL
     if not url:
@@ -23,6 +23,15 @@ def _make_engine():
     # Convert sslmode=require → ssl=require and drop unsupported params.
     parsed = urlparse(url)
     scheme = parsed.scheme
+    # Only rewrite PostgreSQL URLs for asyncpg compatibility.
+    # Other drivers (e.g. sqlite+aiosqlite for tests) should be left untouched.
+    if scheme not in ("postgresql", "postgres"):
+        return create_async_engine(
+            url,
+            pool_pre_ping=True,
+            echo=get_settings().DEBUG,
+        )
+
     if scheme in ("postgresql", "postgres"):
         scheme = "postgresql+asyncpg"
     params = parse_qs(parsed.query, keep_blank_values=True)

@@ -93,8 +93,8 @@ class SimulationListItem(BaseModel):
     supply_ids: list[str]
     demand_ids: list[str]
     network_ids: list[str]
-    total_supply_mwh: Optional[float]
-    total_demand_mwh: Optional[float]
+    total_supply_mwh: float | None
+    total_demand_mwh: float | None
     created_at: datetime
 
 

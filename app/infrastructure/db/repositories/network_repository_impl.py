@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -61,7 +61,7 @@ class NetworkRepositoryImpl(INetworkRepository):
         row.status = component.status
         row.unit = component.unit
         row.description = component.description
-        row.updated_at = datetime.now(timezone.utc)
+        row.updated_at = datetime.now(UTC)
 
         if isinstance(component, Transformer):
             row.voltage_hv_kv = component.voltage_hv_kv
@@ -117,7 +117,7 @@ class NetworkRepositoryImpl(INetworkRepository):
 
     @staticmethod
     def _to_orm(component: BaseNetwork) -> NetworkModel:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         row = NetworkModel(
             id=component.id,
             name=component.name,

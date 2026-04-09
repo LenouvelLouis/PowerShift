@@ -18,6 +18,8 @@ Full-stack energy grid simulation platform — Clean Architecture backend with P
 | PyPSA | Power grid simulation (OPF) |
 | pydantic-settings | Environment variable loading |
 | Pytest + httpx | Testing |
+| pytest-bdd | BDD / Gherkin test automation |
+| Selenium | UI testing (headless Chrome) |
 
 ### Frontend
 | Technology | Role |
@@ -125,9 +127,77 @@ Copy `.env.example` to `.env` and fill in the values:
 
 ## Tests
 
+### Run all tests (except UI)
+
 ```bash
-pytest
-pytest -v   # verbose
+pytest tests/ --ignore=tests/ui -v
+```
+
+### BDD tests only (Gherkin scenarios)
+
+```bash
+pytest tests/bdd/ -v
+```
+
+These run the 12 BDD scenarios (US-01 through US-04) directly against the PyPSA
+simulation engine — **no database or running server required**.
+
+### API tests only
+
+```bash
+pytest tests/api/ -v
+```
+
+These test all REST endpoints via FastAPI's `TestClient`. Requires a database
+connection (set `DATABASE_URL` in `.env`).
+
+### UI tests (Selenium)
+
+```bash
+# 1. Start the server in the background
+uvicorn app.main:app --port 8000 &
+
+# 2. Run the Selenium tests (headless Chrome)
+pytest tests/ui/ -v
+
+# 3. Stop the server when done
+kill %1
+```
+
+Requires Chrome/Chromium and chromedriver on your PATH. Override the target URL
+with `TEST_BASE_URL=http://localhost:9000 pytest tests/ui/ -v` if needed.
+
+### Lint (Ruff)
+
+Same checks as CI — fails if the `app/` package does not pass Ruff:
+
+```bash
+ruff check app
+```
+
+Auto-fix what Ruff can repair locally:
+
+```bash
+ruff check app --fix
+```
+
+### Coverage report
+
+```bash
+pytest tests/ --ignore=tests/ui --cov=app --cov-report=html -v
+open htmlcov/index.html
+```
+
+### Makefile (run CI checks locally)
+
+If you have **GNU Make** and PostgreSQL available at the same URL as CI (or override `DATABASE_URL`):
+
+```bash
+make help          # list targets
+make install       # pip install -e ".[dev]"
+make ci            # pytest with same flags and env as Azure Pipelines
+make check         # ruff + make ci (stricter local gate before push)
+make test-quick    # fast pytest without coverage / junit
 ```
 
 ---

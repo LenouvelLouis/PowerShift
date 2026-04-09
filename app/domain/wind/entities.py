@@ -5,7 +5,6 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -22,8 +21,8 @@ class WindDataPoint:
 
     timestamp: datetime
     wind_speed_ms: float
-    wind_direction_deg: Optional[float] = None
-    temperature_c: Optional[float] = None
+    wind_direction_deg: float | None = None
+    temperature_c: float | None = None
 
 
 @dataclass
@@ -43,8 +42,8 @@ class WindTurbineModel:
     cut_out_speed_ms: float
     rated_speed_ms: float
     power_curve: list[PowerCurvePoint] = field(default_factory=list)
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -70,10 +69,10 @@ class WindTurbineAsset:
     id: uuid.UUID
     name: str
     turbine_model: WindTurbineModel
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    altitude_m: Optional[float] = None
+    latitude: float | None = None
+    longitude: float | None = None
+    altitude_m: float | None = None
     quantity: int = 1
     is_active: bool = True
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None

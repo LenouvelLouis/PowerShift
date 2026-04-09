@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional, Protocol, runtime_checkable
-
 from datetime import datetime
+from typing import Protocol, runtime_checkable
 
 from app.domain.wind.entities import WindMeasurement, WindTurbineAsset, WindTurbineModel
 
@@ -18,7 +17,7 @@ class WindTurbineRepository(Protocol):
     Domain and application layers depend only on this interface.
     """
 
-    async def get_turbine_model(self, model_id: uuid.UUID) -> Optional[WindTurbineModel]:
+    async def get_turbine_model(self, model_id: uuid.UUID) -> WindTurbineModel | None:
         """Fetch a turbine model by UUID; returns None if not found."""
         ...
 
@@ -30,7 +29,7 @@ class WindTurbineRepository(Protocol):
         """Persist a new turbine model and return it (with any DB-assigned fields)."""
         ...
 
-    async def get_asset(self, asset_id: uuid.UUID) -> Optional[WindTurbineAsset]:
+    async def get_asset(self, asset_id: uuid.UUID) -> WindTurbineAsset | None:
         """Fetch a wind turbine asset by UUID; returns None if not found."""
         ...
 
@@ -50,6 +49,6 @@ class WindTurbineRepository(Protocol):
 
     async def get_latest_measurement_timestamp(
         self, station_code: str
-    ) -> Optional[datetime]:
+    ) -> datetime | None:
         """Return the most recent timestamp stored for this station, or None."""
         ...

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Optional, Sequence
 
 from app.domain.entities.base_component import BaseComponent
 
@@ -19,7 +19,7 @@ class BaseDemand(BaseComponent):
     def get_load_profile(self) -> Sequence[float]:
         """Return a normalized hourly load profile (24 values, 0.0–1.0)."""
 
-    def to_pypsa_params(self, profile: Optional[list[float]] = None) -> dict:
+    def to_pypsa_params(self, profile: list[float] | None = None) -> dict:
         """Return keyword arguments for pypsa.Network.add('Load', name, **params).
 
         If `profile` is provided (normalized values 0.0–1.0), p_set becomes a
