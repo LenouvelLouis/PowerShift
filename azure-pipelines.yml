@@ -105,21 +105,23 @@ jobs:
 
       - script: |
           set -euo pipefail
+          # Build authenticated URL on the agent where variables are available
           CLEAN_URI=$(echo "$REPO_URI" | sed 's|https://[^@]*@|https://|')
-          AUTH_URL=$(echo "$CLEAN_URI" | sed "s|https://|https://pat:${SYSTEM_ACCESSTOKEN}@|")
+          AUTH_URL=$(echo "$CLEAN_URI" | sed "s|https://|https://build:${SYSTEM_ACCESSTOKEN}@|")
 
-          ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no $(VM_USER)@$(VM_HOST) "
-            set -euo pipefail
-            REPO_DIR=/home/azureuser/isep-app
-            if [ -d \"\$REPO_DIR/.git\" ]; then
-              git -C \"\$REPO_DIR\" fetch --all
-              git -C \"\$REPO_DIR\" reset --hard origin/main
-            else
-              git clone '$AUTH_URL' \"\$REPO_DIR\"
-            fi
-            cd \"\$REPO_DIR\"
-            DOCKER_BUILDKIT=1 sudo -E docker compose up --build -d
-          "
+          ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no $(VM_USER)@$(VM_HOST) bash -s "$AUTH_URL" << 'ENDSSH'
+          set -euo pipefail
+          AUTH_URL="$1"
+          REPO_DIR=/home/azureuser/isep-app
+          if [ -d "$REPO_DIR/.git" ]; then
+            git -C "$REPO_DIR" fetch --all
+            git -C "$REPO_DIR" reset --hard origin/main
+          else
+            git clone "$AUTH_URL" "$REPO_DIR"
+          fi
+          cd "$REPO_DIR"
+          DOCKER_BUILDKIT=1 sudo -E docker compose up --build -d
+          ENDSSH
         displayName: 'Deploy via Docker Compose'
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
