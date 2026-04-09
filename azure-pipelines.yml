@@ -92,6 +92,7 @@ jobs:
         displayName: 'Configure SSH key'
 
       - script: |
+          ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no $(VM_USER)@$(VM_HOST) "mkdir -p /home/$(VM_USER)/isep-app"
           printf "APP_NAME=%s\nAPP_VERSION=%s\nENVIRONMENT=%s\nDEBUG=false\nHOST=0.0.0.0\nPORT=8000\nDATABASE_URL=%s\nKNMI_API_KEY=%s\nNUXT_API_BASE_URL=http://backend:8000\n" \
             "$APP_NAME" "$APP_VERSION" "$ENVIRONMENT" "$DATABASE_URL" "$KNMI_API_KEY" > /tmp/.env
           scp -i ~/.ssh/vm_key -o StrictHostKeyChecking=no /tmp/.env $(VM_USER)@$(VM_HOST):/home/$(VM_USER)/isep-app/.env
@@ -105,27 +106,19 @@ jobs:
 
       - script: |
           set -euo pipefail
-          # Build authenticated URL on the agent where variables are available
-          CLEAN_URI=$(echo "$REPO_URI" | sed 's|https://[^@]*@|https://|')
-          AUTH_URL=$(echo "$CLEAN_URI" | sed "s|https://|https://build:${SYSTEM_ACCESSTOKEN}@|")
-
-          ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no $(VM_USER)@$(VM_HOST) bash -s "$AUTH_URL" << 'ENDSSH'
-          set -euo pipefail
-          AUTH_URL="$1"
-          REPO_DIR=/home/azureuser/isep-app
-          if [ -d "$REPO_DIR/.git" ]; then
-            git -C "$REPO_DIR" fetch --all
-            git -C "$REPO_DIR" reset --hard origin/main
-          else
-            git clone "$AUTH_URL" "$REPO_DIR"
-          fi
-          cd "$REPO_DIR"
-          DOCKER_BUILDKIT=1 sudo -E docker compose up --build -d
-          ENDSSH
+          DEST=$(VM_USER)@$(VM_HOST):/home/$(VM_USER)/isep-app/
+          # Sync repo from agent to VM (agent already has the checkout)
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no" \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude '__pycache__' \
+            --exclude '.env' \
+            "$(Build.SourcesDirectory)/" "$DEST"
+          # Build and deploy
+          ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no $(VM_USER)@$(VM_HOST) \
+            "cd /home/$(VM_USER)/isep-app && DOCKER_BUILDKIT=1 sudo -E docker compose up --build -d"
         displayName: 'Deploy via Docker Compose'
-        env:
-          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-          REPO_URI: $(Build.Repository.Uri)
 
       - script: |
           ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no $(VM_USER)@$(VM_HOST) bash << 'ENDSSH'
