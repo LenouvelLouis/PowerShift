@@ -18,10 +18,7 @@ class Transformer(BaseNetwork):
         return "transformer"
 
     def to_pypsa_params(self) -> dict:
+        # bus0/bus1 are injected by network_builder based on voltage levels
         return {
-            "bus0": "main_bus",
-            "bus1": "main_bus",
             "s_nom": self.capacity_mva,
-            # migration note: replace main_bus with bus_mv / bus_lv when Network group
-            # introduces multi-bus topology
         }

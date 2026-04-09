@@ -19,12 +19,9 @@ class Cable(BaseNetwork):
         return "cable"
 
     def to_pypsa_params(self) -> dict:
+        # bus0/bus1 are injected by network_builder based on topology
         return {
-            "bus0": "main_bus",
-            "bus1": "main_bus",
             "length": self.length_km,
             "r": self.resistance_ohm_per_km,
             "x": self.reactance_ohm_per_km,
-            # migration note: replace main_bus with bus_mv / bus_lv when Network group
-            # introduces multi-bus topology
         }

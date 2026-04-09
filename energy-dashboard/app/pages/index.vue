@@ -1,5 +1,6 @@
 <template>
   <div class="flex flex-col min-h-full bg-[#020617] p-6 gap-6">
+
     <!-- Backend unavailable banner -->
     <div
       v-if="referential.backendAvailable === false"
@@ -11,6 +12,7 @@
 
     <ScenarioBar @loading-change="loadingScenario = $event" />
 
+    <!-- Loading skeletons -->
     <UiShimmerSkeleton
       v-if="loadingScenario"
       headline="Preparing your scenario"
@@ -23,26 +25,65 @@
     />
 
     <template v-else-if="result">
+      <!-- Error / non-convergence banner -->
       <ErrorBanner
         v-if="result.status === 'error' || result.status === 'non_converged'"
         :headline="errorHeadline"
         :description="errorDescription"
       />
+
+      <!-- Big KPI cards -->
       <KpiCardsGrid :result="result" />
-      <UTabs
-        :items="[{ label: 'Results', slot: 'results' }, { label: 'Graphics', slot: 'charts' }]"
-        class="w-full"
-      >
-        <template #results>
+
+      <!-- Tabs: Résultats / Graphiques / Réseau -->
+      <div>
+        <!-- Tab bar -->
+        <div class="flex gap-1 border-b border-[#1E293B] mb-6">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            class="px-4 py-2 text-sm font-medium transition-colors"
+            :class="activeTab === tab.key
+              ? 'text-white border-b-2 border-blue-500 -mb-px'
+              : 'text-gray-500 hover:text-gray-300'"
+            @click="activeTab = tab.key"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+
+        <!-- Tab content — use v-show so NetworkCanvas stays mounted and the
+             ResizeObserver can read clientWidth on the first paint -->
+        <div v-show="activeTab === 'results'">
           <ResultsTab :result="result" />
-        </template>
-        <template #charts>
+        </div>
+        <div v-show="activeTab === 'graphics'">
           <GraphicsTab :result="result" />
-        </template>
-      </UTabs>
+        </div>
+        <div v-show="activeTab === 'network'" class="flex flex-col gap-6">
+          <NetworkCanvas
+            :supplies="sim.selectedSupplies"
+            :demands="sim.selectedDemands"
+            :network="sim.selectedNetwork"
+            :result="result"
+            :visible="activeTab === 'network'"
+          />
+          <NetworkCanvasMetricTiles :result="result" />
+        </div>
+      </div>
     </template>
 
-    <EmptyState v-else />
+    <!-- No result yet: show canvas with selected assets only, or empty state -->
+    <template v-else>
+      <NetworkCanvas
+        v-if="sim.hasMinimumAssets"
+        :supplies="sim.selectedSupplies"
+        :demands="sim.selectedDemands"
+        :network="sim.selectedNetwork"
+        :result="null"
+      />
+      <EmptyState v-else />
+    </template>
   </div>
 </template>
 
@@ -51,14 +92,21 @@ import { useSimulationStore } from '~/stores/simulation'
 import { useReferentialStore } from '~/stores/referential'
 import { useHistoryStore } from '~/stores/history'
 
-const sim = useSimulationStore()
+const sim        = useSimulationStore()
 const referential = useReferentialStore()
-const history = useHistoryStore()
+const history    = useHistoryStore()
 
 useSimulationUrl()
 
 const loadingScenario = ref(false)
 const result = computed(() => sim.displayedResult)
+
+const tabs = [
+  { key: 'results',  label: 'Results' },
+  { key: 'graphics', label: 'Charts' },
+  { key: 'network',  label: 'Network' },
+]
+const activeTab = ref('results')
 
 const errorHeadline = computed(() => {
   const status = result.value?.status
@@ -74,7 +122,7 @@ const errorDescription = computed(() => {
   const details = result.value?.result_json?.error
   if (status === 'non_converged') {
     const conv = result.value?.result_json?.convergence
-    const bad = conv?.non_converged_snapshots?.length ?? 0
+    const bad  = conv?.non_converged_snapshots?.length ?? 0
     return details ?? `The AC power flow did not converge for ${bad} snapshot(s). Check that generation can meet demand and that network parameters are physically consistent.`
   }
   if (result.value?.result_json?.error_type === 'convergence_error') {
@@ -90,7 +138,7 @@ onMounted(async () => {
       await history.loadHistory()
     }
   } catch {
-    // non-critical — page still usable
+    // non-critical
   }
 })
 </script>

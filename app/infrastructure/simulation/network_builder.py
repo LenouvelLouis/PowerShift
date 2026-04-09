@@ -47,8 +47,7 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
         n = pypsa.Network()
         n.set_snapshots(range(config.snapshot_hours))
 
-        # BUS CONVENTION (POC — Sprint 1):
-        # All components connect to "main_bus" (single shared bus, v_nom=380).
+        # ── Single shared bus ────────────────────────────────────────────────────
         n.add("Bus", "main_bus", v_nom=380.0)
 
         # ── 1. Add loads first (needed to compute residual for dispatch) ─────────
@@ -113,12 +112,10 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
             })
             n.add("Generator", supply.name, **params)
 
-        # ── 4. Add network components (lines / transformers) ─────────────────────
-        for component in config.network_components:
-            pypsa_type = "Transformer" if component.get_network_type() == "transformer" else "Line"
-            comp_params = component.to_pypsa_params()
-            comp_params.update(config.pypsa_params.get(component.name, {}))
-            n.add(pypsa_type, component.name, **comp_params)
+        # ── 4. Network components ────────────────────────────────────────────────
+        # All assets share main_bus; cables/transformers are descriptive only and
+        # cannot be modelled as PyPSA Lines in a single-bus topology.
+        # (No n.add call here — components are visualised in the canvas instead.)
 
         # ── 5. Slack generator: absorbs any grid imbalance ───────────────────────
         # Positive output → system imports from grid; negative → exports to grid.

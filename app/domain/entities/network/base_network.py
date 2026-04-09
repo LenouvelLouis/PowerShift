@@ -26,9 +26,8 @@ class BaseNetwork(BaseComponent):
 
     @abstractmethod
     def to_pypsa_params(self) -> dict:
-        """Return the keyword arguments for pypsa.Network.add(type, name, **params).
+        """Return keyword arguments for pypsa.Network.add(type, name, **params).
 
-        Every implementation must include 'bus0' and 'bus1' set to 'main_bus'.
-        Migration note: replace 'main_bus' with bus_mv / bus_lv when the Network
-        group introduces multi-bus topology — only this method changes.
+        Bus assignment (bus0/bus1) is determined at simulation time by the
+        network builder from the topology — not stored in the domain entity.
         """
