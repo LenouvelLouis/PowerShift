@@ -19,9 +19,16 @@ echo "==> Installing Azure Pipelines agent v${AGENT_VERSION}"
 mkdir -p "$AGENT_DIR"
 cd "$AGENT_DIR"
 
-curl -fsSL \
-  "https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz" \
-  -o agent.tar.gz
+# Use pre-downloaded tarball if available, otherwise download
+if [ -n "${AGENT_TAR_PATH:-}" ] && [ -f "$AGENT_TAR_PATH" ]; then
+  echo "==> Using pre-downloaded tarball: $AGENT_TAR_PATH"
+  cp "$AGENT_TAR_PATH" agent.tar.gz
+else
+  echo "==> Downloading agent tarball"
+  curl -fsSL \
+    "https://github.com/microsoft/azure-pipelines-agent/releases/download/v${AGENT_VERSION}/vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz" \
+    -o agent.tar.gz
+fi
 tar xzf agent.tar.gz
 rm agent.tar.gz
 

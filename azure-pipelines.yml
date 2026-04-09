@@ -8,15 +8,15 @@ pr:
     include:
       - '*'
 
-pool:
-  vmImage: ubuntu-latest
-
 variables:
-  PYTHON_VERSION: '3.11'
+  - group: energy-grid-prod
 
 jobs:
+  # ─── Tests ────────────────────────────────────────────────────────────────────
   - job: test
     displayName: 'Test'
+    pool:
+      vmImage: ubuntu-latest
     services:
       postgres:
         image: postgres:15
@@ -34,8 +34,8 @@ jobs:
     steps:
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: '$(PYTHON_VERSION)'
-        displayName: 'Setup Python $(PYTHON_VERSION)'
+          versionSpec: '3.11'
+        displayName: 'Setup Python 3.11'
 
       - script: |
           python -m pip install --upgrade pip
@@ -69,33 +69,92 @@ jobs:
         condition: always()
         displayName: 'Publish coverage'
 
-  - job: deploy_frontend
-    displayName: 'Deploy Frontend to Vercel'
-    condition: and(succeeded('test'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  # ─── Deploy ───────────────────────────────────────────────────────────────────
+  - job: deploy
+    displayName: 'Deploy to Azure VM'
     dependsOn: test
+    condition: and(succeeded('test'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    pool:
+      vmImage: ubuntu-latest
 
     steps:
-      - script: npm install -g vercel
-        displayName: 'Install Vercel CLI'
+      - task: DownloadSecureFile@1
+        name: sshKey
+        inputs:
+          secureFile: 'azure.key'
+        displayName: 'Download SSH key'
 
-      - script: vercel deploy --prod --token=$(VERCEL_TOKEN)
-        displayName: 'Deploy to Vercel'
-        workingDirectory: energy-dashboard
+      - script: |
+          mkdir -p ~/.ssh
+          cp $(sshKey.secureFilePath) ~/.ssh/vm_key
+          chmod 600 ~/.ssh/vm_key
+          ssh-keyscan -H $(VM_HOST) >> ~/.ssh/known_hosts 2>/dev/null
+        displayName: 'Configure SSH key'
+
+      - script: |
+          printf "APP_NAME=%s\nAPP_VERSION=%s\nENVIRONMENT=%s\nDEBUG=false\nHOST=0.0.0.0\nPORT=8000\nDATABASE_URL=%s\nKNMI_API_KEY=%s\nNUXT_API_BASE_URL=http://backend:8000\n" \
+            "$APP_NAME" "$APP_VERSION" "$ENVIRONMENT" "$DATABASE_URL" "$KNMI_API_KEY" > /tmp/.env
+          scp -i ~/.ssh/vm_key -o StrictHostKeyChecking=no /tmp/.env $(VM_USER)@$(VM_HOST):/home/$(VM_USER)/isep-app/.env
+        displayName: 'Push .env to VM'
         env:
-          VERCEL_ORG_ID: team_6oqbtVfbTg67O1tSLEvfDucE
-          VERCEL_PROJECT_ID: prj_FA0YmYMYJij1G73160fp9vGfvhxH
+          APP_NAME: $(APP_NAME)
+          APP_VERSION: $(APP_VERSION)
+          ENVIRONMENT: $(ENVIRONMENT)
+          DATABASE_URL: $(DATABASE_URL)
+          KNMI_API_KEY: $(KNMI_API_KEY)
 
-  - job: deploy_backend
-    displayName: 'Deploy Backend to Railway'
-    condition: and(succeeded('test'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-    dependsOn: test
+      - script: |
+          set -euo pipefail
+          CLEAN_URI=$(echo "$REPO_URI" | sed 's|https://[^@]*@|https://|')
+          AUTH_URL=$(echo "$CLEAN_URI" | sed "s|https://|https://pat:${SYSTEM_ACCESSTOKEN}@|")
 
-    steps:
-      - script: npm install -g @railway/cli
-        displayName: 'Install Railway CLI'
-
-      - script: railway up --service backend --detach
-        displayName: 'Deploy to Railway'
+          ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no $(VM_USER)@$(VM_HOST) "
+            set -euo pipefail
+            REPO_DIR=/home/azureuser/isep-app
+            if [ -d \"\$REPO_DIR/.git\" ]; then
+              git -C \"\$REPO_DIR\" pull
+            else
+              git clone '$AUTH_URL' \"\$REPO_DIR\"
+            fi
+            cd \"\$REPO_DIR\"
+            DOCKER_BUILDKIT=1 sudo -E docker compose up --build -d
+          "
+        displayName: 'Deploy via Docker Compose'
         env:
-          RAILWAY_TOKEN: $(RAILWAY_TOKEN)
-          RAILWAY_PROJECT_ID: da7f2eff-710d-4607-8be5-90fe4cdfab48
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          REPO_URI: $(Build.Repository.Uri)
+
+      - script: |
+          ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no $(VM_USER)@$(VM_HOST) bash << 'ENDSSH'
+          set -euo pipefail
+
+          echo "==> Health check backend (port 8000)"
+          for i in $(seq 1 10); do
+            if curl -sf http://localhost:8000/health; then
+              echo ""
+              echo "Backend OK"
+              break
+            fi
+            echo "Attempt $i/10 failed, retrying in 5s..."
+            sleep 5
+            if [ "$i" -eq 10 ]; then
+              echo "Backend health check failed"
+              exit 1
+            fi
+          done
+
+          echo "==> Health check frontend (port 80)"
+          for i in $(seq 1 10); do
+            if curl -sf http://localhost:80 > /dev/null; then
+              echo "Frontend OK"
+              break
+            fi
+            echo "Attempt $i/10 failed, retrying in 5s..."
+            sleep 5
+            if [ "$i" -eq 10 ]; then
+              echo "Frontend health check failed"
+              exit 1
+            fi
+          done
+          ENDSSH
+        displayName: 'Health checks'
