@@ -4,7 +4,7 @@
     <!-- Status -->
     <div
       class="rounded-2xl border p-5 flex flex-col gap-2"
-      :class="result.status === 'converged'
+      :class="isSuccess
         ? 'bg-emerald-950/30 border-emerald-800/40'
         : result.status === 'error'
           ? 'bg-red-950/30 border-red-800/40'
@@ -12,17 +12,17 @@
     >
       <div class="flex items-center gap-2">
         <UIcon
-          :name="result.status === 'converged' ? 'i-heroicons-check-circle' : 'i-heroicons-exclamation-circle'"
+          :name="isSuccess ? 'i-heroicons-check-circle' : 'i-heroicons-exclamation-circle'"
           class="w-6 h-6"
-          :class="result.status === 'converged' ? 'text-emerald-400' : result.status === 'error' ? 'text-red-400' : 'text-amber-400'"
+          :class="isSuccess ? 'text-emerald-400' : result.status === 'error' ? 'text-red-400' : 'text-amber-400'"
         />
         <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Status</span>
       </div>
       <p
         class="text-2xl font-bold"
-        :class="result.status === 'converged' ? 'text-emerald-400' : result.status === 'error' ? 'text-red-400' : 'text-amber-400'"
+        :class="isSuccess ? 'text-emerald-400' : result.status === 'error' ? 'text-red-400' : 'text-amber-400'"
       >
-        {{ result.status === 'converged' ? 'Converged' : result.status === 'non_converged' ? 'Non-conv.' : 'Error' }}
+        {{ statusLabel }}
       </p>
     </div>
 
@@ -74,6 +74,17 @@ function fmtShort(v: number | null | undefined): string {
   if (Math.abs(v) >= 1000) return (v / 1000).toFixed(1) + 'k'
   return v.toFixed(1)
 }
+
+const isSuccess = computed(() =>
+  props.result.status === 'converged' || props.result.status === 'optimized'
+)
+const statusLabel = computed(() => {
+  const s = props.result.status
+  if (s === 'optimized') return 'Optimised'
+  if (s === 'converged') return 'Converged'
+  if (s === 'non_converged') return 'Non-conv.'
+  return 'Error'
+})
 
 const balanceColor = computed(() => {
   const b = props.result.balance_mwh ?? 0
