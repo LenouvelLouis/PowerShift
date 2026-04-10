@@ -15,13 +15,13 @@ class SupplyResponse(BaseModel):
 
     id: uuid.UUID = Field(description="Unique identifier of the supply component.")
     name: str = Field(description="Human-readable name.")
-    type: str = Field(description="Component type: `wind_turbine`, `solar_panel`, or `nuclear_plant`.")
+    type: str = Field(description="Component type: `wind_turbine`, `solar_panel`, `nuclear_plant`, or `battery_storage`.")
     capacity_mw: float = Field(description="Nominal installed capacity in megawatts.")
     efficiency: float = Field(description="Conversion efficiency, between 0.0 and 1.0.")
     status: ComponentStatus = Field(description="Operational status.")
     unit: str = Field(description="Unit of the capacity field (typically `MW`).")
     description: str = Field(default="", description="Free-text description.")
-    carrier: str = Field(description="Energy carrier used by PyPSA: `wind`, `solar`, or `nuclear`.")
+    carrier: str = Field(description="Energy carrier used by PyPSA: `wind`, `solar`, `nuclear`, or `battery`.")
     created_at: datetime = Field(description="UTC timestamp of creation.")
     updated_at: datetime = Field(description="UTC timestamp of the last update.")
 
@@ -44,7 +44,7 @@ class SupplyCreate(BaseModel):
     }
 
     name: str = Field(description="Human-readable name.")
-    type: str = Field(description="Component type: `wind_turbine`, `solar_panel`, or `nuclear_plant`.")
+    type: str = Field(description="Component type: `wind_turbine`, `solar_panel`, `nuclear_plant`, or `battery_storage`.")
     capacity_mw: float = Field(description="Nominal installed capacity in megawatts.")
     efficiency: float = Field(default=1.0, description="Conversion efficiency, between 0.0 and 1.0.")
     status: ComponentStatus = Field(default=ComponentStatus.ACTIVE, description="Operational status.")

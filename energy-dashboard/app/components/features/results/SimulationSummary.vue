@@ -12,9 +12,9 @@
         <span class="text-gray-400">Status</span>
         <span
           class="font-semibold"
-          :class="result.status === 'converged' ? 'text-emerald-400' : 'text-red-400'"
+          :class="(result.status === 'converged' || result.status === 'optimized') ? 'text-emerald-400' : 'text-red-400'"
         >
-          {{ result.status === 'converged' ? 'Converged' : result.status === 'non_converged' ? 'Non-converged' : 'Error' }}
+          {{ result.status === 'optimized' ? 'Optimised' : result.status === 'converged' ? 'Converged' : result.status === 'non_converged' ? 'Non-converged' : 'Error' }}
         </span>
       </div>
       <div class="flex justify-between items-center">
@@ -49,8 +49,8 @@
           <span class="font-mono text-blue-400">{{ fmt(gridExchange.total_import_mwh) }} MWh</span>
         </div>
         <div class="flex justify-between items-center">
-          <span class="text-gray-400">Grid Export</span>
-          <span class="font-mono text-emerald-400">{{ fmt(gridExchange.total_export_mwh) }} MWh</span>
+          <span class="text-gray-400">Curtailed</span>
+          <span class="font-mono text-violet-400">{{ fmt(gridExchange.total_export_mwh) }} MWh</span>
         </div>
       </template>
       <div class="flex justify-between items-center border-t border-[#1E293B] pt-2.5 mt-1">

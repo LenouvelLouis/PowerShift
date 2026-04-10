@@ -115,8 +115,8 @@
         <div class="space-y-2.5 text-sm">
           <div class="flex justify-between items-center">
             <span class="text-gray-500">Status</span>
-            <span class="font-semibold" :class="result.status === 'converged' ? 'text-emerald-400' : 'text-red-400'">
-              {{ result.status === 'converged' ? 'Converged' : result.status === 'non_converged' ? 'Non-converged' : 'Error' }}
+            <span class="font-semibold" :class="(result.status === 'converged' || result.status === 'optimized') ? 'text-emerald-400' : 'text-red-400'">
+              {{ result.status === 'optimized' ? 'Optimised' : result.status === 'converged' ? 'Converged' : result.status === 'non_converged' ? 'Non-converged' : 'Error' }}
             </span>
           </div>
           <div class="flex justify-between items-center">

@@ -2,7 +2,7 @@
   <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Energy Flow</h3>
-      <UTooltip text="How electricity moved through the system during the simulation period. The model uses a single shared bus — all generators and loads connect to the same node. The grid slack absorbs any real-time imbalance between production and consumption.">
+      <UTooltip text="How electricity moved through the system. The optimizer (LOPF) dispatches generators at minimum cost, uses batteries to shift surplus energy, and only imports from the grid as a last resort.">
         <UIcon name="i-heroicons-information-circle" class="w-4 h-4 text-gray-600 cursor-help" />
       </UTooltip>
     </div>
@@ -27,6 +27,13 @@
         <span class="font-mono text-gray-500 text-xs">{{ fmt(genMwh(name as string)) }} MWh</span>
       </div>
 
+      <!-- Battery discharge (only if > 0) -->
+      <div v-if="batteryDischarge > 0.1" class="flex items-center gap-3">
+        <div class="w-3 h-3 rounded-full bg-yellow-400 shrink-0" />
+        <span class="text-gray-400 flex-1">Battery discharge</span>
+        <span class="font-mono text-yellow-400">+{{ fmt(batteryDischarge) }} MWh</span>
+      </div>
+
       <!-- Grid import (only if > 0) -->
       <div v-if="gridImport > 0.1" class="flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-blue-400 shrink-0" />
@@ -48,10 +55,17 @@
         <span class="font-mono text-red-400">−{{ fmt(result.total_demand_mwh) }} MWh</span>
       </div>
 
-      <!-- Grid export (only if > 0) -->
+      <!-- Battery charge (only if > 0) -->
+      <div v-if="batteryCharge > 0.1" class="flex items-center gap-3">
+        <div class="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
+        <span class="text-gray-400 flex-1">Battery charge</span>
+        <span class="font-mono text-amber-500">−{{ fmt(batteryCharge) }} MWh</span>
+      </div>
+
+      <!-- Curtailed / grid export (only if > 0) -->
       <div v-if="gridExport > 0.1" class="flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-violet-400 shrink-0" />
-        <span class="text-gray-400 flex-1">Grid export</span>
+        <span class="text-gray-400 flex-1">Curtailed (excess)</span>
         <span class="font-mono text-violet-400">−{{ fmt(gridExport) }} MWh</span>
       </div>
 
@@ -64,16 +78,39 @@
         </span>
       </div>
 
+      <!-- Curtailment warning -->
+      <div
+        v-if="curtailmentRatio > 0.3"
+        class="mt-2 flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2"
+      >
+        <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <p class="text-[11px] text-amber-300 leading-relaxed">
+          <strong>{{ (curtailmentRatio * 100).toFixed(0) }}% of available renewable energy is curtailed.</strong>
+          Adding battery storage would allow storing excess production for later use and reduce grid dependency.
+        </p>
+      </div>
+
       <!-- Balance explanation -->
       <p class="text-[11px] text-gray-600 leading-relaxed pt-1">
-        <template v-if="Math.abs(balance) < 1">
+        <template v-if="result.status === 'optimized'">
+          <template v-if="Math.abs(balance) < 2">
+            LOPF balanced the system. Any residual reflects battery round-trip losses.
+          </template>
+          <template v-else-if="gridImport > 0.1">
+            {{ fmt(gridImport) }} MWh imported from grid — local resources couldn't fully cover demand.
+          </template>
+          <template v-else>
+            LOPF optimised dispatch. Small imbalance ({{ fmt(Math.abs(balance)) }} MWh) reflects storage losses.
+          </template>
+        </template>
+        <template v-else-if="Math.abs(balance) < 1">
           Production matched consumption — the system was balanced.
         </template>
         <template v-else-if="balance > 0">
-          {{ fmt(balance) }} MWh surplus: local generators over-produced. In a real grid this excess is exported or curtailed.
+          {{ fmt(balance) }} MWh surplus: local generators over-produced. Excess is curtailed or exported.
         </template>
         <template v-else>
-          {{ fmt(Math.abs(balance)) }} MWh deficit: local production couldn't meet demand. The grid slack generator covered the gap.
+          {{ fmt(Math.abs(balance)) }} MWh deficit: local production couldn't meet demand.
         </template>
       </p>
 
@@ -89,10 +126,32 @@ const props = defineProps<{ result: SimulationResult }>()
 const fmt = (v: number | null | undefined) => v == null ? '—' : Math.abs(v) >= 1000 ? (v / 1000).toFixed(2) + 'k' : v.toFixed(1)
 
 const generators = computed(() => props.result.result_json?.generators_t ?? {})
+const storageUnits = computed(() => props.result.result_json?.storage_units_t ?? {})
 const gridImport = computed(() => props.result.result_json?.grid_exchange?.total_import_mwh ?? 0)
 const gridExport = computed(() => props.result.result_json?.grid_exchange?.total_export_mwh ?? 0)
 const balance = computed(() => props.result.balance_mwh ?? 0)
-const totalAvailable = computed(() => (props.result.total_supply_mwh ?? 0) + gridImport.value)
+
+const batteryDischarge = computed(() =>
+  Object.values(storageUnits.value).reduce((sum, su) =>
+    sum + su.p.reduce((a: number, v: number) => a + Math.max(0, v), 0), 0
+  )
+)
+const batteryCharge = computed(() =>
+  Object.values(storageUnits.value).reduce((sum, su) =>
+    sum + su.p.reduce((a: number, v: number) => a + Math.max(0, -v), 0), 0
+  )
+)
+
+const totalAvailable = computed(() =>
+  (props.result.total_supply_mwh ?? 0) + batteryDischarge.value + gridImport.value
+)
+
+const curtailmentRatio = computed(() => {
+  const localProd = props.result.total_supply_mwh ?? 0
+  const curtailed = gridExport.value
+  const totalRenewable = localProd + curtailed
+  return totalRenewable > 0 ? curtailed / totalRenewable : 0
+})
 
 function genMwh(name: string): number {
   const ts = generators.value[name]
@@ -109,7 +168,7 @@ function genColor(name: string): string {
 const balanceColor = computed(() => {
   const b = balance.value
   if (props.result.status === 'error') return 'text-gray-500'
-  if (Math.abs(b) < 1) return 'text-emerald-400'
+  if (Math.abs(b) < 2) return 'text-emerald-400'
   return b > 0 ? 'text-blue-400' : 'text-amber-400'
 })
 </script>

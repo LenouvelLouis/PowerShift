@@ -10,7 +10,7 @@
             Solver helper
           </h3>
           <p class="text-xs text-gray-400 mt-0.5">
-            AC power flow uses Newton-Raphson. Solver selection applies to DC power flow and future OPF modes.
+            The solver is used for LOPF (Linear Optimal Power Flow). HiGHS is recommended for all simulations.
           </p>
         </div>
         <span class="text-xs px-2 py-1 rounded bg-[#1E293B] text-slate-300">

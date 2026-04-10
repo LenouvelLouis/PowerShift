@@ -20,8 +20,8 @@
     />
     <UiShimmerSkeleton
       v-else-if="sim.isLiveRunning || sim.isRunning"
-      headline="Computing power flow"
-      subtitle="Running AC power flow analysis, results coming shortly..."
+      headline="Optimising power flow"
+      subtitle="Running LOPF optimisation across all snapshots, results coming shortly..."
     />
 
     <template v-else-if="result">
@@ -123,7 +123,7 @@ const errorDescription = computed(() => {
   if (status === 'non_converged') {
     const conv = result.value?.result_json?.convergence
     const bad  = conv?.non_converged_snapshots?.length ?? 0
-    return details ?? `The AC power flow did not converge for ${bad} snapshot(s). Check that generation can meet demand and that network parameters are physically consistent.`
+    return details ?? `The power flow optimisation did not find a feasible solution for ${bad} snapshot(s). Check that generation can meet demand and that network parameters are physically consistent.`
   }
   if (result.value?.result_json?.error_type === 'convergence_error') {
     return details ?? 'The power flow solver failed to converge. Ensure network parameters are valid.'

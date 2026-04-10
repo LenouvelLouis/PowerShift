@@ -166,10 +166,10 @@ const steps: Step[] = [
     iconBg: 'bg-blue-950',
     iconColor: 'text-blue-400',
     title: 'Welcome to the Energy Network Simulator',
-    description: 'This platform lets you model a local electricity grid, run an AC power flow simulation, and understand how production, transport, and consumption interact.',
+    description: 'This platform lets you model a local electricity grid, run an optimal power flow simulation, and understand how production, storage, and consumption interact.',
     detail: [
-      { icon: 'i-heroicons-bolt', label: 'You configure assets', desc: 'Generators, loads, and network components with real parameters (MW, efficiency…)', bg: 'bg-amber-950', color: 'text-amber-400' },
-      { icon: 'i-heroicons-cpu-chip', label: 'PyPSA solves the grid', desc: 'An AC Newton-Raphson power flow runs hour by hour for your chosen period', bg: 'bg-blue-950', color: 'text-blue-400' },
+      { icon: 'i-heroicons-bolt', label: 'You configure assets', desc: 'Generators, batteries, loads, and network components with real parameters (MW, efficiency…)', bg: 'bg-amber-950', color: 'text-amber-400' },
+      { icon: 'i-heroicons-cpu-chip', label: 'PyPSA optimises the grid', desc: 'A Linear Optimal Power Flow (LOPF) finds the cheapest dispatch across all hours simultaneously', bg: 'bg-blue-950', color: 'text-blue-400' },
       { icon: 'i-heroicons-chart-bar', label: 'You read the results', desc: 'Production per generator, consumption per load, balance, and capacity factors', bg: 'bg-emerald-950', color: 'text-emerald-400' },
     ],
   },
@@ -204,7 +204,7 @@ const steps: Step[] = [
     iconBg: 'bg-teal-950',
     iconColor: 'text-teal-400',
     title: 'Step 3 — Choose your time window',
-    description: 'Each simulation runs one AC power flow calculation per hour. A longer period gives more realistic averages but takes more time.',
+    description: 'The LOPF optimises all hours simultaneously. A longer period gives more realistic averages and lets batteries shift energy across more hours.',
     detail: [
       { icon: 'i-heroicons-bolt', label: '1 hour', desc: 'A single snapshot — good for testing extreme peak scenarios.', bg: 'bg-teal-950', color: 'text-teal-400' },
       { icon: 'i-heroicons-sun', label: '24 hours', desc: 'One day — captures the solar day/night cycle and the daily demand curve.', bg: 'bg-teal-950', color: 'text-teal-400' },

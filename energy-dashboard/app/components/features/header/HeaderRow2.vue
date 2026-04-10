@@ -34,7 +34,7 @@
         class="w-24"
         size="xs"
       />
-      <UTooltip text="Number of hourly snapshots to simulate. Each snapshot is one AC power flow calculation. Total energy (MWh) = installed capacity (MW) × number of hours × capacity factor. More hours = more realistic averaging but longer computation.">
+      <UTooltip text="Number of hourly snapshots. The LOPF optimises all hours simultaneously — batteries can shift energy across the whole period. Total energy (MWh) = installed capacity (MW) × hours × capacity factor. More hours = more realistic averaging.">
         <UIcon name="i-heroicons-information-circle" class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0" />
       </UTooltip>
     </div>

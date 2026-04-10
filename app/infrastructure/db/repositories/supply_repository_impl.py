@@ -10,6 +10,7 @@ from sqlmodel import select
 
 from app.domain.entities.base_component import ComponentStatus
 from app.domain.entities.supply.base_supply import BaseSupply
+from app.domain.entities.supply.battery_storage import BatteryStorage
 from app.domain.entities.supply.nuclear_plant import NuclearPlant
 from app.domain.entities.supply.solar_panel import SolarPanel
 from app.domain.entities.supply.wind_turbine import WindTurbine
@@ -20,6 +21,7 @@ _TYPE_MAP: dict[str, type[BaseSupply]] = {
     "wind_turbine": WindTurbine,
     "solar_panel": SolarPanel,
     "nuclear_plant": NuclearPlant,
+    "battery_storage": BatteryStorage,
 }
 
 

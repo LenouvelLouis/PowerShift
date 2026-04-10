@@ -58,7 +58,7 @@
             <h4 class="text-white font-semibold">Choose a time window</h4>
           </div>
           <p class="text-gray-400 leading-relaxed">
-            The simulation runs one AC power flow calculation per hour. Choosing a longer window gives more representative results:
+            The optimizer solves all hours simultaneously. Choosing a longer window gives more representative results:
           </p>
           <div class="mt-2 space-y-1.5">
             <div class="flex items-start gap-2">
@@ -109,22 +109,24 @@
 
         <div class="border-t border-[#1E293B]" />
 
-        <!-- Step 4: PyPSA & AC power flow -->
+        <!-- Step 4: PyPSA & LOPF -->
         <section>
           <div class="flex items-center gap-2 mb-2">
             <span class="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold shrink-0">4</span>
-            <h4 class="text-white font-semibold">The AC power flow (PyPSA)</h4>
+            <h4 class="text-white font-semibold">The optimizer (PyPSA LOPF)</h4>
           </div>
           <p class="text-gray-400 leading-relaxed">
-            The backend uses <span class="text-white">PyPSA</span> (Python for Power System Analysis) to run an
-            <span class="text-white">AC power flow</span> using the Newton-Raphson method.
-            For each hour, it solves the non-linear equations relating voltages, angles, and power injections
-            across all buses in the network.
+            The backend uses <span class="text-white">PyPSA</span> (Python for Power System Analysis) with
+            <span class="text-white">Linear Optimal Power Flow (LOPF)</span> solved by HiGHS.
+            Instead of fixing the dispatch manually, the optimizer finds the cheapest dispatch schedule
+            across all hours simultaneously — prioritizing free renewables, then cheaper conventional generators,
+            and reserving the grid connection as a last resort.
           </p>
           <p class="text-gray-400 leading-relaxed mt-1">
-            A simulation <span class="text-emerald-400">converges</span> when the solver finds a physically consistent solution
-            (voltages and angles balance). It <span class="text-red-400">does not converge</span> if the network is physically
-            infeasible — for example if demand far exceeds available supply, or network parameters are inconsistent.
+            Battery storage (if selected) is handled as a <span class="text-white">StorageUnit</span>:
+            the optimizer charges it during surplus hours and discharges it when generation is short,
+            minimizing curtailment and grid imports. A simulation is <span class="text-emerald-400">optimised</span>
+            when HiGHS finds an optimal solution, or returns an error if the problem is infeasible.
           </p>
         </section>
 

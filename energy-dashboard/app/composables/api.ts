@@ -90,8 +90,9 @@ export interface SimulationRunRequest {
 }
 
 export interface SimulationResultJson {
-  // Power flow time-series
+  // Power flow / OPF time-series
   generators_t: Record<string, { p: number[]; q?: number[] }>;
+  storage_units_t?: Record<string, { p: number[]; state_of_charge: number[] }>;
   loads_t: Record<string, { p: number[]; q?: number[] }>;
   buses_t?: Record<string, { v_mag_pu: number[]; v_ang: number[] }>;
   lines_t?: Record<string, { p0: number[]; loading: number[] }>;
@@ -118,7 +119,7 @@ export interface SimulationResultJson {
 export interface SimulationResult {
   id: string;
   request_id: string;
-  status: 'converged' | 'non_converged' | 'error';
+  status: 'converged' | 'optimized' | 'non_converged' | 'error';
   solver: string;
   name?: string | null;
   start_date?: string | null;
@@ -134,7 +135,7 @@ export interface SimulationResult {
 export interface SimulationListItem {
   id: string;
   request_id: string;
-  status: 'converged' | 'non_converged' | 'error';
+  status: 'converged' | 'optimized' | 'non_converged' | 'error';
   solver: string;
   name?: string | null;
   supply_ids: string[];

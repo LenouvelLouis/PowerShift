@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="result.status === 'converged' && hasChartData"
+    v-if="(result.status === 'converged' || result.status === 'optimized') && hasChartData"
     class="flex flex-col gap-8 pt-4"
   >
     <!-- Production section -->
@@ -33,6 +33,14 @@
         Demand
       </p>
       <ConsumptionChart :result="result" :start-date="startDate" />
+    </div>
+
+    <!-- Storage section -->
+    <div v-if="hasStorageData">
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">
+        Storage
+      </p>
+      <BatteryStorageChart :result="result" :start-date="startDate" />
     </div>
 
     <!-- Bilan section -->
@@ -80,6 +88,7 @@ const loadsT = computed(() => props.result.result_json?.loads_t ?? {})
 const hasChartData = computed(() => Object.keys(generatorsT.value).length > 0)
 const hasConsumptionData = computed(() => Object.keys(loadsT.value).length > 0)
 const hasCapacityFactors = computed(() => Object.keys(props.result.result_json?.capacity_factors ?? {}).length > 0)
+const hasStorageData = computed(() => Object.keys(props.result.result_json?.storage_units_t ?? {}).length > 0)
 const hasBusData = computed(() => Object.keys(props.result.result_json?.buses_t ?? {}).length > 0)
 const hasLineData = computed(() => Object.keys(props.result.result_json?.lines_t ?? {}).length > 0)
 </script>

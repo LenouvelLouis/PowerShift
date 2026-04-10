@@ -62,11 +62,12 @@ const supplyConfig: AssetSectionConfig = {
     typeOptions: [
       { label: 'Wind Turbine', value: 'wind_turbine' },
       { label: 'Solar Panel', value: 'solar_panel' },
-      { label: 'Nuclear Plant', value: 'nuclear_plant' }
+      { label: 'Nuclear Plant', value: 'nuclear_plant' },
+      { label: 'Battery Storage', value: 'battery_storage' }
     ],
     fields: [
-      { key: 'capacity_mw', label: 'Capacity (MW)', tooltip: 'Installed capacity in MW — the maximum power this generator can deliver. For wind/solar, PyPSA scales this by an hourly weather factor (0–1) from KNMI data.' },
-      { key: 'efficiency', label: 'Efficiency (0–1)', step: 0.01, tooltip: 'Fraction of fuel energy converted to electricity. Applies to nuclear plants (e.g. 0.33). Wind and solar efficiency is already embedded in the weather profile.' }
+      { key: 'capacity_mw', label: 'Capacity (MW)', tooltip: 'Installed power capacity in MW — maximum charge/discharge rate for batteries, or maximum generation for other types. Wind/solar are further scaled by a KNMI weather profile (0–1).' },
+      { key: 'efficiency', label: 'Efficiency (0–1)', step: 0.01, tooltip: 'One-way efficiency for batteries (e.g. 0.95 → round-trip 90.25%). For nuclear plants: thermal-to-electric conversion efficiency. Wind and solar efficiency is embedded in the weather profile.' }
     ],
     defaults: { type: 'wind_turbine', name: '', capacity_mw: 500, efficiency: 0.42, status: 'active', unit: 'MW', description: '' }
   }
@@ -106,7 +107,7 @@ const networkConfig: AssetSectionConfig = {
       { label: 'Cable', value: 'cable' }
     ],
     fields: [
-      { key: 'voltage_kv', label: 'Voltage (kV)', tooltip: 'Nominal voltage level of the bus this component connects to. The simulation uses this to compute per-unit values for the AC power flow equations.' },
+      { key: 'voltage_kv', label: 'Voltage (kV)', tooltip: 'Nominal voltage level of this network component. All assets connect to a single 380 kV bus in the LOPF model — this value is informational and shown in the Network canvas.' },
       { key: 'capacity_mva', label: 'Capacity (MVA)', tooltip: 'Apparent power rating in MVA. PyPSA checks this against actual power flow to compute the line loading % shown in the Network tab. Above 100% = overloaded.' }
     ],
     defaults: { type: 'transformer', name: '', voltage_kv: 400, capacity_mva: 500, status: 'active', unit: 'MVA', description: '' }
