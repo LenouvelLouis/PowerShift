@@ -25,12 +25,14 @@ _ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 _DEFAULT_LAT = 53.2194   # Groningen
 _DEFAULT_LON = 6.5665
 
-# Typical EV overnight charging shape (24 h, normalised 0–1)
+# Realistic EV charging profile (24 h, normalised 0–1)
+# Source: ISEP 2026 QA — 6 charging channels, 16 BEVs, driving pattern CBS NL 2023
+# Peak at 18h–19h (evening return), zero at 07h & 17h (commute)
 _EV_BASE_PROFILE: list[float] = [
-    0.80, 0.90, 1.00, 0.95, 0.70, 0.40,
-    0.20, 0.10, 0.10, 0.10, 0.15, 0.20,
-    0.20, 0.20, 0.15, 0.10, 0.15, 0.30,
-    0.50, 0.60, 0.70, 0.75, 0.80, 0.85,
+    0.3730, 0.3730, 0.3730, 0.3730, 0.3730, 0.3730,  # 00h–05h home overnight
+    0.3730, 0.0000, 0.0000, 0.1235, 0.1750, 0.1750,  # 06h–11h commute + work
+    0.5961, 0.5961, 0.5961, 0.5961, 0.5961, 0.0000,  # 12h–17h work + fast charge
+    1.0000, 1.0000, 0.5274, 0.5274, 0.5274, 0.3730,  # 18h–23h evening peak
 ]
 
 
@@ -88,13 +90,14 @@ def _temperature_to_profile(demand_type: str, temps: list[float]) -> list[float]
     return [1.0] * len(temps)
 
 
-# Typical residential time-of-day shape (24 h, normalized 0–1)
-# Morning peak ~8h, evening peak ~19-21h, night trough ~3-5h
+# Residential time-of-day shape (24 h, normalized 0–1)
+# Source: CBS Netherlands 2023 — weighted average of 10 household profiles
+# Morning peak ~08h, evening peak ~18h, night trough ~03h
 _HOUSE_TOD_PROFILE: list[float] = [
-    0.45, 0.40, 0.38, 0.37, 0.38, 0.45,  # 0h–5h   night / early morning
-    0.60, 0.80, 0.95, 0.85, 0.75, 0.70,  # 6h–11h  morning peak
-    0.68, 0.65, 0.63, 0.65, 0.72, 0.85,  # 12h–17h afternoon
-    0.95, 1.00, 0.98, 0.90, 0.75, 0.60,  # 18h–23h evening peak
+    0.3158, 0.2566, 0.2221, 0.2007, 0.2424, 0.3605,  # 00h–05h night
+    0.6285, 0.8392, 0.8646, 0.7221, 0.6536, 0.6808,  # 06h–11h morning peak
+    0.7263, 0.6808, 0.6454, 0.7127, 0.8320, 0.9960,  # 12h–17h afternoon
+    1.0000, 0.9439, 0.8507, 0.7620, 0.6388, 0.4435,  # 18h–23h evening peak
 ]
 
 

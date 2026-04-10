@@ -8,6 +8,18 @@
     </div>
     <BaseChart :option="chartOption" height="h-72" title="Consumption by Load" />
 
+    <!-- Residential load profile info -->
+    <div
+      v-if="hasHouseLoad"
+      class="mt-3 flex items-start gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2"
+    >
+      <UIcon name="i-heroicons-home" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+      <p class="text-[11px] text-emerald-300 leading-relaxed">
+        <strong>Residential profile</strong> — CBS Netherlands 2023 (10 household types, 500 homes).
+        Evening peak at 18h (cooking + appliances), morning peak at 08h–09h, night trough at 03h–04h.
+      </p>
+    </div>
+
     <!-- EV charging pattern info -->
     <div
       v-if="hasEvLoad"
@@ -31,6 +43,13 @@ const { buildLabels, axisLabelFormatter, tooltipLabelFormatter } = useTimeLabels
 
 const loadsT = computed(() => props.result.result_json?.loads_t ?? {})
 const timeLabels = computed(() => buildLabels(Object.values(loadsT.value)[0]?.p?.length ?? 0))
+
+const hasHouseLoad = computed(() =>
+  Object.keys(loadsT.value).some(name => {
+    const n = name.toLowerCase()
+    return n.includes('house') || n.includes('residential') || n.includes('home')
+  })
+)
 
 const hasEvLoad = computed(() =>
   Object.keys(loadsT.value).some(name => {
