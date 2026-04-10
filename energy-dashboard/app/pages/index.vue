@@ -68,7 +68,7 @@
             :result="result"
             :visible="activeTab === 'network'"
           />
-          <NetworkCanvasMetricTiles :result="result" />
+          <MetricTiles :result="result" />
         </div>
       </div>
     </template>

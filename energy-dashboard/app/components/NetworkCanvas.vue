@@ -142,12 +142,15 @@
       <p class="text-gray-700 text-sm text-center px-6">Add supply and demand assets to visualize the network</p>
     </div>
 
-    <!-- ── Floating tooltip ──────────────────────────────────────────────── -->
+  </div>
+
+  <!-- ── Floating tooltip (teleported to body to escape overflow-hidden) ── -->
+  <Teleport to="body">
     <Transition name="tip">
       <div
         v-if="tip.visible && tip.data"
-        class="absolute z-50 pointer-events-none"
-        :style="tipStyle"
+        class="fixed z-[9999] pointer-events-none"
+        :style="tipScreenStyle"
       >
         <div class="bg-[#0B1220]/95 border border-[#334155] rounded-xl shadow-2xl p-3 w-56 backdrop-blur-sm">
           <!-- Header -->
@@ -193,7 +196,7 @@
         </div>
       </div>
     </Transition>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -493,20 +496,18 @@ function buildTipData(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyA
 }
 
 function showTooltip(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyAsset, e: MouseEvent) {
-  const rect = canvasRef.value!.getBoundingClientRect()
   tip.value = {
     visible: true,
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top,
+    x: e.clientX,
+    y: e.clientY,
     data: buildTipData(kind, asset),
   }
 }
 
 function moveTooltip(e: MouseEvent) {
-  if (!tip.value.visible || !canvasRef.value) return
-  const rect = canvasRef.value.getBoundingClientRect()
-  tip.value.x = e.clientX - rect.left
-  tip.value.y = e.clientY - rect.top
+  if (!tip.value.visible) return
+  tip.value.x = e.clientX
+  tip.value.y = e.clientY
 }
 
 function hideTooltip() {
@@ -516,11 +517,13 @@ function hideTooltip() {
 const TIP_W = 224 // w-56 = 14rem = 224px
 const TIP_OFFSET = 14
 
-const tipStyle = computed(() => {
+const tipScreenStyle = computed(() => {
   const x = tip.value.x
   const y = tip.value.y
-  const flipX = x + TIP_OFFSET + TIP_W > canvasW.value
-  const flipY = y + TIP_OFFSET + 260 > canvasH.value
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1920
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 1080
+  const flipX = x + TIP_OFFSET + TIP_W > vw
+  const flipY = y + TIP_OFFSET + 260 > vh
   return {
     left: flipX ? `${x - TIP_W - TIP_OFFSET}px` : `${x + TIP_OFFSET}px`,
     top:  flipY ? `${y - TIP_OFFSET - 10}px` : `${y + TIP_OFFSET}px`,
