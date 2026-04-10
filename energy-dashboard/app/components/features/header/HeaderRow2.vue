@@ -34,6 +34,9 @@
         class="w-24"
         size="xs"
       />
+      <UTooltip text="Number of hourly snapshots to simulate. Each snapshot is one AC power flow calculation. Total energy (MWh) = installed capacity (MW) × number of hours × capacity factor. More hours = more realistic averaging but longer computation.">
+        <UIcon name="i-heroicons-information-circle" class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0" />
+      </UTooltip>
     </div>
 
     <!-- Date range picker -->

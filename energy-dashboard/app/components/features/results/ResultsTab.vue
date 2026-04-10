@@ -1,7 +1,8 @@
 <template>
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start pt-4">
-    <!-- LEFT: summary table + capacity factors + energy bar -->
+    <!-- LEFT: energy flow + summary table + capacity factors + energy bar -->
     <div class="flex flex-col gap-6">
+      <EnergyFlowPanel :result="result" />
       <SimulationSummary :result="result" />
       <CapacityFactorBars
         v-if="capacityFactors.length"

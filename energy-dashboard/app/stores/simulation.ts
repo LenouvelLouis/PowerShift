@@ -68,6 +68,34 @@ export const useSimulationStore = defineStore("simulation", () => {
     ),
   );
 
+  // ─── Computed : objets sélectionnés avec overrides appliqués ─────────────────
+  // Ces versions reflètent immédiatement les valeurs éditées dans le panel,
+  // sans attendre un save/run. Utilisées par le NetworkCanvas.
+  const selectedSuppliesWithOverrides = computed(() =>
+    referential.availableSupplies
+      .filter((s) => selectedSupplyIds.value.includes(s.id))
+      .map((s) => {
+        const ov = _supplyEntries.value.find((e) => e.id === s.id)?.assetOverrides ?? {}
+        return Object.keys(ov).length > 0 ? { ...s, ...ov } : s
+      })
+  );
+  const selectedDemandsWithOverrides = computed(() =>
+    referential.availableDemands
+      .filter((d) => selectedDemandIds.value.includes(d.id))
+      .map((d) => {
+        const ov = _demandEntries.value.find((e) => e.id === d.id)?.assetOverrides ?? {}
+        return Object.keys(ov).length > 0 ? { ...d, ...ov } : d
+      })
+  );
+  const selectedNetworkWithOverrides = computed(() =>
+    referential.availableNetwork
+      .filter((n) => selectedNetworkIds.value.includes(n.id))
+      .map((n) => {
+        const ov = _networkEntries.value.find((e) => e.id === n.id)?.assetOverrides ?? {}
+        return Object.keys(ov).length > 0 ? { ...n, ...ov } : n
+      })
+  );
+
   // ─── État simulation ─────────────────────────────────────────────────────────
   const isRunning = ref(false);
   const isLiveRunning = ref(false);
@@ -343,6 +371,9 @@ export const useSimulationStore = defineStore("simulation", () => {
     selectedSupplies,
     selectedDemands,
     selectedNetwork,
+    selectedSuppliesWithOverrides,
+    selectedDemandsWithOverrides,
+    selectedNetworkWithOverrides,
     isRunning,
     isLiveRunning,
     isSaving,

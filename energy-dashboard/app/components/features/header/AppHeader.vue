@@ -11,6 +11,10 @@
       :open="showSolverHelpModal"
       @update:open="showSolverHelpModal = $event"
     />
+    <HowItWorksModal
+      :open="showHowItWorksModal"
+      @update:open="showHowItWorksModal = $event"
+    />
 
     <HeaderRow1
       :can-save="canSave"
@@ -18,6 +22,8 @@
       @toggle-sidebar="$emit('toggle-sidebar')"
       @save="handleSave"
       @export="handleExport"
+      @open-how-it-works="showHowItWorksModal = true"
+      @open-tutorial="$emit('open-tutorial')"
     />
     <HeaderRow2
       @open-solver-help="showSolverHelpModal = true"
@@ -33,7 +39,7 @@ import { useHistoryStore } from '~/stores/history'
 import { useLiveRunner } from '~/composables/useLiveRunner'
 import type { SimulationRunRequest } from '~/composables/api'
 
-const emit = defineEmits<{ 'toggle-sidebar': [] }>()
+const emit = defineEmits<{ 'toggle-sidebar': []; 'open-tutorial': [] }>()
 
 const store = useSimulationStore()
 const referential = useReferentialStore()
@@ -97,6 +103,7 @@ watch(
 
 const showSaveChoiceModal = ref(false)
 const showSolverHelpModal = ref(false)
+const showHowItWorksModal = ref(false)
 
 function _buildSavePayload(): SimulationRunRequest & { name?: string } {
   return { ...store.buildPayload(), name: store.scenarioName || undefined }

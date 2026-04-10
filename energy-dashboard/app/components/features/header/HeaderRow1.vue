@@ -44,6 +44,24 @@
     </div>
 
     <UButton
+      icon="i-heroicons-academic-cap"
+      label="Tutorial"
+      size="sm"
+      color="neutral"
+      variant="ghost"
+      @click="$emit('open-tutorial')"
+    />
+
+    <UButton
+      icon="i-heroicons-book-open"
+      label="How it works"
+      size="sm"
+      color="neutral"
+      variant="ghost"
+      @click="$emit('open-how-it-works')"
+    />
+
+    <UButton
       icon="i-heroicons-cloud-arrow-up"
       color="primary"
       :label="store.isSaving ? 'Saving…' : 'Save'"
@@ -79,6 +97,8 @@ defineEmits<{
   'toggle-sidebar': []
   'save': []
   'export': []
+  'open-how-it-works': []
+  'open-tutorial': []
 }>()
 
 const store = useSimulationStore()

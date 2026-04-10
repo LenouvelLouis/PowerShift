@@ -62,9 +62,9 @@
         </div>
         <div v-show="activeTab === 'network'" class="flex flex-col gap-6">
           <NetworkCanvas
-            :supplies="sim.selectedSupplies"
-            :demands="sim.selectedDemands"
-            :network="sim.selectedNetwork"
+            :supplies="sim.selectedSuppliesWithOverrides"
+            :demands="sim.selectedDemandsWithOverrides"
+            :network="sim.selectedNetworkWithOverrides"
             :result="result"
             :visible="activeTab === 'network'"
           />
@@ -77,9 +77,9 @@
     <template v-else>
       <NetworkCanvas
         v-if="sim.hasMinimumAssets"
-        :supplies="sim.selectedSupplies"
-        :demands="sim.selectedDemands"
-        :network="sim.selectedNetwork"
+        :supplies="sim.selectedSuppliesWithOverrides"
+        :demands="sim.selectedDemandsWithOverrides"
+        :network="sim.selectedNetworkWithOverrides"
         :result="null"
       />
       <EmptyState v-else />

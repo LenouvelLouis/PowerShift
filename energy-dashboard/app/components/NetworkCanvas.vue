@@ -22,9 +22,12 @@
     <div
       v-for="(supply, i) in supplies"
       :key="supply.id"
-      class="absolute bg-[#0B1220] border border-[#1E293B] rounded-xl flex items-center hover:border-[#334155] transition-colors duration-200"
+      class="absolute bg-[#0B1220] border border-[#1E293B] rounded-xl flex items-center hover:border-[#334155] transition-colors duration-200 cursor-default"
       :class="lv.cardPad"
       :style="supplyCardStyle(i)"
+      @mouseenter="showTooltip('supply', supply, $event)"
+      @mousemove="moveTooltip($event)"
+      @mouseleave="hideTooltip"
     >
       <NetworkCanvasAssetIcon v-if="!isMicro" :type="supply.type" :size="lv.iconSize" class="shrink-0" />
       <div class="min-w-0 flex-1" :class="isMicro ? '' : lv.cardGap">
@@ -43,9 +46,12 @@
     <div
       v-for="(demand, i) in demands"
       :key="demand.id"
-      class="absolute bg-[#0B1220] border border-[#1E293B] rounded-xl flex items-center hover:border-[#334155] transition-colors duration-200"
+      class="absolute bg-[#0B1220] border border-[#1E293B] rounded-xl flex items-center hover:border-[#334155] transition-colors duration-200 cursor-default"
       :class="lv.cardPad"
       :style="demandCardStyle(i)"
+      @mouseenter="showTooltip('demand', demand, $event)"
+      @mousemove="moveTooltip($event)"
+      @mouseleave="hideTooltip"
     >
       <NetworkCanvasAssetIcon v-if="!isMicro" :type="demand.type" :size="lv.iconSize" class="shrink-0" />
       <div class="min-w-0 flex-1" :class="isMicro ? '' : lv.cardGap">
@@ -73,9 +79,12 @@
       />
       <!-- Bus circle -->
       <div
-        class="relative flex flex-col items-center justify-center rounded-full border-2 bg-[#0B1220]"
+        class="relative flex flex-col items-center justify-center rounded-full border-2 bg-[#0B1220] cursor-default"
         :style="{ width: `${lv.busSize}px`, height: `${lv.busSize}px` }"
         :class="busBorderColor"
+        @mouseenter="showTooltip('bus', null, $event)"
+        @mousemove="moveTooltip($event)"
+        @mouseleave="hideTooltip"
       >
         <svg :width="lv.busIconSize" :height="lv.busIconSize" viewBox="0 0 24 24" fill="none">
           <path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z" :fill="busIconFill" stroke="none" />
@@ -93,7 +102,10 @@
         <div
           v-for="n in network"
           :key="n.id"
-          class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#0B1220] border border-[#1E293B] text-[11px]"
+          class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#0B1220] border border-[#1E293B] text-[11px] cursor-default hover:border-[#334155] transition-colors"
+          @mouseenter="showTooltip('network', n, $event)"
+          @mousemove="moveTooltip($event)"
+          @mouseleave="hideTooltip"
         >
           <NetworkCanvasAssetIcon :type="n.type" :size="18" />
           <span class="text-gray-400 truncate">{{ n.name }}</span>
@@ -129,6 +141,58 @@
     <div v-if="!supplies.length && !demands.length" class="absolute inset-0 flex items-center justify-center pointer-events-none">
       <p class="text-gray-700 text-sm text-center px-6">Add supply and demand assets to visualize the network</p>
     </div>
+
+    <!-- ── Floating tooltip ──────────────────────────────────────────────── -->
+    <Transition name="tip">
+      <div
+        v-if="tip.visible && tip.data"
+        class="absolute z-50 pointer-events-none"
+        :style="tipStyle"
+      >
+        <div class="bg-[#0B1220]/95 border border-[#334155] rounded-xl shadow-2xl p-3 w-56 backdrop-blur-sm">
+          <!-- Header -->
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <p class="text-white font-semibold text-xs leading-tight">{{ tip.data.name }}</p>
+            <span
+              class="shrink-0 text-[10px] px-1.5 py-0.5 rounded font-medium"
+              :class="tipBadgeClass"
+            >{{ tip.data.typeLabel }}</span>
+          </div>
+
+          <!-- Static params -->
+          <div class="space-y-1 text-[11px]">
+            <div
+              v-for="row in tip.data.params"
+              :key="row.label"
+              class="flex justify-between items-start gap-2"
+            >
+              <span class="text-gray-500 leading-tight">{{ row.label }}</span>
+              <span class="font-mono text-gray-300 text-right leading-tight shrink-0">{{ row.value }}</span>
+            </div>
+          </div>
+
+          <!-- Simulation results (if available) -->
+          <template v-if="tip.data.results && tip.data.results.length">
+            <div class="border-t border-[#1E293B] mt-2 pt-2 space-y-1 text-[11px]">
+              <p class="text-[10px] uppercase tracking-wider text-gray-600 mb-1">Simulation</p>
+              <div
+                v-for="row in tip.data.results"
+                :key="row.label"
+                class="flex justify-between items-start gap-2"
+              >
+                <span class="text-gray-500 leading-tight">{{ row.label }}</span>
+                <span class="font-mono leading-tight shrink-0" :class="row.color ?? 'text-white'">{{ row.value }}</span>
+              </div>
+            </div>
+          </template>
+
+          <!-- Explanation -->
+          <p v-if="tip.data.hint" class="text-[10px] text-gray-600 mt-2 leading-relaxed border-t border-[#1E293B] pt-2">
+            {{ tip.data.hint }}
+          </p>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -323,6 +387,154 @@ const cableLines = computed<CableLine[]>(() => {
   return lines
 })
 
+// ── Tooltip ───────────────────────────────────────────────────────────────────
+
+interface TipRow { label: string; value: string; color?: string }
+interface TipData {
+  name: string
+  typeLabel: string
+  kind: 'supply' | 'demand' | 'network' | 'bus'
+  params: TipRow[]
+  results?: TipRow[]
+  hint?: string
+}
+
+const tip = ref<{ visible: boolean; x: number; y: number; data: TipData | null }>({
+  visible: false, x: 0, y: 0, data: null,
+})
+
+const SUPPLY_HINTS: Record<string, string> = {
+  wind_turbine: 'Output depends on wind speed. PyPSA scales capacity by an hourly weather factor (0–1) from KNMI data.',
+  solar_panel: 'Output depends on solar irradiance. Zero at night, peaks around noon.',
+  nuclear_plant: 'Dispatchable baseload — runs at a fixed fraction of capacity regardless of weather.',
+}
+const DEMAND_HINTS: Record<string, string> = {
+  house: 'Residential load. Profile peaks in morning and evening, lower overnight.',
+  electric_vehicle: 'EV charging load. Concentrated in evening/night hours.',
+}
+const NETWORK_HINTS: Record<string, string> = {
+  transformer: 'Steps voltage up or down between buses. Loading % = actual MVA / rated MVA.',
+  cable: 'Transmits power between buses. Overloading (>100%) indicates a thermal limit violation.',
+}
+
+const supplyMwh  = (s: Supply) => { const ts = genT.value[s.name];  return ts ? ts.p.reduce((a: number, v: number) => a + v, 0) : null }
+const demandMwh  = (d: Demand) => { const ts = loadT.value[d.name]; return ts ? ts.p.reduce((a: number, v: number) => a + v, 0) : null }
+const supplyCF   = (s: Supply) => { const a = supplyAvg(s); return s.capacity_mw > 0 ? a / s.capacity_mw : 0 }
+
+type AnyAsset = Supply | Demand | NetworkComponent | null
+
+function buildTipData(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyAsset): TipData {
+  const r = props.result
+
+  if (kind === 'supply' && asset && 'capacity_mw' in asset) {
+    const s = asset as Supply
+    const cf = supplyCF(s)
+    const mwh = supplyMwh(s)
+    const typeLabel = s.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    const results: TipRow[] = r ? [
+      { label: 'Avg output', value: `${fmtPow(supplyAvg(s))} MW`, color: 'text-emerald-400' },
+      { label: 'Capacity factor', value: `${(cf * 100).toFixed(1)} %`, color: cf < 0.2 ? 'text-amber-400' : 'text-emerald-400' },
+      ...(mwh != null ? [{ label: 'Energy produced', value: `${mwh.toFixed(0)} MWh`, color: 'text-blue-300' }] : []),
+    ] : []
+    return {
+      name: s.name, typeLabel, kind: 'supply',
+      params: [
+        { label: 'Installed capacity', value: `${s.capacity_mw} MW` },
+        { label: 'Efficiency', value: `${(s.efficiency * 100).toFixed(0)} %` },
+      ],
+      results,
+      hint: SUPPLY_HINTS[s.type] ?? 'Supply asset injecting power into the network.',
+    }
+  }
+
+  if (kind === 'demand' && asset && 'load_mw' in asset) {
+    const d = asset as Demand
+    const mwh = demandMwh(d)
+    const typeLabel = d.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    const results: TipRow[] = r ? [
+      { label: 'Avg consumption', value: `${fmtPow(demandAvg(d))} MW`, color: 'text-red-400' },
+      ...(mwh != null ? [{ label: 'Energy consumed', value: `${mwh.toFixed(0)} MWh`, color: 'text-blue-300' }] : []),
+    ] : []
+    return {
+      name: d.name, typeLabel, kind: 'demand',
+      params: [{ label: 'Peak load', value: `${d.load_mw} MW` }],
+      results,
+      hint: DEMAND_HINTS[d.type] ?? 'Load consuming power from the network.',
+    }
+  }
+
+  if (kind === 'network' && asset && 'capacity_mva' in asset) {
+    const n = asset as NetworkComponent
+    const typeLabel = n.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    return {
+      name: n.name, typeLabel, kind: 'network',
+      params: [
+        { label: 'Rated capacity', value: `${n.capacity_mva} MVA` },
+        ...(n.voltage_kv != null ? [{ label: 'Voltage', value: `${n.voltage_kv} kV` }] : []),
+      ],
+      hint: NETWORK_HINTS[n.type] ?? 'Network component connecting buses.',
+    }
+  }
+
+  // Bus
+  const busResults: TipRow[] = r ? [
+    { label: 'Status', value: r.status === 'converged' ? 'Converged' : r.status === 'non_converged' ? 'Non-converged' : 'Error', color: r.status === 'converged' ? 'text-emerald-400' : 'text-red-400' },
+    { label: 'Total supply', value: `${r.total_supply_mwh?.toFixed(0) ?? '—'} MWh`, color: 'text-emerald-400' },
+    { label: 'Total demand', value: `${r.total_demand_mwh?.toFixed(0) ?? '—'} MWh`, color: 'text-red-400' },
+    { label: 'Balance', value: `${r.balance_mwh != null ? (r.balance_mwh > 0 ? '+' : '') + r.balance_mwh.toFixed(0) : '—'} MWh`, color: r.balance_mwh != null && Math.abs(r.balance_mwh) < 0.1 ? 'text-emerald-400' : r.balance_mwh != null && r.balance_mwh > 0 ? 'text-blue-400' : 'text-amber-400' },
+  ] : []
+  return {
+    name: 'Main Bus', typeLabel: '380 kV', kind: 'bus',
+    params: [{ label: 'Voltage', value: '380 kV' }, { label: 'Type', value: 'AC bus (slack)' }],
+    results: busResults,
+    hint: 'Central bus connecting all generators and loads. The slack bus absorbs any power imbalance in the AC power flow.',
+  }
+}
+
+function showTooltip(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyAsset, e: MouseEvent) {
+  const rect = canvasRef.value!.getBoundingClientRect()
+  tip.value = {
+    visible: true,
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+    data: buildTipData(kind, asset),
+  }
+}
+
+function moveTooltip(e: MouseEvent) {
+  if (!tip.value.visible || !canvasRef.value) return
+  const rect = canvasRef.value.getBoundingClientRect()
+  tip.value.x = e.clientX - rect.left
+  tip.value.y = e.clientY - rect.top
+}
+
+function hideTooltip() {
+  tip.value.visible = false
+}
+
+const TIP_W = 224 // w-56 = 14rem = 224px
+const TIP_OFFSET = 14
+
+const tipStyle = computed(() => {
+  const x = tip.value.x
+  const y = tip.value.y
+  const flipX = x + TIP_OFFSET + TIP_W > canvasW.value
+  const flipY = y + TIP_OFFSET + 260 > canvasH.value
+  return {
+    left: flipX ? `${x - TIP_W - TIP_OFFSET}px` : `${x + TIP_OFFSET}px`,
+    top:  flipY ? `${y - TIP_OFFSET - 10}px` : `${y + TIP_OFFSET}px`,
+    transform: flipY ? 'translateY(-100%)' : 'none',
+  }
+})
+
+const tipBadgeClass = computed(() => {
+  const kind = tip.value.data?.kind
+  if (kind === 'supply')  return 'bg-amber-900/40 text-amber-300'
+  if (kind === 'demand')  return 'bg-emerald-900/40 text-emerald-300'
+  if (kind === 'network') return 'bg-blue-900/40 text-blue-300'
+  return 'bg-slate-800 text-slate-300'
+})
+
 // ── ResizeObserver + tab-visibility watcher ───────────────────────────────────
 function readWidth() {
   if (canvasRef.value) {
@@ -355,3 +567,10 @@ const timestamp = computed(() => {
   return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
 })
 </script>
+
+<style scoped>
+.tip-enter-active { transition: opacity 0.1s ease, transform 0.1s ease; }
+.tip-leave-active { transition: opacity 0.08s ease; }
+.tip-enter-from  { opacity: 0; transform: scale(0.97) translateY(4px); }
+.tip-leave-to    { opacity: 0; }
+</style>

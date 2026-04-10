@@ -65,8 +65,8 @@ const supplyConfig: AssetSectionConfig = {
       { label: 'Nuclear Plant', value: 'nuclear_plant' }
     ],
     fields: [
-      { key: 'capacity_mw', label: 'Capacity (MW)' },
-      { key: 'efficiency', label: 'Efficiency (0–1)', step: 0.01 }
+      { key: 'capacity_mw', label: 'Capacity (MW)', tooltip: 'Installed capacity in MW — the maximum power this generator can deliver. For wind/solar, PyPSA scales this by an hourly weather factor (0–1) from KNMI data.' },
+      { key: 'efficiency', label: 'Efficiency (0–1)', step: 0.01, tooltip: 'Fraction of fuel energy converted to electricity. Applies to nuclear plants (e.g. 0.33). Wind and solar efficiency is already embedded in the weather profile.' }
     ],
     defaults: { type: 'wind_turbine', name: '', capacity_mw: 500, efficiency: 0.42, status: 'active', unit: 'MW', description: '' }
   }
@@ -86,7 +86,7 @@ const demandConfig: AssetSectionConfig = {
       { label: 'Electric Vehicle', value: 'electric_vehicle' }
     ],
     fields: [
-      { key: 'load_mw', label: 'Load (MW)' }
+      { key: 'load_mw', label: 'Load (MW)', tooltip: 'Peak consumption in MW for this demand node. PyPSA multiplies this by a normalised hourly load profile (0–1), so actual demand varies hour by hour.' }
     ],
     defaults: { type: 'house', name: '', load_mw: 120, status: 'active', unit: 'MW', description: '' }
   }
@@ -106,8 +106,8 @@ const networkConfig: AssetSectionConfig = {
       { label: 'Cable', value: 'cable' }
     ],
     fields: [
-      { key: 'voltage_kv', label: 'Voltage (kV)' },
-      { key: 'capacity_mva', label: 'Capacity (MVA)' }
+      { key: 'voltage_kv', label: 'Voltage (kV)', tooltip: 'Nominal voltage level of the bus this component connects to. The simulation uses this to compute per-unit values for the AC power flow equations.' },
+      { key: 'capacity_mva', label: 'Capacity (MVA)', tooltip: 'Apparent power rating in MVA. PyPSA checks this against actual power flow to compute the line loading % shown in the Network tab. Above 100% = overloaded.' }
     ],
     defaults: { type: 'transformer', name: '', voltage_kv: 400, capacity_mva: 500, status: 'active', unit: 'MVA', description: '' }
   }

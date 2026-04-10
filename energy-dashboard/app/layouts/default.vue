@@ -14,7 +14,11 @@
       @confirm="handleDeleteAsset"
     />
 
-    <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
+    <OnboardingTutorial ref="tutorialRef" />
+    <AppHeader
+      @toggle-sidebar="sidebarOpen = !sidebarOpen"
+      @open-tutorial="tutorialRef?.open()"
+    />
 
     <div class="flex flex-1 overflow-hidden">
       <Transition name="sidebar">
@@ -38,6 +42,7 @@ import { useSimulationStore } from '~/stores/simulation'
 const store = useSimulationStore()
 const toast = useToast()
 
+const tutorialRef = ref<{ open: () => void } | null>(null)
 const sidebarOpen = ref(true)
 const deleteTarget = ref<{ id: string, name: string, group: string } | null>(null)
 const isDeleting = ref(false)
