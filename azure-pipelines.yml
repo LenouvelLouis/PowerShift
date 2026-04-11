@@ -111,8 +111,8 @@ jobs:
     steps:
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: '$(PYTHON_VERSION)'
-        displayName: 'Setup Python $(PYTHON_VERSION)'
+          versionSpec: '3.11'
+        displayName: 'Setup Python 3.11'
 
       - script: |
           python -m pip install --upgrade pip
