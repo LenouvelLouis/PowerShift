@@ -53,6 +53,14 @@
 - Priority: `321`
 - Name: `Allow-Frontend-80`
 
+**Port 5432 (PostgreSQL):**
+- Source: `Any`
+- Destination port ranges: `5432`
+- Protocol: `TCP`
+- Action: `Allow`
+- Priority: `305`
+- Name: `Allow-Postgres-5432`
+
 > Port 22 (SSH) is open by default when the VM is created.
 
 ### 4. Connect to the VM and install Docker
@@ -95,7 +103,7 @@ The downloaded key (`azure.pem`) must be uploaded to Azure DevOps Secure Files s
 ```
 Azure DevOps Pipeline (ubuntu-latest hosted agent)
   │
-  ├── Job: test    → Python tests + ephemeral PostgreSQL service (all branches)
+  ├── Job: test    → Python tests + coverage + ephemeral PostgreSQL service (all branches)
   │
   └── Job: deploy  → SSH to VM (main branch only, after test passes)
                       1. Download SSH key from Azure Secure Files
@@ -103,7 +111,14 @@ Azure DevOps Pipeline (ubuntu-latest hosted agent)
                       3. rsync repo from agent to VM
                       4. DOCKER_BUILDKIT=1 docker compose up --build -d
                       5. Health checks: backend (8000) and frontend (80)
+
+VM (74.178.89.28)
+  ├── container: backend   (FastAPI, port 8000, managed by Docker Compose)
+  ├── container: frontend  (Nuxt, port 80→3000, managed by Docker Compose)
+  └── container: isep_simulation_db  (PostgreSQL, port 5432, permanent — NOT in Docker Compose)
 ```
+
+> The PostgreSQL container runs independently of Docker Compose (`--restart always`) so it is never recreated during deployments. Data is persisted in `~/isep-app/.docker_data/postgres`.
 
 ---
 
@@ -117,11 +132,13 @@ Azure DevOps Pipeline (ubuntu-latest hosted agent)
 |---|---|---|
 | `VM_USER` | plain | `azureuser` *(no trailing spaces)* |
 | `VM_HOST` | plain | `74.178.89.28` |
-| `DATABASE_URL` | secret | NeonDB connection string (`postgresql+asyncpg://...`) |
+| `DATABASE_URL` | secret | `postgresql+asyncpg://isep_admin:<password>@74.178.89.28:5432/isep_db` |
 | `KNMI_API_KEY` | secret | KNMI Open Data API key |
 | `APP_NAME` | plain | `Energy Grid API` |
 | `APP_VERSION` | plain | `0.1.0` |
 | `ENVIRONMENT` | plain | `production` |
+
+> **Database migration (2026-04-10):** La base de données a été migrée de NeonDB vers un container PostgreSQL auto-hébergé sur la VM. Seule la variable `DATABASE_URL` a changé — le `docker-compose.yml` n'a pas été modifié.
 
 > **Warning:** Do not leave trailing spaces in values. Trailing spaces in `VM_USER` silently break SCP (error: `:/home/azureuser/isep-app/.env: No such file or directory`).
 
@@ -143,6 +160,7 @@ Private SSH key used to connect to the VM. Uploaded via the Azure DevOps UI, dow
 |---|---|---|
 | FastAPI backend | 8000 | `Allow-Backend-8000` |
 | Nuxt frontend | 80 | `Allow-Frontend-80` |
+| PostgreSQL | 5432 | `Allow-Postgres-5432` |
 
 The frontend container listens on port 3000, mapped to port 80 on the VM (`80:3000` in `docker-compose.yml`).
 
@@ -168,14 +186,30 @@ The `.env` is generated **on the agent** (not on the VM) to avoid interpolation 
 - script: |
     ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no $(VM_USER)@$(VM_HOST) \
       "mkdir -p /home/$(VM_USER)/isep-app"
-    printf "APP_NAME=%s\n..." "$APP_NAME" ... > /tmp/.env
-    scp -i ~/.ssh/vm_key ... /tmp/.env $(VM_USER)@$(VM_HOST):/home/$(VM_USER)/isep-app/.env
+    printf "APP_NAME=%s\nAPP_VERSION=%s\nENVIRONMENT=%s\nDEBUG=false\nHOST=0.0.0.0\nPORT=8000\nDATABASE_URL=%s\nKNMI_API_KEY=%s\nNUXT_API_BASE_URL=http://backend:8000\n" \
+      "$APP_NAME" "$APP_VERSION" "$ENVIRONMENT" "$DATABASE_URL" "$KNMI_API_KEY" > /tmp/.env
+    scp -i ~/.ssh/vm_key -o StrictHostKeyChecking=no /tmp/.env $(VM_USER)@$(VM_HOST):/home/$(VM_USER)/isep-app/.env
   env:
     APP_NAME: $(APP_NAME)
+    APP_VERSION: $(APP_VERSION)
+    ENVIRONMENT: $(ENVIRONMENT)
     DATABASE_URL: $(DATABASE_URL)
     KNMI_API_KEY: $(KNMI_API_KEY)
-    ...
 ```
+
+Variables written to `.env` on the VM:
+
+| Key | Value |
+|---|---|
+| `APP_NAME` | from Variable Group |
+| `APP_VERSION` | from Variable Group |
+| `ENVIRONMENT` | from Variable Group (`production`) |
+| `DEBUG` | `false` (hardcoded) |
+| `HOST` | `0.0.0.0` (hardcoded) |
+| `PORT` | `8000` (hardcoded) |
+| `DATABASE_URL` | from Variable Group (secret) |
+| `KNMI_API_KEY` | from Variable Group (secret) |
+| `NUXT_API_BASE_URL` | `http://backend:8000` (hardcoded — Docker Compose internal DNS) |
 
 ### Step: Deploy via Docker Compose
 
@@ -229,6 +263,61 @@ Useful if you want the pipeline to run directly on the VM without an Azure DevOp
 
 ---
 
+## PostgreSQL on VM (migration from NeonDB)
+
+**Date:** 2026-04-10
+
+The database was migrated from NeonDB (cloud) to a self-hosted PostgreSQL container on the VM. The container runs independently of Docker Compose so it is never recreated during deployments.
+
+### Create the PostgreSQL container
+
+```bash
+docker run -d \
+  --name isep_simulation_db \
+  --restart always \
+  -e POSTGRES_USER='isep_admin' \
+  -e POSTGRES_PASSWORD='<password>' \
+  -e POSTGRES_DB='isep_db' \
+  -v ~/isep-app/.docker_data/postgres:/var/lib/postgresql \
+  -p 5432:5432 \
+  postgres:latest
+```
+
+- `--restart always`: container survives VM reboots and Docker daemon restarts
+- `-v ~/isep-app/.docker_data/postgres`: data persisted on the VM disk
+- `-p 5432:5432`: exposed externally (NSG rule `Allow-Postgres-5432` required)
+
+### Restore the NeonDB backup
+
+```bash
+# Copy backup from local machine to VM
+scp -i azure.pem neondb_backup_2026-04-10_11-45.tar azureuser@74.178.89.28:~
+
+# Copy backup into the container
+docker cp neondb_backup_2026-04-10_11-45.tar isep_simulation_db:/tmp/backup.tar
+
+# Restore
+docker exec -it isep_simulation_db pg_restore -U isep_admin -d isep_db --no-owner --no-privileges /tmp/backup.tar
+
+# Verify
+docker exec -it isep_simulation_db psql -U isep_admin -d isep_db -c "SELECT COUNT(*) FROM public.supplies;"
+
+# Cleanup
+rm ~/neondb_backup_2026-04-10_11-45.tar
+```
+
+### Update Variable Group
+
+In `Pipelines → Library → energy-grid-prod`, update `DATABASE_URL`:
+
+```
+postgresql+asyncpg://isep_admin:<password>@74.178.89.28:5432/isep_db
+```
+
+No changes to `docker-compose.yml` were needed — the database is referenced only via `DATABASE_URL`.
+
+---
+
 ## Issues Encountered
 
 ### SSH key corrupted when stored as an Azure DevOps variable
@@ -267,9 +356,10 @@ Useful if you want the pipeline to run directly on the VM without an Azure DevOp
 
 From the VM:
 ```bash
-docker ps                          # 2 containers running
+docker ps                          # 3 containers: backend, frontend, isep_simulation_db
 curl http://localhost:8000/health  # {"status":"ok"}
 curl -s http://localhost:80 | head # Nuxt HTML
+docker exec isep_simulation_db psql -U isep_admin -d isep_db -c "\l"  # DB accessible
 ```
 
 From the internet:
