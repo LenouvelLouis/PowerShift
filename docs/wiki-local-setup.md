@@ -130,7 +130,16 @@ The frontend container talks to the backend via the Docker Compose internal DNS 
 
 ## 5. Database
 
-The project uses **Cloud DB** (serverless PostgreSQL) in production. For local dev, any PostgreSQL 15+ instance works.
+The project uses a **self-hosted PostgreSQL container on the Azure VM** (`74.178.89.28:5432`) in production. For local dev, you can either connect to the production DB or run a local PostgreSQL instance.
+
+### Get the production DATABASE_URL
+
+The credentials are stored in Azure DevOps Variable Group `energy-grid-prod` (secret `DATABASE_URL`). Ask a project member with Azure DevOps access to share it with you securely.
+
+Connection string format:
+```
+postgresql+asyncpg://isep_admin:<password>@74.178.89.28:5432/isep_db
+```
 
 ### Schema migrations
 
