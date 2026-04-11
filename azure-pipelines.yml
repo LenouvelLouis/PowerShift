@@ -112,6 +112,7 @@ jobs:
             -e "ssh -i ~/.ssh/vm_key -o StrictHostKeyChecking=no" \
             --exclude '.git' \
             --exclude 'node_modules' \
+            --exclude '.docker_data' \
             --exclude '__pycache__' \
             --exclude '.env' \
             "$(Build.SourcesDirectory)/" "$DEST"
