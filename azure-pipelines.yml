@@ -153,7 +153,9 @@ jobs:
   # ─── Deploy ───────────────────────────────────────────────────────────────────
   - job: deploy
     displayName: 'Deploy to Azure VM'
-    dependsOn: unit_api_bdd && ui_tests
+    dependsOn:
+      - unit_api_bdd
+      - ui_tests
     condition: and(succeeded('unit_api_bdd'), succeeded('ui_tests'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
     pool:
       vmImage: ubuntu-latest
