@@ -18,11 +18,14 @@ async def init_db() -> None:
     from sqlalchemy import text
     from app.infrastructure.db.connection import get_engine
 
-    async with get_engine().begin() as conn:
+    engine = get_engine()
+    async with engine.begin() as conn:
         # Create all tables that don't exist yet
         await conn.run_sync(SQLModel.metadata.create_all)
 
         # Idempotent migrations: add columns introduced after initial schema
-        await conn.execute(
-            text("ALTER TABLE simulation_requests ADD COLUMN IF NOT EXISTS asset_overrides JSONB")
-        )
+        # Only for PostgreSQL — SQLite doesn't support JSONB or ALTER IF NOT EXISTS
+        if engine.url.drivername.startswith("postgresql"):
+            await conn.execute(
+                text("ALTER TABLE simulation_requests ADD COLUMN IF NOT EXISTS asset_overrides JSONB")
+            )

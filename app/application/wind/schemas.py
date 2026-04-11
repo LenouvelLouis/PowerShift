@@ -103,11 +103,11 @@ class WindDataPointSchema(BaseModel):
 class CalculatePowerRequest(BaseModel):
     asset_id: uuid.UUID
     # Option A: provide wind data inline
-    wind_data: Optional[list[WindDataPointSchema]] = None
+    wind_data: list[WindDataPointSchema] | None = None
     # Option B: pull from the weather_profile table
-    station_code: Optional[str] = None
-    start: Optional[datetime] = None
-    end: Optional[datetime] = None
+    station_code: str | None = None
+    start: datetime | None = None
+    end: datetime | None = None
     availability: float = Field(default=0.97, ge=0.0, le=1.0)
 
     @model_validator(mode="after")

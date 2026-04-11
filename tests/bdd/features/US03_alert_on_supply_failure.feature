@@ -15,7 +15,7 @@ Feature: US-03 — Alert on supply failure
 
   Scenario: Other houses are not impacted when supply is sufficient
     When I run a 1-hour simulation
-    Then the simulation status is "optimal"
+    Then the simulation status is "optimized"
     And each house should receive between 9.9 and 10.1 MWh
 
   Scenario: Failure information is included in the result

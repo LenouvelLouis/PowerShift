@@ -14,15 +14,15 @@ from fastapi.testclient import TestClient
 class TestSimulationEndpoint:
     def test_run_returns_200(self, client: TestClient):
         response = client.post(
-            "/api/v1/simulation/run",
-            json={"snapshot_hours": 1},
+            "/api/v1/simulation/save",
+            json={"snapshot_hours": 24},
         )
         assert response.status_code == 200
 
     def test_run_response_schema(self, client: TestClient):
         data = client.post(
-            "/api/v1/simulation/run",
-            json={"snapshot_hours": 1},
+            "/api/v1/simulation/save",
+            json={"snapshot_hours": 24},
         ).json()
         assert "id" in data
         assert "status" in data

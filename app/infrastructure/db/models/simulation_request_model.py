@@ -28,6 +28,6 @@ class SimulationRequestModel(SQLModel, table=True):
     hourly_load_overrides: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
     optimization_objective: str = "pf"
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
+        default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime(timezone=True)),
     )

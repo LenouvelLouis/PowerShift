@@ -20,5 +20,5 @@ Feature: US-02 — Equal distribution across all houses
 
   Scenario: Transformer distributes symmetrically
     When I run a 1-hour simulation
-    Then the simulation status is "optimal"
+    Then the simulation status is "optimized"
     And no house deviates more than 1% from the mean consumption

@@ -18,5 +18,5 @@ Feature: US-01 — Constant energy delivery
 
   Scenario: Simulation completes without interruption
     When I run a 1-hour simulation
-    Then the simulation status is "optimal"
+    Then the simulation status is "optimized"
     And the total demand is 100.0 MWh
