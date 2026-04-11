@@ -88,6 +88,17 @@
       />
     </div>
 
+    <!-- Optimization Objective selector -->
+    <div class="flex items-center gap-1.5">
+      <label class="text-xs text-gray-500">Objective</label>
+      <USelect
+        v-model="store.optimizationObjective"
+        :items="objectiveSelectItems"
+        class="w-44"
+        size="xs"
+      />
+    </div>
+
     <!-- Scenario name + rename -->
     <div class="flex items-center gap-1">
       <UInput
@@ -172,5 +183,11 @@ const history = useHistoryStore()
 
 const { dateMode, setDateMode, handleImport, fileInputRef } = useScenarioIO()
 const { solverSelectItems, solverAvailabilityLoading, selectedSolverTitle } = useSolverAvailability()
+
+const objectiveSelectItems = [
+  { label: 'Minimize cost', value: 'min_cost' },
+  { label: 'Minimize emissions', value: 'min_emissions' },
+  { label: 'Maximize renewable', value: 'max_renewable' },
+]
 
 </script>

@@ -82,6 +82,7 @@ export interface SimulationRunRequest {
   network_ids: string[];
   snapshot_hours: number;
   solver: string;
+  optimization_objective?: "min_cost" | "min_emissions" | "max_renewable";
   name?: string;
   start_date?: string;
   end_date?: string;

@@ -19,6 +19,7 @@ function _payloadKey(p: SimulationRunRequest): string {
     network_ids: [...p.network_ids].sort(),
     snapshot_hours: p.snapshot_hours,
     solver: p.solver,
+    optimization_objective: p.optimization_objective ?? null,
     start_date: p.start_date ?? null,
     end_date: p.end_date ?? null,
     asset_overrides: p.asset_overrides ?? null,
@@ -121,6 +122,7 @@ export const useSimulationStore = defineStore("simulation", () => {
   const snapshotHours = ref(24);
   const solver = ref("highs");
   const scenarioName = ref("");
+  const optimizationObjective = ref<"min_cost" | "min_emissions" | "max_renewable">("min_cost");
   const startDate = ref<string>("");
   const endDate = ref<string>("");
 
@@ -174,6 +176,7 @@ export const useSimulationStore = defineStore("simulation", () => {
       network_ids: selectedNetworkIds.value,
       snapshot_hours: snapshotHours.value,
       solver: solver.value,
+      optimization_objective: optimizationObjective.value,
       start_date: startDate.value || undefined,
       end_date: endDate.value || undefined,
       asset_overrides:
@@ -382,6 +385,7 @@ export const useSimulationStore = defineStore("simulation", () => {
     liveError,
     snapshotHours,
     solver,
+    optimizationObjective,
     scenarioName,
     startDate,
     endDate,
