@@ -20,11 +20,11 @@ schedules:
 
 variables:
   - group: energy-grid-prod
-  - DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
-  - APP_NAME: 'Energy Grid API'
-  - APP_VERSION: '0.1.0'
-  - ENVIRONMENT: testing
-  - DEBUG: 'false'
+  DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+  APP_NAME: 'Energy Grid API'
+  APP_VERSION: '0.1.0'
+  ENVIRONMENT: testing
+  DEBUG: 'false'
 
 jobs:
   # ── Stage 1: Unit + API + BDD tests ────────────────────────────────────────
