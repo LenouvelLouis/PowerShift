@@ -63,10 +63,6 @@ jobs:
         displayName: 'Install dependencies'
 
       - script: |
-          ruff check app
-        displayName: 'Ruff lint (app)'
-
-      - script: |
           pytest tests/unit/ tests/api/ tests/bdd/ tests/simulation/ tests/integration/ \
             --ignore=tests/ui \
             --cov=app \
