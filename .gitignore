@@ -79,3 +79,4 @@ energy-dashboard/.env
 energy-dashboard/.env.*
 !energy-dashboard/.env.example
 energy-dashboard/package-lock.json
+test-results.xml
