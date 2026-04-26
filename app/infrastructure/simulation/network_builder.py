@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, datetime, timedelta, timezone
-
-import logging
+from datetime import date, timedelta
 
 from app.domain.interfaces.load_profile_provider import ILoadProfileProvider
 from app.domain.interfaces.pv_profile_repository import IPVProfileRepository
@@ -16,13 +15,13 @@ from app.domain.interfaces.simulation_repository import (
     SimulationRunInput,
     SimulationRunOutput,
 )
+from app.domain.nuclear.services import NuclearConstraintsBuilder
+from app.infrastructure.nuclear.repository import NuclearRepositoryImpl
 from app.infrastructure.simulation.pypsa_adapter import (
     AbstractGridSimulation,
     AdapterOutput,
     SimulationConfig,
 )
-from app.infrastructure.nuclear.repository import NuclearRepositoryImpl
-from app.domain.nuclear.services import NuclearConstraintsBuilder
 
 _log = logging.getLogger(__name__)
 
@@ -43,6 +42,7 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
     def run_sync(self, config: SimulationConfig) -> AdapterOutput:
         import pandas as pd  # noqa: PLC0415
         import pypsa  # type: ignore[import-untyped]
+
         from app.domain.entities.supply.battery_storage import BatteryStorage  # noqa: PLC0415
 
         n = pypsa.Network()

@@ -1,6 +1,5 @@
 # app/domain/nuclear/exceptions.py
 
-import uuid
 
 
 class NuclearReactorNotFoundError(Exception):

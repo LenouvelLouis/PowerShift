@@ -15,12 +15,13 @@ from app.domain.use_cases.run_simulation import RunSimulationUseCase
 from app.infrastructure.db.connection import get_db
 from app.infrastructure.db.repositories.demand_repository_impl import DemandRepositoryImpl
 from app.infrastructure.db.repositories.network_repository_impl import NetworkRepositoryImpl
-from app.infrastructure.db.repositories.weather_profile_repository_impl import WeatherProfileRepositoryImpl
 from app.infrastructure.db.repositories.simulation_repository_impl import SimulationRepositoryImpl
 from app.infrastructure.db.repositories.supply_repository_impl import SupplyRepositoryImpl
+from app.infrastructure.db.repositories.weather_profile_repository_impl import WeatherProfileRepositoryImpl
 from app.infrastructure.external.open_meteo_provider import OpenMeteoLoadProfileProvider
 from app.infrastructure.nuclear.repository import NuclearRepositoryImpl
 from app.infrastructure.simulation.network_builder import PyPSANetworkBuilder
+
 # ── DB session (shared by all repos via FastAPI deduplication) ───────────────
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]

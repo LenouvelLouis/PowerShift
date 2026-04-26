@@ -53,10 +53,10 @@ class WindMeasurement:
     station_code: str
     station_name: str
     timestamp: datetime
-    wind_speed_ms: Optional[float]
-    wind_direction_deg: Optional[float]
-    temperature_c: Optional[float]
-    air_pressure_hpa: Optional[float]
+    wind_speed_ms: float | None
+    wind_direction_deg: float | None
+    temperature_c: float | None
+    air_pressure_hpa: float | None
 
 
 @dataclass

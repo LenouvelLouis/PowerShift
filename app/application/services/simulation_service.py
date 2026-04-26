@@ -5,14 +5,14 @@ from __future__ import annotations
 import importlib.util
 import shutil
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.api.v1.schemas.simulation_schema import (
     SimulationListItem,
-    SimulationSolverInfo,
     SimulationRunRequest,
     SimulationRunResponse,
     SimulationScenarioExport,
+    SimulationSolverInfo,
 )
 from app.domain.interfaces.simulation_persistence_repository import ISimulationPersistenceRepository
 from app.domain.interfaces.simulation_repository import SimulationRunInput
@@ -107,7 +107,7 @@ class SimulationService:
             balance_mwh=output.balance_mwh,
             objective_value=output.objective_value,
             result_json=output.result_json,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
     async def list(self) -> list[SimulationListItem]:

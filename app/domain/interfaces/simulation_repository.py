@@ -11,9 +11,9 @@ from datetime import date
 class SimulationRunInput:
     snapshot_hours: int = 8760
     solver: str = "highs"
-    name: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
+    name: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
     supply_ids: list[str] = field(default_factory=list)
     demand_ids: list[str] = field(default_factory=list)
     network_ids: list[str] = field(default_factory=list)

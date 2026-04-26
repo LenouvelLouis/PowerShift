@@ -10,7 +10,6 @@ The table contains 17 520 rows for a full year (365 × 48 slots/day).
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import Column, DateTime, Index
 from sqlmodel import Field, SQLModel
@@ -30,15 +29,15 @@ class WeatherProfileModel(SQLModel, table=True):
     )
 
     # Wind (KNMI variable: ff → average, dd → circular mean, fx → max)
-    wind_speed_ms: Optional[float] = None       # ff  [m/s]
-    wind_dir_deg: Optional[float] = None         # dd  [°]
-    wind_gust_ms: Optional[float] = None         # fx  [m/s]
+    wind_speed_ms: float | None = None       # ff  [m/s]
+    wind_dir_deg: float | None = None         # dd  [°]
+    wind_gust_ms: float | None = None         # fx  [m/s]
 
     # Atmospheric
-    temperature_c: Optional[float] = None        # ta  [°C]
-    air_pressure_hpa: Optional[float] = None     # pp  [hPa]
-    humidity_pct: Optional[float] = None         # rh  [%]
+    temperature_c: float | None = None        # ta  [°C]
+    air_pressure_hpa: float | None = None     # pp  [hPa]
+    humidity_pct: float | None = None         # rh  [%]
 
     # Solar (KNMI variable: qg → average W/m², ss → summed sunshine minutes)
-    radiation_wm2: Optional[float] = None        # qg  [W/m²]
-    sunshine_min: Optional[float] = None         # ss  [min], max 30
+    radiation_wm2: float | None = None        # qg  [W/m²]
+    sunshine_min: float | None = None         # ss  [min], max 30

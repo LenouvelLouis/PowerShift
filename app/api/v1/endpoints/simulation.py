@@ -12,10 +12,10 @@ from app.api.v1.dependencies import get_simulation_service
 from app.api.v1.schemas.simulation_schema import (
     SimulationListItem,
     SimulationRenameRequest,
-    SimulationSolverInfo,
     SimulationRunRequest,
     SimulationRunResponse,
     SimulationScenarioExport,
+    SimulationSolverInfo,
 )
 from app.application.services.simulation_service import SimulationService
 

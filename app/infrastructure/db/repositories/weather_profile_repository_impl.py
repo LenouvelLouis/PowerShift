@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timedelta, time, timezone
+from datetime import UTC, date, datetime, time, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -36,8 +36,8 @@ class WeatherProfileRepositoryImpl(IPVProfileRepository):
 
     async def get_solar_profile(self, start_date: date, end_date: date) -> list[float]:
         # Inclusive: start 00:00 → end 23:30 (last slot of end_date)
-        start_dt = datetime.combine(start_date, time.min).replace(tzinfo=timezone.utc)
-        end_dt   = datetime.combine(end_date,   time.max).replace(tzinfo=timezone.utc)
+        start_dt = datetime.combine(start_date, time.min).replace(tzinfo=UTC)
+        end_dt   = datetime.combine(end_date,   time.max).replace(tzinfo=UTC)
         snapshot_hours = ((end_date - start_date).days + 1) * 24
 
         result = await self._session.execute(
@@ -66,7 +66,6 @@ class WeatherProfileRepositoryImpl(IPVProfileRepository):
         hourly: list[float] = []
         for h in range(snapshot_hours):
             bucket_start = start_dt + timedelta(hours=h)
-            slot_30 = bucket_start + timedelta(minutes=30)
             slot_60 = bucket_start + timedelta(hours=1)
             values = [v for ts, v in slot_map.items() if bucket_start < ts <= slot_60]
             hourly.append(sum(values) / len(values) if values else 0.0)
@@ -102,8 +101,8 @@ class WeatherProfileRepositoryImpl(IPVProfileRepository):
         _HUB_HEIGHT = 80.0   # generic hub height (m)
         _SHEAR_EXP  = 0.14   # open terrain
 
-        start_dt = datetime.combine(start_date, time.min).replace(tzinfo=timezone.utc)
-        end_dt   = datetime.combine(end_date,   time.max).replace(tzinfo=timezone.utc)
+        start_dt = datetime.combine(start_date, time.min).replace(tzinfo=UTC)
+        end_dt   = datetime.combine(end_date,   time.max).replace(tzinfo=UTC)
         snapshot_hours = ((end_date - start_date).days + 1) * 24
 
         result = await self._session.execute(

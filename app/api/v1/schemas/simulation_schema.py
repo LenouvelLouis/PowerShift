@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime, timedelta
-from typing import Optional
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -12,15 +11,15 @@ from pydantic import BaseModel, Field, model_validator
 class SimulationRunRequest(BaseModel):
     snapshot_hours: int = Field(default=8760, ge=1, le=8760)
     solver: str = "highs"
-    name: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
+    name: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
     supply_ids: list[str] = Field(default_factory=list)
     demand_ids: list[str] = Field(default_factory=list)
     network_ids: list[str] = Field(default_factory=list)
-    pypsa_params: Optional[dict] = None
-    asset_overrides: Optional[dict] = None
-    hourly_load_overrides: Optional[dict[str, list[float]]] = None
+    pypsa_params: dict | None = None
+    asset_overrides: dict | None = None
+    hourly_load_overrides: dict[str, list[float]] | None = None
 
     @model_validator(mode="after")
     def validate_hourly_load_overrides(self) -> SimulationRunRequest:
@@ -73,14 +72,14 @@ class SimulationRunResponse(BaseModel):
     request_id: uuid.UUID
     status: str
     solver: str
-    name: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    total_supply_mwh: Optional[float]
-    total_demand_mwh: Optional[float]
-    balance_mwh: Optional[float]
-    objective_value: Optional[float]
-    result_json: Optional[dict]
+    name: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    total_supply_mwh: float | None
+    total_demand_mwh: float | None
+    balance_mwh: float | None
+    objective_value: float | None
+    result_json: dict | None
     created_at: datetime
 
 
@@ -89,7 +88,7 @@ class SimulationListItem(BaseModel):
     request_id: uuid.UUID
     status: str
     solver: str
-    name: Optional[str] = None
+    name: str | None = None
     supply_ids: list[str]
     demand_ids: list[str]
     network_ids: list[str]
@@ -108,17 +107,17 @@ class SimulationScenarioExport(BaseModel):
     scenario_version: str = "1.0"
     snapshot_hours: int
     solver: str
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
+    start_date: date | None = None
+    end_date: date | None = None
     supply_ids: list[str]
     demand_ids: list[str]
     network_ids: list[str]
-    asset_overrides: Optional[dict] = None
-    pypsa_params: Optional[dict] = None
-    hourly_load_overrides: Optional[dict[str, list[float]]] = None
+    asset_overrides: dict | None = None
+    pypsa_params: dict | None = None
+    hourly_load_overrides: dict[str, list[float]] | None = None
 
 
 class SimulationSolverInfo(BaseModel):
     name: str
     available: bool
-    reason: Optional[str] = None
+    reason: str | None = None

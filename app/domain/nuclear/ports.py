@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Protocol
 import uuid
+from typing import Protocol
 
 from app.domain.nuclear.entities import NuclearReactor
 

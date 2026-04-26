@@ -15,7 +15,9 @@ class SupplyResponse(BaseModel):
 
     id: uuid.UUID = Field(description="Unique identifier of the supply component.")
     name: str = Field(description="Human-readable name.")
-    type: str = Field(description="Component type: `wind_turbine`, `solar_panel`, `nuclear_plant`, or `battery_storage`.")
+    type: str = Field(
+        description="Component type: `wind_turbine`, `solar_panel`, `nuclear_plant`, or `battery_storage`.",
+    )
     capacity_mw: float = Field(description="Nominal installed capacity in megawatts.")
     efficiency: float = Field(description="Conversion efficiency, between 0.0 and 1.0.")
     status: ComponentStatus = Field(description="Operational status.")
@@ -44,7 +46,9 @@ class SupplyCreate(BaseModel):
     }
 
     name: str = Field(description="Human-readable name.")
-    type: str = Field(description="Component type: `wind_turbine`, `solar_panel`, `nuclear_plant`, or `battery_storage`.")
+    type: str = Field(
+        description="Component type: `wind_turbine`, `solar_panel`, `nuclear_plant`, or `battery_storage`.",
+    )
     capacity_mw: float = Field(description="Nominal installed capacity in megawatts.")
     efficiency: float = Field(default=1.0, description="Conversion efficiency, between 0.0 and 1.0.")
     status: ComponentStatus = Field(default=ComponentStatus.ACTIVE, description="Operational status.")
