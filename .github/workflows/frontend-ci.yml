@@ -10,6 +10,9 @@ on:
     paths:
       - "energy-dashboard/**"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   lint-and-build:
     name: Lint, Typecheck & Build
