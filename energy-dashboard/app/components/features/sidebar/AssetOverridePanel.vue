@@ -1,8 +1,21 @@
 <template>
   <div class="border-t border-[#1E293B] p-2 space-y-2 bg-[#0a111e]">
-    <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">
-      Parameters
-    </p>
+    <div class="flex items-center justify-between mb-1">
+      <p class="text-xs text-gray-500 uppercase tracking-wider">
+        Parameters
+      </p>
+      <!-- Live preview indicator -->
+      <span
+        v-if="store.isLiveRunning"
+        class="inline-flex items-center gap-1 text-[10px] text-blue-400"
+      >
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+        </span>
+        Live preview
+      </span>
+    </div>
 
     <!-- Supply fields -->
     <template v-if="groupType === 'supply' && 'capacity_mw' in asset">
@@ -19,6 +32,15 @@
           size="xs"
           @update:model-value="setVal('capacity_mw', $event)"
         />
+        <input
+          type="range"
+          :value="getVal('capacity_mw', (asset as Supply).capacity_mw)"
+          min="0"
+          max="5000"
+          step="10"
+          class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-blue-500 mt-1"
+          @input="setVal('capacity_mw', ($event.target as HTMLInputElement).value)"
+        />
       </div>
       <div>
         <label class="text-xs text-gray-400 flex items-center gap-1 mb-0.5">
@@ -33,6 +55,15 @@
           step="0.01"
           size="xs"
           @update:model-value="setVal('efficiency', $event)"
+        />
+        <input
+          type="range"
+          :value="getVal('efficiency', (asset as Supply).efficiency)"
+          min="0"
+          max="1"
+          step="0.01"
+          class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-blue-500 mt-1"
+          @input="setVal('efficiency', ($event.target as HTMLInputElement).value)"
         />
       </div>
     </template>
@@ -52,6 +83,15 @@
           size="xs"
           @update:model-value="setVal('load_mw', $event)"
         />
+        <input
+          type="range"
+          :value="getVal('load_mw', (asset as Demand).load_mw)"
+          min="0"
+          max="1000"
+          step="5"
+          class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-blue-500 mt-1"
+          @input="setVal('load_mw', ($event.target as HTMLInputElement).value)"
+        />
       </div>
     </template>
 
@@ -69,6 +109,15 @@
           type="number"
           size="xs"
           @update:model-value="setVal('capacity_mva', $event)"
+        />
+        <input
+          type="range"
+          :value="getVal('capacity_mva', (asset as NetworkComponent).capacity_mva)"
+          min="0"
+          max="2000"
+          step="10"
+          class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-blue-500 mt-1"
+          @input="setVal('capacity_mva', ($event.target as HTMLInputElement).value)"
         />
       </div>
     </template>

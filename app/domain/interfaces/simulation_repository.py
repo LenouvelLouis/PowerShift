@@ -11,6 +11,7 @@ from datetime import date
 class SimulationRunInput:
     snapshot_hours: int = 8760
     solver: str = "highs"
+    optimization_objective: str = "min_cost"
     name: str | None = None
     start_date: date | None = None
     end_date: date | None = None

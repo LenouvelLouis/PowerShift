@@ -11,6 +11,10 @@ from pydantic import BaseModel, Field, model_validator
 class SimulationRunRequest(BaseModel):
     snapshot_hours: int = Field(default=8760, ge=1, le=8760)
     solver: str = "highs"
+    optimization_objective: str = Field(
+        default="min_cost",
+        description="Optimization objective: min_cost, min_emissions, or max_renewable",
+    )
     name: str | None = None
     start_date: date | None = None
     end_date: date | None = None
@@ -88,6 +92,7 @@ class SimulationListItem(BaseModel):
     request_id: uuid.UUID
     status: str
     solver: str
+    optimization_objective: str = "min_cost"
     name: str | None = None
     supply_ids: list[str]
     demand_ids: list[str]
@@ -107,6 +112,7 @@ class SimulationScenarioExport(BaseModel):
     scenario_version: str = "1.0"
     snapshot_hours: int
     solver: str
+    optimization_objective: str = "min_cost"
     start_date: date | None = None
     end_date: date | None = None
     supply_ids: list[str]

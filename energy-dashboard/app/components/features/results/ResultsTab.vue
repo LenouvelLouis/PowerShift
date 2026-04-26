@@ -1,5 +1,28 @@
 <template>
-  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start pt-4">
+  <div class="flex flex-col gap-6 pt-4">
+    <!-- Data sources banner -->
+    <div class="flex flex-wrap items-start gap-3 rounded-xl border border-[#1E293B] bg-[#0F172A] px-4 py-3">
+      <div class="flex items-center gap-1.5 text-gray-400">
+        <UIcon name="i-heroicons-information-circle" class="w-4 h-4 shrink-0" />
+        <span class="text-xs font-semibold uppercase tracking-wider">Data sources</span>
+      </div>
+      <div class="flex flex-wrap gap-2 text-[11px]">
+        <span class="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 text-blue-300">
+          Weather: KNMI station Groningen-Eelde (06280)
+        </span>
+        <span class="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 text-amber-300">
+          Solar profiles: Open-Meteo GHI irradiance
+        </span>
+        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-emerald-300">
+          Wind profiles: KNMI 10-min measurements
+        </span>
+        <span class="inline-flex items-center gap-1 rounded-full bg-violet-500/10 border border-violet-500/20 px-2.5 py-0.5 text-violet-300">
+          Optimization: LOPF via PyPSA + HiGHS solver
+        </span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
     <!-- LEFT: energy flow + summary table + capacity factors + energy bar -->
     <div class="flex flex-col gap-6">
       <EnergyFlowPanel :result="result" />
@@ -34,6 +57,7 @@
       >
         {{ result.status === 'error' ? 'No power flow data — simulation error' : result.status === 'non_converged' ? 'Power flow did not converge' : 'No time-series data available' }}
       </div>
+    </div>
     </div>
   </div>
 </template>

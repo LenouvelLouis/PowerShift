@@ -48,13 +48,81 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
         n = pypsa.Network()
         n.set_snapshots(range(config.snapshot_hours))
 
-        # ── Single shared bus ────────────────────────────────────────────────────
-        n.add("Bus", "main_bus", v_nom=380.0)
+        # ── Bus topology (generic N-bus) ────────────────────────────────────
+        # Buses are discovered from network_components voltage levels.
+        # Each unique voltage creates a bus. Transformers bridge two voltage
+        # levels, cables/lines connect within the same level.
+        # Supplies and demands are assigned to a bus via asset_overrides["bus"]
+        # or default to the first bus created (highest voltage for supplies,
+        # lowest voltage for demands).
+        bus_by_voltage: dict[float, str] = {}
+        default_supply_bus = "main_bus"
+        default_demand_bus = "main_bus"
+
+        if config.network_components:
+            from app.domain.entities.network.cable import Cable  # noqa: PLC0415
+            from app.domain.entities.network.transformer import Transformer  # noqa: PLC0415
+
+            # 1) Discover all voltage levels
+            voltage_levels: set[float] = set()
+            for nc in config.network_components:
+                if nc.voltage_kv and nc.voltage_kv > 0:
+                    voltage_levels.add(nc.voltage_kv)
+                if hasattr(nc, "voltage_hv_kv") and nc.voltage_hv_kv and nc.voltage_hv_kv > 0:
+                    voltage_levels.add(nc.voltage_hv_kv)
+                if hasattr(nc, "voltage_lv_kv") and nc.voltage_lv_kv and nc.voltage_lv_kv > 0:
+                    voltage_levels.add(nc.voltage_lv_kv)
+
+            if not voltage_levels:
+                voltage_levels = {380.0}
+
+            # 2) Create one bus per voltage level
+            for v in sorted(voltage_levels, reverse=True):
+                bus_name = f"bus_{v}kV"
+                n.add("Bus", bus_name, v_nom=v)
+                bus_by_voltage[v] = bus_name
+
+            sorted_voltages = sorted(voltage_levels, reverse=True)
+            default_supply_bus = bus_by_voltage[sorted_voltages[0]]
+            default_demand_bus = bus_by_voltage[sorted_voltages[-1]]
+
+            # 3) Add network components as PyPSA Lines / Transformers
+            for nc in config.network_components:
+                nc_params = nc.to_pypsa_params()
+                if isinstance(nc, Transformer):
+                    bus0 = bus_by_voltage.get(nc.voltage_hv_kv, default_supply_bus)
+                    bus1 = bus_by_voltage.get(nc.voltage_lv_kv, default_demand_bus)
+                    n.add("Transformer", nc.name, bus0=bus0, bus1=bus1, **nc_params)
+                elif isinstance(nc, Cable):
+                    # Each cable creates a secondary bus at its voltage level
+                    # and connects it to the main bus at that level, modeling
+                    # a real distribution feeder.
+                    base_bus = bus_by_voltage.get(nc.voltage_kv, default_demand_bus)
+                    cable_bus = f"{base_bus}_{nc.name.replace(' ', '_')}"
+                    n.add("Bus", cable_bus, v_nom=nc.voltage_kv)
+                    nc_params["s_nom"] = nc.capacity_mva if nc.capacity_mva else 100.0
+                    n.add("Line", nc.name, bus0=base_bus, bus1=cable_bus, **nc_params)
+        else:
+            # No network components → single copper-plate bus
+            n.add("Bus", "main_bus", v_nom=380.0)
+
+        def _resolve_bus(asset_name: str, default: str) -> str:
+            """Resolve bus for an asset: check asset_overrides first, then default."""
+            overrides = config.pypsa_params.get(asset_name, {})
+            bus_override = overrides.get("bus")
+            if bus_override and bus_override in [b for b in bus_by_voltage.values()]:
+                return bus_override
+            # Also check by voltage: if override has "bus_voltage_kv", map to bus
+            bus_v = overrides.get("bus_voltage_kv")
+            if bus_v and bus_v in bus_by_voltage:
+                return bus_by_voltage[bus_v]
+            return default
 
         # ── 1. Add loads ─────────────────────────────────────────────────────────
         for demand in config.demands:
             profile = config.load_profiles.get(demand.name)
             params = demand.to_pypsa_params(profile=profile)
+            params["bus"] = _resolve_bus(demand.name, default_demand_bus)
             if isinstance(params.get("p_set"), list):
                 params["p_set"] = pd.Series(params["p_set"], index=n.snapshots)
             n.add("Load", demand.name, **params)
@@ -63,15 +131,23 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
         # Also pre-compute renewable available energy for post-LOPF curtailment calc.
         renewable_available_mwh: dict[str, float] = {}  # gen_name → total available MWh
 
+        # Resolve optimization strategy (default: MinCostStrategy)
+        from app.infrastructure.simulation.objectives.min_cost import MinCostStrategy  # noqa: PLC0415
+
+        strategy = config.optimization_strategy or MinCostStrategy()
+
         for supply in config.supplies:
             if isinstance(supply, BatteryStorage):
                 params = supply.to_pypsa_params()
+                params["bus"] = _resolve_bus(supply.name, default_supply_bus)
                 supply_overrides = config.pypsa_params.get(supply.name, {})
+                params = strategy.apply_marginal_cost(params, "battery", supply_overrides)
                 params.update({k: v for k, v in supply_overrides.items() if k != "emissions_factor"})
                 n.add("StorageUnit", supply.name, **params)
                 continue
 
             params = supply.to_pypsa_params()
+            params["bus"] = _resolve_bus(supply.name, default_supply_bus)
             params.pop("p_set", None)
 
             # Set p_max_pu from weather profiles (0–1 capacity factor per snapshot)
@@ -94,11 +170,23 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
             supply_overrides = config.pypsa_params.get(supply.name, {})
             params.update({k: v for k, v in supply_overrides.items() if k != "emissions_factor"})
 
+            # Apply optimization strategy (adjusts marginal_cost based on objective)
+            params = strategy.apply_marginal_cost(params, supply.get_carrier(), supply_overrides)
+
             n.add("Generator", supply.name, **params)
 
-        # ── 3. Backstop grid-import generator (keeps LOPF always feasible) ───────
+        # ── 3. Backstop grid-import generators (keeps LOPF always feasible) ──────
+        # Add one backstop per bus so isolated buses never cause infeasibility.
         # Very high marginal cost → dispatched only when local resources are exhausted.
-        n.add("Generator", "__grid_import__", bus="main_bus", p_nom=1e9, marginal_cost=500.0)
+        all_buses = list(n.buses.index)
+        for bus_name in all_buses:
+            n.add(
+                "Generator",
+                f"__grid_import_{bus_name}__",
+                bus=bus_name,
+                p_nom=1e9,
+                marginal_cost=500.0,
+            )
 
         # ── 4. Run LOPF ──────────────────────────────────────────────────────────
         try:
@@ -118,13 +206,15 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
             status = "optimized"
             objective_value = float(getattr(n, "objective", 0.0) or 0.0)
 
-            # ── Generator time-series (exclude internal backstop) ────────────────
+            # ── Generator time-series (exclude internal backstops) ───────────────
             generators_t: dict = {}
-            grid_import_mw: list[float] = []
+            grid_import_mw: list[float] = [0.0] * config.snapshot_hours
             if not n.generators_t.p.empty:
                 for gen in n.generators_t.p.columns:
-                    if gen == "__grid_import__":
-                        grid_import_mw = n.generators_t.p[gen].tolist()
+                    if gen.startswith("__grid_import_"):
+                        # Accumulate grid import from all backstop generators
+                        for i, v in enumerate(n.generators_t.p[gen].tolist()):
+                            grid_import_mw[i] += v
                         continue
                     generators_t[gen] = {"p": n.generators_t.p[gen].tolist()}
 
@@ -152,7 +242,7 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
             # ── Capacity factors: actual generation / (p_nom × hours) ───────────
             capacity_factors: dict = {}
             for gen in n.generators.index:
-                if gen == "__grid_import__":
+                if gen.startswith("__grid_import_"):
                     continue
                 p_nom_val = float(n.generators.at[gen, "p_nom"])
                 if gen in n.generators_t.p.columns and p_nom_val > 0:
@@ -166,7 +256,7 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
                 sum(
                     n.generators_t.p[gen].clip(lower=0).sum()
                     for gen in n.generators_t.p.columns
-                    if gen != "__grid_import__"
+                    if not gen.startswith("__grid_import_")
                 )
             ) if not n.generators_t.p.empty else 0.0
 
@@ -208,6 +298,32 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
                     "overvoltages": [],
                 },
             }
+
+            # ── Network results (lines and transformers) ────────────────────
+            lines_loading: dict = {}
+            if hasattr(n, "lines_t") and not n.lines_t.p0.empty:
+                for line in n.lines_t.p0.columns:
+                    lines_loading[line] = {
+                        "p0": n.lines_t.p0[line].tolist(),
+                        "loading_pct": (
+                            (n.lines_t.p0[line].abs() / n.lines.at[line, "s_nom"] * 100).tolist()
+                            if n.lines.at[line, "s_nom"] > 0
+                            else []
+                        ),
+                    }
+            result_json["lines_t"] = lines_loading
+
+            bus_results: dict = {}
+            if (
+                hasattr(n, "buses_t")
+                and hasattr(n.buses_t, "marginal_price")
+                and not n.buses_t.marginal_price.empty
+            ):
+                for bus in n.buses_t.marginal_price.columns:
+                    bus_results[bus] = {
+                        "marginal_price": n.buses_t.marginal_price[bus].tolist(),
+                    }
+            result_json["buses_t"] = bus_results
 
         except Exception as e:
             error_message = str(e)
@@ -271,6 +387,12 @@ class PyPSANetworkBuilder(ISimulationRepository):
         demands: list,
         network_components: list,
     ) -> SimulationRunOutput:
+        _log.info(
+            "PyPSANetworkBuilder.run(): %d supplies, %d demands, %d network_components, "
+            "network_ids=%s, objective=%s",
+            len(supplies), len(demands), len(network_components),
+            run_input.network_ids, run_input.optimization_objective,
+        )
         # Resolve effective date range for weather-profile lookups.
         # If the user did not supply explicit dates, derive them from snapshot_hours
         # anchored to today's month/day in 2025 (the year covered by the weather_profile table).
@@ -347,6 +469,19 @@ class PyPSANetworkBuilder(ISimulationRepository):
                             reactor
                         )
 
+        # Resolve optimization strategy from run_input
+        from app.infrastructure.simulation.objectives.max_renewable import MaxRenewableStrategy  # noqa: PLC0415
+        from app.infrastructure.simulation.objectives.min_cost import MinCostStrategy  # noqa: PLC0415
+        from app.infrastructure.simulation.objectives.min_emissions import MinEmissionsStrategy  # noqa: PLC0415
+
+        _STRATEGIES = {
+            "min_cost": MinCostStrategy,
+            "min_emissions": MinEmissionsStrategy,
+            "max_renewable": MaxRenewableStrategy,
+        }
+        strategy_cls = _STRATEGIES.get(run_input.optimization_objective, MinCostStrategy)
+        strategy = strategy_cls()
+
         config = SimulationConfig(
             snapshot_hours=run_input.snapshot_hours,
             solver=run_input.solver,
@@ -358,6 +493,7 @@ class PyPSANetworkBuilder(ISimulationRepository):
             wind_profiles=wind_profiles,
             nuclear_constraints=nuclear_constraints,
             pypsa_params=run_input.pypsa_params or {},
+            optimization_strategy=strategy,
         )
         loop = asyncio.get_running_loop()
         result: AdapterOutput = await loop.run_in_executor(

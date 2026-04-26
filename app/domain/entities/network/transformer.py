@@ -18,7 +18,13 @@ class Transformer(BaseNetwork):
         return "transformer"
 
     def to_pypsa_params(self) -> dict:
-        # bus0/bus1 are injected by network_builder based on voltage levels
+        # bus0/bus1 are injected by network_builder based on voltage levels.
+        # x (reactance p.u.) and r (resistance p.u.) are required by PyPSA
+        # for linear power flow. Typical values for distribution transformers.
+        s_nom = self.capacity_mva if self.capacity_mva else 100.0
         return {
-            "s_nom": self.capacity_mva,
+            "s_nom": s_nom,
+            "s_nom_extendable": True,  # allow PyPSA to expand capacity if needed
+            "x": 0.1,     # typical transformer reactance (p.u.)
+            "r": 0.01,    # typical transformer resistance (p.u.)
         }

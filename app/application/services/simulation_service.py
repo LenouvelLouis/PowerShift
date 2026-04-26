@@ -50,6 +50,7 @@ class SimulationService:
         return SimulationRunInput(
             snapshot_hours=body.snapshot_hours,
             solver=body.solver,
+            optimization_objective=body.optimization_objective,
             name=body.name,
             start_date=body.start_date,
             end_date=body.end_date,

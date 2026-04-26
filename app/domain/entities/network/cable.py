@@ -24,4 +24,5 @@ class Cable(BaseNetwork):
             "length": self.length_km,
             "r": self.resistance_ohm_per_km,
             "x": self.reactance_ohm_per_km,
+            "s_nom_extendable": True,  # allow PyPSA to expand capacity if needed
         }

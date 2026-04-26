@@ -90,6 +90,15 @@
         </p>
       </div>
 
+      <!-- Merit order / dispatch priority -->
+      <div class="mt-2 flex items-start gap-2 rounded-lg bg-slate-500/10 border border-slate-500/20 px-3 py-2">
+        <UIcon name="i-heroicons-queue-list" class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+        <p class="text-[11px] text-slate-300 leading-relaxed">
+          <strong>Dispatch priority (merit order):</strong>
+          1. Solar &amp; Wind (free) &rarr; 2. Battery (stored energy) &rarr; 3. Nuclear &rarr; 4. Grid import (last resort, 500 &euro;/MWh)
+        </p>
+      </div>
+
       <!-- Balance explanation -->
       <p class="text-[11px] text-gray-600 leading-relaxed pt-1">
         <template v-if="result.status === 'optimized'">

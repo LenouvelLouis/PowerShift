@@ -131,7 +131,7 @@ import type { Supply, Demand, NetworkComponent } from '~/composables/api'
 import type { CreateFormConfig } from './AssetCreateForm.vue'
 
 export interface AssetSectionConfig {
-  group: 'Supply' | 'Demand' | 'Network'
+  group: 'Supply' | 'Demand' | 'Storage' | 'Network'
   storeType: 'supply' | 'demand' | 'network'
   icon: string
   iconColor: string

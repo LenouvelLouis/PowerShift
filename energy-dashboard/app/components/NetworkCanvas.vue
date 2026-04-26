@@ -66,8 +66,9 @@
       </div>
     </div>
 
-    <!-- ── Bus node ──────────────────────────────────────────────────────── -->
+    <!-- ── Bus node (single bus – original) ─────────────────────────────── -->
     <div
+      v-if="!isMultiBus"
       class="absolute flex flex-col items-center"
       :style="{ left: `${busX}px`, top: `${busY}px`, transform: 'translate(-50%, -50%)' }"
     >
@@ -111,6 +112,61 @@
           <span class="text-gray-400 truncate">{{ n.name }}</span>
           <span class="text-gray-600 font-mono ml-auto shrink-0">{{ n.capacity_mva }} MVA</span>
         </div>
+      </div>
+    </div>
+
+    <!-- ── Bus nodes (multi-bus topology) ─────────────────────────────── -->
+    <template v-else>
+      <div
+        v-for="(busName, idx) in buses"
+        :key="busName"
+        class="absolute flex flex-col items-center"
+        :style="multiBusStyle(idx)"
+      >
+        <div
+          class="relative flex flex-col items-center justify-center rounded-full border-2 bg-[#0B1220] cursor-default"
+          :style="{ width: `${multiBusSize}px`, height: `${multiBusSize}px` }"
+          :class="busBorderColor"
+          @mouseenter="showTooltip('bus', busName as any, $event)"
+          @mousemove="moveTooltip($event)"
+          @mouseleave="hideTooltip"
+        >
+          <svg :width="20" :height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z" :fill="busIconFill" stroke="none" />
+          </svg>
+        </div>
+        <div class="mt-1 text-center" style="max-width: 120px;">
+          <p class="font-semibold text-gray-400 text-[10px] truncate">{{ formatBusName(busName) }}</p>
+        </div>
+      </div>
+      <!-- Status label below last bus -->
+      <div
+        class="absolute text-center"
+        :style="{ left: `${canvasW / 2}px`, top: `${demandBusY + multiBusSize / 2 + 20}px`, transform: 'translateX(-50%)' }"
+      >
+        <p v-if="result" class="font-semibold" :class="[lv.busLabel, busStatusColor]">{{ busStatusLabel }}</p>
+        <p v-else class="text-gray-700" :class="lv.busLabel">No result</p>
+      </div>
+    </template>
+
+    <!-- ── Storage cards (batteries) ────────────────────────────────────── -->
+    <div
+      v-for="(bat, i) in (storage ?? [])"
+      :key="`bat-${bat.id}`"
+      class="absolute bg-[#0B1220] border border-green-900/60 rounded-xl flex items-center hover:border-green-700/60 transition-colors duration-200 cursor-default"
+      :class="lv.cardPad"
+      :style="storageCardStyle(i)"
+      @mouseenter="showTooltip('supply', bat, $event)"
+      @mousemove="moveTooltip($event)"
+      @mouseleave="hideTooltip"
+    >
+      <NetworkCanvasAssetIcon v-if="!isMicro" type="battery_storage" :size="lv.iconSize" class="shrink-0" />
+      <div class="min-w-0 flex-1" :class="isMicro ? '' : lv.cardGap">
+        <p class="font-semibold text-white truncate leading-tight" :class="lv.cardTitle">{{ bat.name }}</p>
+        <p class="text-green-500 leading-tight" :class="lv.cardSub">{{ bat.capacity_mw }} MW</p>
+        <p v-if="result && storageAvg(bat)" class="font-mono text-green-400 leading-tight" :class="lv.cardSub">
+          🔋 {{ fmtPow(Math.abs(storageAvg(bat))) }} MW avg
+        </p>
       </div>
     </div>
 
@@ -207,6 +263,7 @@ import type { CableLine } from '~/components/network-canvas/CableLayer.vue'
 
 const props = defineProps<{
   supplies: Supply[]
+  storage?: Supply[]
   demands:  Demand[]
   network:  NetworkComponent[]
   result:   SimulationResult | null
@@ -318,6 +375,50 @@ const busStatusLabel = computed(() => {
   return 'Error'
 })
 
+// ── Multi-bus detection ──────────────────────────────────────────────────────
+const buses = computed(() => {
+  const r = props.result?.result_json
+  if (!r?.buses_t || Object.keys(r.buses_t).length <= 1) return null
+  return Object.keys(r.buses_t)
+})
+const isMultiBus = computed(() => buses.value !== null && buses.value.length > 1)
+
+const multiBusSize = computed(() => Math.max(48, lv.value.busSize - 16))
+
+function formatBusName(name: string): string {
+  const m = name.match(/bus_([\d.]+)kV/)
+  if (!m) return name
+  const suffix = name.includes('kV_') && name.split('kV_')[1]
+    ? ` (${name.split('kV_')[1].replace(/_/g, ' ').replace(/ - /g, '-')})`
+    : ''
+  return `${m[1]} kV${suffix}`
+}
+
+function multiBusStyle(idx: number) {
+  const total = buses.value?.length ?? 1
+  const spacing = Math.min(80, (canvasH.value - 80) / Math.max(total, 1))
+  const startY = (canvasH.value - (total - 1) * spacing) / 2
+  return {
+    left: `${canvasW.value / 2}px`,
+    top: `${startY + idx * spacing}px`,
+    transform: 'translate(-50%, -50%)',
+  }
+}
+
+const supplyBusY = computed(() => {
+  if (!isMultiBus.value) return busY.value
+  const total = buses.value?.length ?? 1
+  const spacing = Math.min(80, (canvasH.value - 80) / Math.max(total, 1))
+  return (canvasH.value - (total - 1) * spacing) / 2
+})
+
+const demandBusY = computed(() => {
+  if (!isMultiBus.value) return busY.value
+  const total = buses.value?.length ?? 1
+  const spacing = Math.min(80, (canvasH.value - 80) / Math.max(total, 1))
+  return (canvasH.value - (total - 1) * spacing) / 2 + (total - 1) * spacing
+})
+
 // ── Card position styles ──────────────────────────────────────────────────────
 function supplyCardStyle(i: number) {
   const { padX, cardH, gap } = lv.value
@@ -341,13 +442,35 @@ function demandCardStyle(i: number) {
   return { left: `${canvasW.value - padX - lv.value.cardW}px`, top: `${top}px`, width: `${lv.value.cardW}px` }
 }
 
+// ── Storage card positioning ──────────────────────────────────────────────────
+function storageCardStyle(i: number) {
+  const { cardH, gap } = lv.value
+  const batCount = props.storage?.length ?? 0
+  if (isColumn.value) {
+    // Column mode: place batteries between bus and demands
+    const batStartY = colBusStart.value + colBusBlockH.value + 8
+    return { left: `${lv.value.padX}px`, top: `${batStartY + i * (cardH + gap)}px`, width: `${colCardW.value}px` }
+  }
+  // Horizontal mode: place batteries below the bus, centered
+  const batW = Math.min(lv.value.cardW, 180)
+  const totalH = batCount * cardH + (batCount - 1) * gap
+  const topStart = busY.value + busR.value + 24
+  return {
+    left: `${canvasW.value / 2 - batW / 2}px`,
+    top: `${topStart + i * (cardH + gap)}px`,
+    width: `${batW}px`,
+  }
+}
+
 // ── Power helpers ─────────────────────────────────────────────────────────────
-const genT  = computed(() => props.result?.result_json?.generators_t ?? {})
-const loadT = computed(() => props.result?.result_json?.loads_t      ?? {})
+const genT     = computed(() => props.result?.result_json?.generators_t ?? {})
+const loadT    = computed(() => props.result?.result_json?.loads_t      ?? {})
+const storageT = computed(() => props.result?.result_json?.storage_units_t ?? {})
 const avg   = (s: number[]) => s.length ? s.reduce((a, v) => a + v, 0) / s.length : 0
-const supplyAvg = (s: Supply) => { const ts = genT.value[s.name];  return ts ? avg(ts.p) : s.capacity_mw }
-const demandAvg = (d: Demand) => { const ts = loadT.value[d.name]; return ts ? avg(ts.p) : d.load_mw }
-const fmtPow    = (v: number) => v.toFixed(1)
+const supplyAvg  = (s: Supply) => { const ts = genT.value[s.name];  return ts ? avg(ts.p) : s.capacity_mw }
+const demandAvg  = (d: Demand) => { const ts = loadT.value[d.name]; return ts ? avg(ts.p) : d.load_mw }
+const storageAvg = (s: Supply) => { const ts = storageT.value[s.name]; return ts ? avg(ts.p) : 0 }
+const fmtPow     = (v: number) => v.toFixed(1)
 
 // ── Cable lines ───────────────────────────────────────────────────────────────
 const cableLines = computed<CableLine[]>(() => {
@@ -377,16 +500,50 @@ const cableLines = computed<CableLine[]>(() => {
       const power = supplyAvg(s)
       const totalH = total_s * cardH + (total_s - 1) * gap
       const cardMidY = (canvasH.value - totalH) / 2 + i * (cardH + gap) + cardH / 2
-      lines.push({ x1: padX + cardW, y1: cardMidY, x2: busX.value - r, y2: busY.value,
+      lines.push({ x1: padX + cardW, y1: cardMidY, x2: busX.value - r, y2: supplyBusY.value,
         isSupply: true, isBusCable: false, power, label: props.result ? `${fmtPow(power)} MW` : '' })
     })
     props.demands.forEach((d, i) => {
       const power = demandAvg(d)
       const totalH = total_d * cardH + (total_d - 1) * gap
       const cardMidY = (canvasH.value - totalH) / 2 + i * (cardH + gap) + cardH / 2
-      lines.push({ x1: busX.value + r, y1: busY.value, x2: canvasW.value - padX - cardW, y2: cardMidY,
+      lines.push({ x1: busX.value + r, y1: demandBusY.value, x2: canvasW.value - padX - cardW, y2: cardMidY,
         isSupply: false, isBusCable: false, power, label: props.result ? `${fmtPow(power)} MW` : '' })
     })
+
+    // ── Inter-bus links (transformers / lines between consecutive buses) ──
+    if (isMultiBus.value && buses.value && buses.value.length > 1) {
+      const total = buses.value.length
+      const spacing = Math.min(80, (canvasH.value - 80) / Math.max(total, 1))
+      const startY = (canvasH.value - (total - 1) * spacing) / 2
+      const cx = canvasW.value / 2
+      const halfBus = multiBusSize.value / 2
+
+      for (let idx = 0; idx < total - 1; idx++) {
+        const y1 = startY + idx * spacing + halfBus
+        const y2 = startY + (idx + 1) * spacing - halfBus
+        // Find the network component connecting these two voltage levels
+        const busA = buses.value[idx]
+        const busB = buses.value[idx + 1]
+        const nc = props.network.find(n => {
+          if (n.type === 'transformer') {
+            const hvBus = `bus_${n.voltage_hv_kv}kV`
+            const lvBus = `bus_${n.voltage_lv_kv}kV`
+            return (hvBus === busA && lvBus === busB) || (hvBus === busB && lvBus === busA)
+          }
+          return false
+        })
+        const label = nc ? `${nc.name} (${nc.capacity_mva} MVA)` : ''
+        lines.push({
+          x1: cx, y1,
+          x2: cx, y2,
+          isSupply: false,
+          isBusCable: true,
+          power: nc?.capacity_mva ?? 0,
+          label,
+        })
+      }
+    }
   }
   return lines
 })
@@ -487,6 +644,26 @@ function buildTipData(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyA
     { label: 'Total demand', value: `${r.total_demand_mwh?.toFixed(0) ?? '—'} MWh`, color: 'text-red-400' },
     { label: 'Balance', value: `${r.balance_mwh != null ? (r.balance_mwh > 0 ? '+' : '') + r.balance_mwh.toFixed(0) : '—'} MWh`, color: r.balance_mwh != null && Math.abs(r.balance_mwh) < 0.1 ? 'text-emerald-400' : r.balance_mwh != null && r.balance_mwh > 0 ? 'text-blue-400' : 'text-amber-400' },
   ] : []
+
+  // Multi-bus: asset is the bus name string
+  if (isMultiBus.value && typeof asset === 'string') {
+    const busName = asset as string
+    const voltageLabel = formatBusName(busName)
+    const busData = r?.buses_t?.[busName]
+    const mbResults: TipRow[] = [...busResults]
+    if (busData?.marginal_price) {
+      const prices = busData.marginal_price as number[]
+      const avgPrice = prices.length ? prices.reduce((a: number, v: number) => a + v, 0) / prices.length : 0
+      mbResults.push({ label: 'Avg marginal price', value: `${avgPrice.toFixed(2)} €/MWh`, color: 'text-blue-300' })
+    }
+    return {
+      name: voltageLabel, typeLabel: 'Bus', kind: 'bus',
+      params: [{ label: 'Bus ID', value: busName }, { label: 'Voltage', value: voltageLabel }],
+      results: mbResults,
+      hint: 'Bus node in multi-voltage topology. Connected via transformers and lines to other voltage levels.',
+    }
+  }
+
   return {
     name: 'Main Bus', typeLabel: '380 kV', kind: 'bus',
     params: [{ label: 'Voltage', value: '380 kV' }, { label: 'Type', value: 'AC bus (slack)' }],

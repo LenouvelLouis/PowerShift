@@ -43,6 +43,9 @@
       <div class="flex items-center gap-2 text-emerald-500">
         <UIcon name="i-heroicons-bolt" class="w-6 h-6" />
         <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Supply</span>
+        <UTooltip text="MWh = MW × hours. A 100 MW plant running 24h produces 2,400 MWh.">
+          <UIcon name="i-heroicons-question-mark-circle" class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0" />
+        </UTooltip>
       </div>
       <p class="text-3xl font-bold font-mono text-emerald-400">
         {{ result.status === 'error' ? '—' : fmtShort(result.total_supply_mwh) }}
@@ -55,6 +58,9 @@
       <div class="flex items-center gap-2 text-red-500">
         <UIcon name="i-heroicons-home" class="w-6 h-6" />
         <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Demand</span>
+        <UTooltip text="MWh = MW × hours. A 100 MW plant running 24h produces 2,400 MWh.">
+          <UIcon name="i-heroicons-question-mark-circle" class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0" />
+        </UTooltip>
       </div>
       <p class="text-3xl font-bold font-mono text-red-400">
         {{ result.status === 'error' ? '—' : fmtShort(result.total_demand_mwh) }}

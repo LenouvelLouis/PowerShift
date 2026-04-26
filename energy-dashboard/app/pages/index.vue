@@ -62,7 +62,8 @@
         </div>
         <div v-show="activeTab === 'network'" class="flex flex-col gap-6">
           <NetworkCanvas
-            :supplies="sim.selectedSuppliesWithOverrides"
+            :supplies="nonBatterySupplies"
+            :storage="batterySupplies"
             :demands="sim.selectedDemandsWithOverrides"
             :network="sim.selectedNetworkWithOverrides"
             :result="result"
@@ -77,12 +78,13 @@
     <template v-else>
       <NetworkCanvas
         v-if="sim.hasMinimumAssets"
-        :supplies="sim.selectedSuppliesWithOverrides"
+        :supplies="nonBatterySupplies"
+        :storage="batterySupplies"
         :demands="sim.selectedDemandsWithOverrides"
         :network="sim.selectedNetworkWithOverrides"
         :result="null"
       />
-      <EmptyState v-else />
+      <GuidedScenarioWizard v-else @complete="activeTab = 'results'" />
     </template>
   </div>
 </template>
@@ -100,6 +102,13 @@ useSimulationUrl()
 
 const loadingScenario = ref(false)
 const result = computed(() => sim.displayedResult)
+
+const nonBatterySupplies = computed(() =>
+  sim.selectedSuppliesWithOverrides.filter(s => s.type !== 'battery_storage')
+)
+const batterySupplies = computed(() =>
+  sim.selectedSuppliesWithOverrides.filter(s => s.type === 'battery_storage')
+)
 
 const tabs = [
   { key: 'results',  label: 'Results' },

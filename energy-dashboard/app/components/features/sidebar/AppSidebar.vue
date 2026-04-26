@@ -42,9 +42,9 @@ const store = useSimulationStore()
 const referential = useReferentialStore()
 const toast = useToast()
 
-const activeGroup = ref<'Supply' | 'Demand' | 'Network'>('Supply')
+const activeGroup = ref<'Supply' | 'Demand' | 'Storage' | 'Network'>('Supply')
 
-function setActiveGroup(group: 'Supply' | 'Demand' | 'Network') {
+function setActiveGroup(group: 'Supply' | 'Demand' | 'Storage' | 'Network') {
   activeGroup.value = group
 }
 
@@ -63,13 +63,32 @@ const supplyConfig: AssetSectionConfig = {
       { label: 'Wind Turbine', value: 'wind_turbine' },
       { label: 'Solar Panel', value: 'solar_panel' },
       { label: 'Nuclear Plant', value: 'nuclear_plant' },
-      { label: 'Battery Storage', value: 'battery_storage' }
     ],
     fields: [
-      { key: 'capacity_mw', label: 'Capacity (MW)', tooltip: 'Installed power capacity in MW — maximum charge/discharge rate for batteries, or maximum generation for other types. Wind/solar are further scaled by a KNMI weather profile (0–1).' },
-      { key: 'efficiency', label: 'Efficiency (0–1)', step: 0.01, tooltip: 'One-way efficiency for batteries (e.g. 0.95 → round-trip 90.25%). For nuclear plants: thermal-to-electric conversion efficiency. Wind and solar efficiency is embedded in the weather profile.' }
+      { key: 'capacity_mw', label: 'Capacity (MW)', tooltip: 'Installed power capacity in MW. Wind/solar are further scaled by a KNMI weather profile (0–1).' },
+      { key: 'efficiency', label: 'Efficiency (0–1)', step: 0.01, tooltip: 'For nuclear plants: thermal-to-electric conversion efficiency. Wind and solar efficiency is embedded in the weather profile.' }
     ],
     defaults: { type: 'wind_turbine', name: '', capacity_mw: 500, efficiency: 0.42, status: 'active', unit: 'MW', description: '' }
+  }
+}
+
+const storageConfig: AssetSectionConfig = {
+  group: 'Storage',
+  storeType: 'supply',
+  icon: 'i-heroicons-battery-100',
+  iconColor: 'text-green-400',
+  emptyLabel: 'No storage selected',
+  createFormConfig: {
+    title: 'New Battery Storage',
+    namePlaceholder: 'e.g. Grid Battery 100 MW',
+    typeOptions: [
+      { label: 'Battery Storage', value: 'battery_storage' },
+    ],
+    fields: [
+      { key: 'capacity_mw', label: 'Power (MW)', tooltip: 'Max charge/discharge rate in MW.' },
+      { key: 'efficiency', label: 'Efficiency (0–1)', step: 0.01, tooltip: 'One-way efficiency (e.g. 0.95 → round-trip ~90%). Li-ion typically 0.92–0.95.' }
+    ],
+    defaults: { type: 'battery_storage', name: '', capacity_mw: 200, efficiency: 0.95, status: 'active', unit: 'MW', description: '' }
   }
 }
 
@@ -117,10 +136,15 @@ const networkConfig: AssetSectionConfig = {
 const sections = [
   {
     config: supplyConfig,
-    selectedIds: computed(() => store.selectedSupplyIds),
-    selectedAssets: computed(() => store.selectedSupplies as Array<Supply | Demand | NetworkComponent>),
+    selectedIds: computed(() =>
+      store.selectedSupplies.filter((s: Supply) => s.type !== 'battery_storage').map((s: Supply) => s.id)
+    ),
+    selectedAssets: computed(() =>
+      store.selectedSupplies.filter((s: Supply) => s.type !== 'battery_storage') as Array<Supply | Demand | NetworkComponent>
+    ),
     availableForDropdown: computed(() =>
       referential.availableSupplies
+        .filter((s: Supply) => s.type !== 'battery_storage')
         .filter((s: Supply) => !store.selectedSupplyIds.includes(s.id))
         .map((s: Supply) => ({ label: s.name, value: s.id, name: s.name }))
     )
@@ -133,6 +157,21 @@ const sections = [
       referential.availableDemands
         .filter((d: Demand) => !store.selectedDemandIds.includes(d.id))
         .map((d: Demand) => ({ label: d.name, value: d.id, name: d.name }))
+    )
+  },
+  {
+    config: storageConfig,
+    selectedIds: computed(() =>
+      store.selectedSupplies.filter((s: Supply) => s.type === 'battery_storage').map((s: Supply) => s.id)
+    ),
+    selectedAssets: computed(() =>
+      store.selectedSupplies.filter((s: Supply) => s.type === 'battery_storage') as Array<Supply | Demand | NetworkComponent>
+    ),
+    availableForDropdown: computed(() =>
+      referential.availableSupplies
+        .filter((s: Supply) => s.type === 'battery_storage')
+        .filter((s: Supply) => !store.selectedSupplyIds.includes(s.id))
+        .map((s: Supply) => ({ label: s.name, value: s.id, name: s.name }))
     )
   },
   {

@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.infrastructure.simulation.objectives.base import OptimizationStrategy
 
 
 @dataclass
@@ -27,6 +31,7 @@ class SimulationConfig:
     wind_profiles: dict = field(default_factory=dict)       # supply.name -> list[float] (p_max_pu)
     nuclear_constraints: dict = field(default_factory=dict)  # supply.name -> PyPSA param overrides
     pypsa_params: dict = field(default_factory=dict)        # asset.name -> param overrides
+    optimization_strategy: OptimizationStrategy | None = None  # objective strategy (default: MinCostStrategy)
 
 
 @dataclass
