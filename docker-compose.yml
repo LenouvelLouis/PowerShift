@@ -1,7 +1,24 @@
 services:
 
-  # ─── FastAPI backend ─────────────────────────────────────────────────────────
-  # Database: NeonDB (cloud PostgreSQL) — configure DATABASE_URL in .env
+  # --- PostgreSQL database ------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: powershift
+      POSTGRES_PASSWORD: powershift
+      POSTGRES_DB: powershift
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U powershift"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # --- FastAPI backend ----------------------------------------------------
   backend:
     build:
       context: .
@@ -12,14 +29,18 @@ services:
     env_file:
       - .env
     environment:
-      ENVIRONMENT: production
+      DATABASE_URL: postgresql+asyncpg://powershift:powershift@db:5432/powershift
+      ENVIRONMENT: development
+    depends_on:
+      db:
+        condition: service_healthy
     develop:
       watch:
         - action: sync
           path: ./app
           target: /workspace/app
 
-  # ─── Nuxt frontend ───────────────────────────────────────────────────────────
+  # --- Nuxt frontend ------------------------------------------------------
   frontend:
     build:
       context: ./energy-dashboard
@@ -31,3 +52,6 @@ services:
       NUXT_API_BASE_URL: http://backend:8000
     depends_on:
       - backend
+
+volumes:
+  pgdata:

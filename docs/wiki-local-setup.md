@@ -4,87 +4,56 @@
 
 | Tool | Version | Install |
 |---|---|---|
-| Python | 3.11+ | [python.org](https://python.org) |
-| Node.js | 20+ | [nodejs.org](https://nodejs.org) |
-| pnpm | 10+ | `npm install -g pnpm` |
-| PostgreSQL | 15+ | Local install or Docker |
+| Docker | 24+ | [docker.com](https://docs.docker.com/get-docker/) |
+| Docker Compose | v2+ | Included with Docker Desktop |
+| Python | 3.11+ | [python.org](https://python.org) (manual install only) |
+| Node.js | 20+ | [nodejs.org](https://nodejs.org) (manual install only) |
+| pnpm | 10+ | `npm install -g pnpm` (manual install only) |
 
 ---
 
-## 1. Clone and configure environment
+## 1. Quick start (Docker Compose)
 
 ```bash
-git clone <repo-url>
-cd <repo>
+git clone https://github.com/LenouvelLouis/PowerShift.git
+cd PowerShift
 cp .env.example .env
+docker compose up --build
 ```
 
-Edit `.env` with your values:
+This starts **3 services**:
+- **db** — PostgreSQL 15 on port 5432 (user: `powershift`, password: `powershift`, database: `powershift`)
+- **backend** — FastAPI on port 8000
+- **frontend** — Nuxt on port 80
 
-```env
-# App
-APP_NAME="Energy Grid API"
-APP_VERSION="0.1.0"
-DEBUG=false
-HOST=0.0.0.0
-PORT=8000
-ENVIRONMENT=development
-
-# Database — pick one:
-# Local PostgreSQL:
-DATABASE_URL=postgresql+asyncpg://tes_user:tes_password@localhost:5432/tes_db
-# DB cloud:
-# DATABASE_URL=postgresql+asyncpg://user:password@ep-xxx.eu-central-1.aws.com
-
-# Frontend (reachable from the frontend container, set to backend's internal Docker Compose hostname):
-NUXT_API_BASE_URL=http://localhost:8000
-
-# KNMI (only needed for weather data ingestion scripts)
-KNMI_API_KEY=your-knmi-api-key-here
-```
-
-> `AZURE_KEY_VAULT_URL` and related Azure vars can be left blank for local dev — the app falls back to `.env`.
+No cloud database needed. Data persists in a Docker volume.
 
 ---
 
-## 2. Backend
-
-### Install dependencies
+## 2. Manual backend setup (without Docker)
 
 ```bash
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate   # Linux/macOS
+# .venv\Scripts\activate    # Windows
+
+# Install dependencies
 pip install -e ".[dev]"
+
+# Configure .env
+cp .env.example .env
+# Edit DATABASE_URL to point to your PostgreSQL instance
+
+# Start the API
+uvicorn app.main:app --reload
 ```
 
-### Run the API
-
-```bash
-uvicorn main:app --reload
-```
-
-API available at `http://localhost:8000`.
-
-Interactive docs: `http://localhost:8000/docs`
-
-### Run tests
-
-```bash
-pytest              # run all tests
-pytest -v           # verbose
-pytest --cov=app    # with coverage
-```
-
-Tests use an in-memory SQLite database (via `aiosqlite`) — no real DB needed.
-
-### Lint and format
-
-```bash
-ruff check app/     # lint
-ruff format app/    # format
-```
+API: http://localhost:8000 — Docs: http://localhost:8000/docs
 
 ---
 
-## 3. Frontend
+## 3. Manual frontend setup (without Docker)
 
 ```bash
 cd energy-dashboard
@@ -92,66 +61,68 @@ pnpm install
 pnpm dev
 ```
 
-Frontend available at `http://localhost:3000`.
-
-### Type check and lint
-
-```bash
-pnpm typecheck      # must pass before any commit
-pnpm lint
-```
-
-### Production build
-
-```bash
-pnpm build
-```
+Dashboard: http://localhost:3000
 
 ---
 
-## 4. Run with Docker Compose
+## 4. Running tests
 
-Runs backend + frontend together. Requires Docker with Compose plugin.
+Tests use an in-memory SQLite database — no real DB needed.
 
 ```bash
-cp .env.example .env
-# Edit .env — set DATABASE_URL to Cloud DB or a local PostgreSQL accessible from Docker
-docker compose up --build
+pytest tests/ --ignore=tests/ui -v          # all tests except UI
+pytest tests/bdd/ -v                         # BDD only
+pytest tests/api/ -v                         # API only
+pytest tests/ --cov=app --cov-report=html -v # with coverage
 ```
 
-| Service | URL |
-|---|---|
-| Backend | `http://localhost:8000` |
-| Frontend | `http://localhost:80` |
+### Lint
 
-The frontend container talks to the backend via the Docker Compose internal DNS (`http://backend:8000`), set by `NUXT_API_BASE_URL` in `docker-compose.yml`.
+```bash
+ruff check app/        # lint
+ruff check app/ --fix  # auto-fix
+```
+
+### Makefile shortcuts
+
+```bash
+make install     # pip install -e ".[dev]"
+make ci          # pytest like GitHub Actions CI
+make check       # lint + ci
+make docker-up   # start all services
+make docker-down # stop all services
+```
 
 ---
 
 ## 5. Database
 
-The project uses a **self-hosted PostgreSQL container on the Azure VM** (`74.178.89.28:5432`) in production. For local dev, you can either connect to the production DB or run a local PostgreSQL instance.
+### Local (Docker Compose)
 
-### Get the production DATABASE_URL
+The `db` service runs PostgreSQL 15 with these defaults:
 
-The credentials are stored in Azure DevOps Variable Group `energy-grid-prod` (secret `DATABASE_URL`). Ask a project member with Azure DevOps access to share it with you securely.
+| Parameter | Value |
+|---|---|
+| Host | `localhost` (or `db` from within Docker) |
+| Port | `5432` |
+| User | `powershift` |
+| Password | `powershift` |
+| Database | `powershift` |
+| Connection string | `postgresql+asyncpg://powershift:powershift@localhost:5432/powershift` |
 
-Connection string format:
+To reset the database:
+```bash
+docker compose down -v && docker compose up --build
 ```
-postgresql+asyncpg://isep_admin:<password>@74.178.89.28:5432/isep_db
+
+### Cloud (NeonDB)
+
+To use NeonDB instead, set `DATABASE_URL` in `.env`:
 ```
-
-### Schema migrations
-
-Migrations are run via raw SQL or Alembic. Never use `Base.metadata.create_all()` in production.
-
-Check `alembic/` or `scripts/` for migration files.
+DATABASE_URL=postgresql+asyncpg://user:password@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require
+```
 
 ### Weather profile ingestion (KNMI data)
-
-The `weather_profile` table stores hourly meteorological data from KNMI station `06280` (Groningen Eelde). It is the source of truth for solar irradiance and wind speed profiles used in simulations.
-
-To ingest data:
 
 ```bash
 python scripts/ingest_weather_profile.py
@@ -159,11 +130,9 @@ python scripts/ingest_weather_profile.py
 
 Requires `KNMI_API_KEY` in `.env`. Register for free at [developer.dataplatform.knmi.nl](https://developer.dataplatform.knmi.nl/).
 
-Without ingested data, simulations will run but solar/wind profiles will be all-zero and a warning will appear in `result_json["warnings"]`.
-
 ---
 
-## 6. Key Environment Variables Reference
+## 6. Key Environment Variables
 
 | Variable | Required | Description |
 |---|---|---|
@@ -171,35 +140,3 @@ Without ingested data, simulations will run but solar/wind profiles will be all-
 | `ENVIRONMENT` | yes | `development` / `staging` / `production` |
 | `NUXT_API_BASE_URL` | frontend | Backend URL reachable from the frontend |
 | `KNMI_API_KEY` | ingestion only | KNMI Open Data API key |
-| `AZURE_KEY_VAULT_URL` | optional | Leave blank to use `.env` only |
-
----
-
-## 7. Project Structure
-
-```
-.
-├── app/                        # Backend (Python, FastAPI)
-│   ├── api/v1/                 # HTTP layer (endpoints, schemas)
-│   │   ├── dependencies.py     # DI wiring — only file that imports infrastructure
-│   │   ├── endpoints/          # FastAPI routers
-│   │   └── schemas/            # Pydantic v2 request/response schemas
-│   ├── application/            # Use cases and services
-│   │   ├── dtos/               # Data Transfer Objects
-│   │   └── services/           # Business logic orchestration
-│   ├── domain/                 # Pure domain — no framework imports
-│   │   ├── entities/           # Domain entities (supply, demand, network…)
-│   │   └── interfaces/         # Abstract base classes (repository interfaces)
-│   └── infrastructure/         # Framework-specific implementations
-│       ├── db/
-│       │   ├── models/         # SQLAlchemy ORM models
-│       │   └── repositories/   # Repository implementations
-│       ├── external/           # External API clients (Open-Meteo)
-│       └── simulation/         # PyPSA network builder and adapter
-├── energy-dashboard/           # Frontend (Nuxt 4, Vue 4, TypeScript)
-├── tests/                      # pytest test suite
-├── scripts/                    # Utility scripts (KNMI ingestion, etc.)
-├── docker-compose.yml
-├── azure-pipelines.yml
-└── .env.example
-```

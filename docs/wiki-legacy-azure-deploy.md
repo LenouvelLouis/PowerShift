@@ -1,3 +1,7 @@
+> **ARCHIVED** — This document describes the legacy Azure DevOps deployment that is no longer in use. The project now uses GitHub Actions for CI/CD. Kept for historical reference.
+
+---
+
 # Wiki — Azure Deployment
 
 **VM:** `azureuser@74.178.89.28` (Ubuntu 24.04)

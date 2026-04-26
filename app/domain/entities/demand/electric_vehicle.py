@@ -1,6 +1,6 @@
 """Electric vehicle demand entity.
 
-Profile source: ISEP 2026 — EV Charging Power Profile
+Profile source: PowerShift — EV Charging Power Profile
 Based on real charging channel data (charging_channels.json)
 and driving pattern data (driving_pattern.json).
 

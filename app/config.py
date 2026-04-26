@@ -16,8 +16,8 @@ class Settings(BaseSettings):
     # Environment: development | staging | production
     ENVIRONMENT: str = "development"
 
-    # Database (NeonDB / PostgreSQL)
-    DATABASE_URL: str = "postgresql://neondb_owner:npg_OUMdt0gS5vkD@ep-silent-dream-albpp1df-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    # Database (PostgreSQL — Docker local or NeonDB cloud)
+    DATABASE_URL: str = "postgresql+asyncpg://powershift:powershift@localhost:5432/powershift"
 
     model_config = SettingsConfigDict(
         env_file=".env",

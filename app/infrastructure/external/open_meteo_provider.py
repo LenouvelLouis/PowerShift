@@ -26,7 +26,7 @@ _DEFAULT_LAT = 53.2194   # Groningen
 _DEFAULT_LON = 6.5665
 
 # Realistic EV charging profile (24 h, normalised 0–1)
-# Source: ISEP 2026 QA — 6 charging channels, 16 BEVs, driving pattern CBS NL 2023
+# Source: PowerShift — Open-Meteo integration (6 charging channels, 16 BEVs, driving pattern CBS NL 2023)
 # Peak at 18h–19h (evening return), zero at 07h & 17h (commute)
 _EV_BASE_PROFILE: list[float] = [
     0.3730, 0.3730, 0.3730, 0.3730, 0.3730, 0.3730,  # 00h–05h home overnight

@@ -14,7 +14,7 @@ Full-stack energy grid simulation platform — Clean Architecture backend with P
 | Uvicorn | ASGI server |
 | SQLAlchemy (asyncio) | Async ORM |
 | asyncpg | Async PostgreSQL driver |
-| NeonDB | Serverless PostgreSQL database |
+| PostgreSQL 15 | Relational database (Docker local / NeonDB cloud) |
 | PyPSA | Power grid simulation (OPF) |
 | pydantic-settings | Environment variable loading |
 | Pytest + httpx | Testing |
@@ -40,23 +40,23 @@ Requirements: [Docker](https://docs.docker.com/get-docker/) and [Docker Compose]
 
 ```bash
 # 1. Clone the repo
-git clone <repo-url>
-cd <repo-name>
+git clone https://github.com/LenouvelLouis/PowerShift.git
+cd PowerShift
 
 # 2. Configure environment variables
 cp .env.example .env
-# Edit .env and set DATABASE_URL to your NeonDB connection string:
-# DATABASE_URL=postgresql+asyncpg://user:pass@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require
+# .env works out of the box for local dev — no cloud DB needed
 
-# 3. Build and start all services
+# 3. Build and start all services (PostgreSQL + backend + frontend)
 docker compose up --build
 ```
 
 | Service | URL |
 |---|---|
-| Frontend (Nuxt) | http://localhost:3000 |
+| Frontend (Nuxt) | http://localhost:80 |
 | Backend (FastAPI) | http://localhost:8000 |
 | Swagger UI | http://localhost:8000/docs |
+| PostgreSQL | localhost:5432 |
 
 To stop all services:
 
@@ -72,6 +72,19 @@ docker compose watch
 
 Changes in `app/` are synced into the container automatically without a rebuild.
 
+### Database
+
+The Docker Compose stack includes a PostgreSQL 15 container. Data is persisted in a Docker volume (`pgdata`), so it survives `docker compose down`.
+
+To fully reset the database:
+
+```bash
+docker compose down -v   # removes volumes
+docker compose up --build
+```
+
+To use a cloud database (NeonDB or other) instead, set `DATABASE_URL` in your `.env` file.
+
 ---
 
 ### Manual installation
@@ -80,8 +93,8 @@ Changes in `app/` are synced into the container automatically without a rebuild.
 
 ```bash
 # 1. Clone the repo
-git clone <repo-url>
-cd <repo-name>
+git clone https://github.com/LenouvelLouis/PowerShift.git
+cd PowerShift
 
 # 2. Create and activate a virtual environment
 python -m venv .venv
@@ -93,10 +106,10 @@ pip install -e ".[dev]"
 
 # 4. Configure environment variables
 cp .env.example .env
-# Edit .env and set DATABASE_URL to your NeonDB connection string
+# Edit .env — point DATABASE_URL to a running PostgreSQL instance
 
 # 5. Start the server
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 ```
 
 The API is available at [http://localhost:8000](http://localhost:8000).
@@ -111,106 +124,6 @@ pnpm dev
 ```
 
 The dashboard is available at [http://localhost:3000](http://localhost:3000).
-
----
-
-## Environment variables
-
-Copy `.env.example` to `.env` and fill in the values:
-
-| Variable | Required | Description |
-|---|---|---|
-| `DATABASE_URL` | **Yes** | NeonDB connection string — `postgresql+asyncpg://user:pass@host/db?sslmode=require` |
-| `DEBUG` | No | Set to `true` to enable SQLAlchemy query logging |
-
----
-
-## Tests
-
-### Run all tests (except UI)
-
-```bash
-pytest tests/ --ignore=tests/ui -v
-```
-
-### BDD tests only (Gherkin scenarios)
-
-```bash
-pytest tests/bdd/ -v
-```
-
-These run the 12 BDD scenarios (US-01 through US-04) directly against the PyPSA
-simulation engine — **no database or running server required**.
-
-### API tests only
-
-```bash
-pytest tests/api/ -v
-```
-
-These test all REST endpoints via FastAPI's `TestClient`. Requires a database
-connection (set `DATABASE_URL` in `.env`).
-
-### UI tests (Selenium)
-
-```bash
-# 1. Start the server in the background
-uvicorn app.main:app --port 8000 &
-
-# 2. Run the Selenium tests (headless Chrome)
-pytest tests/ui/ -v
-
-# 3. Stop the server when done
-kill %1
-```
-
-Requires Chrome/Chromium and chromedriver on your PATH. Override the target URL
-with `TEST_BASE_URL=http://localhost:9000 pytest tests/ui/ -v` if needed.
-
-### Lint (Ruff)
-
-Same checks as CI — fails if the `app/` package does not pass Ruff:
-
-```bash
-ruff check app
-```
-
-Auto-fix what Ruff can repair locally:
-
-```bash
-ruff check app --fix
-```
-
-### Coverage report
-
-```bash
-pytest tests/ --ignore=tests/ui --cov=app --cov-report=html -v
-open htmlcov/index.html
-```
-
-### Makefile (run CI checks locally)
-
-If you have **GNU Make** and PostgreSQL available at the same URL as CI (or override `DATABASE_URL`):
-
-```bash
-make help          # list targets
-make install       # pip install -e ".[dev]"
-make ci            # pytest with same flags and env as Azure Pipelines
-make check         # ruff + make ci (stricter local gate before push)
-make test-quick    # fast pytest without coverage / junit
-```
-
-### Makefile (run CI checks locally)
-
-If you have **GNU Make** and PostgreSQL available at the same URL as CI (or override `DATABASE_URL`):
-
-```bash
-make help          # list targets
-make install       # pip install -e ".[dev]"
-make ci            # pytest with same flags and env as Azure Pipelines
-make check         # ruff + make ci (stricter local gate before push)
-make test-quick    # fast pytest without coverage / junit
-```
 
 ---
 
