@@ -84,6 +84,7 @@ EV_profil_ameliore_v2/
 energy-dashboard/.output/
 energy-dashboard/dist/
 */node_modules/
+energy-dashboard/.pnpm-store/
 energy-dashboard/.env
 energy-dashboard/.env.*
 !energy-dashboard/.env.example

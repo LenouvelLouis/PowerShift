@@ -7,6 +7,6 @@
  */
 export default defineEventHandler((event) => {
   const base = process.env.NUXT_API_BASE_URL ?? 'http://localhost:8000'
-  const target = base + event.path          // event.path = /api/v1/...
+  const target = base + event.path // event.path = /api/v1/...
   return proxyRequest(event, target)
 })

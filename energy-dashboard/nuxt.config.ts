@@ -1,14 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import Aura from '@primeuix/themes/aura'
 export default defineNuxtConfig({
-  components: {
-    dirs: [
-      { path: '~/components/ui', prefix: 'Ui' },
-      { path: '~/components/features/sidebar', prefix: 'Sidebar' },
-      { path: '~/components', pathPrefix: false }
-    ]
-  },
-
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
@@ -17,13 +8,20 @@ export default defineNuxtConfig({
     '@nuxt/icon'
   ],
 
-  // ← AJOUTE ce bloc pour corriger les icons
+  components: {
+    dirs: [
+      { path: '~/components/ui', prefix: 'Ui' },
+      { path: '~/components/features/sidebar', prefix: 'Sidebar' },
+      { path: '~/components', pathPrefix: false }
+    ]
+  },
+
   icon: {
     collections: [
       'heroicons',
       'lucide'
     ],
-    // @ts-ignore do not delete or Vs code will consider it as an error
+    // @ts-expect-error do not delete or VS Code will consider it as an error
     provider: 'unjs'
   },
 
@@ -35,13 +33,10 @@ export default defineNuxtConfig({
     '/': { prerender: true }
   },
 
-  // Proxy géré par server/routes/api/[...path].ts (runtime, pas build-time)
-
   compatibilityDate: '2025-01-15',
 
-  // ← Ajoute ce bloc pour Pinia persistedstate
   pinia: {
-    storesDirs: ['./app/stores/**'],
+    storesDirs: ['./app/stores/**']
   },
 
   eslint: {
