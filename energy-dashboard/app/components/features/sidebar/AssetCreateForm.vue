@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex items-center justify-between mt-2 mb-1">
-      <p class="text-xs font-semibold text-[#3C83F8] uppercase tracking-wider">
+      <p class="text-xs font-semibold text-blue-500 uppercase tracking-wider">
         {{ config.title }}
       </p>
       <button

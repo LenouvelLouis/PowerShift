@@ -34,6 +34,9 @@ dependencies = [
     # Utilities
     "httpx==0.28.1",
     "slowapi>=0.1.9",
+
+    # Export / reporting
+    "reportlab>=4.0",
 ]
 
 [project.optional-dependencies]

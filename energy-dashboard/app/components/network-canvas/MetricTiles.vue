@@ -3,7 +3,7 @@
     <!-- ── 6 KPI tiles ──────────────────────────────────────────────────── -->
     <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
       <!-- Balance -->
-      <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4 flex flex-col gap-1.5">
+      <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-1.5">
         <div class="flex items-center gap-1.5 text-gray-500">
           <UIcon
             name="i-heroicons-scale"
@@ -23,7 +23,7 @@
       </div>
 
       <!-- Supply -->
-      <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4 flex flex-col gap-1.5">
+      <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-1.5">
         <div class="flex items-center gap-1.5 text-emerald-500">
           <UIcon
             name="i-heroicons-bolt"
@@ -40,7 +40,7 @@
       </div>
 
       <!-- Demand -->
-      <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4 flex flex-col gap-1.5">
+      <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-1.5">
         <div class="flex items-center gap-1.5 text-red-500">
           <UIcon
             name="i-heroicons-home"
@@ -57,7 +57,7 @@
       </div>
 
       <!-- Grid Import -->
-      <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4 flex flex-col gap-1.5">
+      <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-1.5">
         <div class="flex items-center gap-1.5 text-blue-500">
           <UIcon
             name="i-heroicons-arrow-down-tray"
@@ -74,7 +74,7 @@
       </div>
 
       <!-- Grid Export -->
-      <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4 flex flex-col gap-1.5">
+      <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-1.5">
         <div class="flex items-center gap-1.5 text-amber-500">
           <UIcon
             name="i-heroicons-arrow-up-tray"
@@ -91,7 +91,7 @@
       </div>
 
       <!-- Convergence -->
-      <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4 flex flex-col gap-1.5">
+      <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-1.5">
         <div
           class="flex items-center gap-1.5"
           :class="convergence?.all_converged ? 'text-emerald-500' : 'text-amber-500'"
@@ -119,9 +119,9 @@
       <!-- Capacity factors -->
       <div
         v-if="capacityFactors.length"
-        class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-5"
+        class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5"
       >
-        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+        <h3 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-4">
           Capacity Factors
         </h3>
         <div class="space-y-3">
@@ -136,13 +136,13 @@
                   class="w-3 h-3 text-gray-500 shrink-0"
                 />
                 <span
-                  class="text-xs text-gray-400 truncate max-w-[160px]"
+                  class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-[160px]"
                   :title="name"
                 >{{ name }}</span>
               </div>
-              <span class="text-xs font-mono text-white shrink-0 ml-2">{{ (cf * 100).toFixed(1) }}%</span>
+              <span class="text-xs font-mono text-gray-900 dark:text-white shrink-0 ml-2">{{ (cf * 100).toFixed(1) }}%</span>
             </div>
-            <div class="w-full bg-[#1E293B] rounded-full h-2">
+            <div class="w-full bg-gray-200 dark:bg-slate-800 rounded-full h-2">
               <div
                 class="h-2 rounded-full transition-all duration-700"
                 :style="{ width: `${Math.min(cf * 100, 100)}%`, backgroundColor: color }"
@@ -153,13 +153,13 @@
       </div>
 
       <!-- Simulation summary -->
-      <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-5">
-        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+      <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5">
+        <h3 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-4">
           Simulation Summary
         </h3>
         <div class="space-y-2.5 text-sm">
           <div class="flex justify-between items-center">
-            <span class="text-gray-500">Status</span>
+            <span class="text-gray-600 dark:text-gray-500">Status</span>
             <span
               class="font-semibold"
               :class="(result.status === 'converged' || result.status === 'optimized' || result.status === 'optimal') ? 'text-emerald-400' : 'text-red-400'"
@@ -168,33 +168,33 @@
             </span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-gray-500">ID</span>
-            <span class="font-mono text-gray-400 text-xs">{{ result.id.slice(-8) }}</span>
+            <span class="text-gray-600 dark:text-gray-500">ID</span>
+            <span class="font-mono text-gray-600 dark:text-gray-400 text-xs">{{ result.id.slice(-8) }}</span>
           </div>
           <div
             v-if="result.name"
             class="flex justify-between items-center"
           >
-            <span class="text-gray-500">Name</span>
-            <span class="text-gray-300 text-xs truncate max-w-40">{{ result.name }}</span>
+            <span class="text-gray-600 dark:text-gray-500">Name</span>
+            <span class="text-gray-700 dark:text-gray-300 text-xs truncate max-w-40">{{ result.name }}</span>
           </div>
           <div
             v-if="violations?.overloads?.length"
             class="flex justify-between items-center"
           >
-            <span class="text-gray-500">Overloaded lines</span>
+            <span class="text-gray-600 dark:text-gray-500">Overloaded lines</span>
             <span class="text-red-400 font-mono text-xs">{{ violations.overloads.length }}</span>
           </div>
           <div
             v-if="violations?.overvoltages?.length"
             class="flex justify-between items-center"
           >
-            <span class="text-gray-500">Overvoltage buses</span>
+            <span class="text-gray-600 dark:text-gray-500">Overvoltage buses</span>
             <span class="text-amber-400 font-mono text-xs">{{ violations.overvoltages.length }}</span>
           </div>
-          <div class="flex justify-between items-center border-t border-[#1E293B] pt-2.5 mt-1">
-            <span class="text-gray-500">Created</span>
-            <span class="font-mono text-gray-400 text-xs">{{ new Date(result.created_at).toLocaleString() }}</span>
+          <div class="flex justify-between items-center border-t border-gray-200 dark:border-slate-800 pt-2.5 mt-1">
+            <span class="text-gray-600 dark:text-gray-500">Created</span>
+            <span class="font-mono text-gray-600 dark:text-gray-400 text-xs">{{ new Date(result.created_at).toLocaleString() }}</span>
           </div>
         </div>
       </div>

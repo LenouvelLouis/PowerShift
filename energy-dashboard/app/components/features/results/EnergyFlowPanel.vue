@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+  <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-semibold text-white uppercase tracking-wider">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
         Energy Flow
       </h3>
       <UTooltip text="How electricity moved through the system. The optimizer (LOPF) dispatches generators at minimum cost, uses batteries to shift surplus energy, and only imports from the grid as a last resort.">
@@ -16,7 +16,7 @@
       <!-- Local production -->
       <div class="flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-emerald-400 shrink-0" />
-        <span class="text-gray-400 flex-1">Local production</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">Local production</span>
         <span class="font-mono text-emerald-400 text-right">{{ fmt(result.total_supply_mwh) }} MWh</span>
       </div>
 
@@ -40,7 +40,7 @@
         class="flex items-center gap-3"
       >
         <div class="w-3 h-3 rounded-full bg-yellow-400 shrink-0" />
-        <span class="text-gray-400 flex-1">Battery discharge</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">Battery discharge</span>
         <span class="font-mono text-yellow-400">+{{ fmt(batteryDischarge) }} MWh</span>
       </div>
 
@@ -50,21 +50,21 @@
         class="flex items-center gap-3"
       >
         <div class="w-3 h-3 rounded-full bg-blue-400 shrink-0" />
-        <span class="text-gray-400 flex-1">Grid import</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">Grid import</span>
         <span class="font-mono text-blue-400">+{{ fmt(gridImport) }} MWh</span>
       </div>
 
       <!-- Divider: total available -->
-      <div class="border-t border-[#1E293B] my-2 pt-2 flex items-center gap-3">
+      <div class="border-t border-gray-200 dark:border-slate-800 my-2 pt-2 flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-slate-500 shrink-0" />
-        <span class="text-gray-300 flex-1 font-medium">Total available</span>
-        <span class="font-mono text-white">{{ fmt(totalAvailable) }} MWh</span>
+        <span class="text-gray-700 dark:text-gray-300 flex-1 font-medium">Total available</span>
+        <span class="font-mono text-gray-900 dark:text-white">{{ fmt(totalAvailable) }} MWh</span>
       </div>
 
       <!-- Consumption -->
       <div class="flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-red-400 shrink-0" />
-        <span class="text-gray-400 flex-1">Consumption (loads)</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">Consumption (loads)</span>
         <span class="font-mono text-red-400">−{{ fmt(result.total_demand_mwh) }} MWh</span>
       </div>
 
@@ -74,7 +74,7 @@
         class="flex items-center gap-3"
       >
         <div class="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
-        <span class="text-gray-400 flex-1">Battery charge</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">Battery charge</span>
         <span class="font-mono text-amber-500">−{{ fmt(batteryCharge) }} MWh</span>
       </div>
 
@@ -84,18 +84,18 @@
         class="flex items-center gap-3"
       >
         <div class="w-3 h-3 rounded-full bg-violet-400 shrink-0" />
-        <span class="text-gray-400 flex-1">Curtailed (excess)</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">Curtailed (excess)</span>
         <span class="font-mono text-violet-400">−{{ fmt(gridExport) }} MWh</span>
       </div>
 
       <!-- Balance -->
-      <div class="border-t border-[#1E293B] mt-2 pt-2 flex items-center gap-3">
+      <div class="border-t border-gray-200 dark:border-slate-800 mt-2 pt-2 flex items-center gap-3">
         <UIcon
           name="i-heroicons-scale"
           class="w-3.5 h-3.5 shrink-0"
           :class="balanceColor"
         />
-        <span class="text-gray-400 flex-1">Balance</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">Balance</span>
         <span
           class="font-mono"
           :class="balanceColor"

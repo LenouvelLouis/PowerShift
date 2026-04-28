@@ -1,7 +1,7 @@
 <template>
   <div
     ref="canvasRef"
-    class="relative w-full bg-[#020617] rounded-2xl border border-[#1E293B] overflow-hidden"
+    class="relative w-full bg-gray-50 dark:bg-slate-950 rounded-2xl border border-gray-200 dark:border-slate-800 overflow-hidden"
     :style="{ height: `${canvasH}px` }"
   >
     <!-- Dot grid background -->
@@ -22,7 +22,7 @@
     <div
       v-for="(supply, i) in supplies"
       :key="supply.id"
-      class="absolute bg-[#0B1220] border border-[#1E293B] rounded-xl flex items-center hover:border-[#334155] transition-colors duration-200 cursor-default"
+      class="absolute bg-white dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-xl flex items-center hover:border-gray-300 dark:hover:border-slate-700 transition-colors duration-200 cursor-default"
       :class="lv.cardPad"
       :style="supplyCardStyle(i)"
       @mouseenter="showTooltip('supply', supply, $event)"
@@ -40,7 +40,7 @@
         :class="isMicro ? '' : lv.cardGap"
       >
         <p
-          class="font-semibold text-white truncate leading-tight"
+          class="font-semibold text-gray-900 dark:text-white truncate leading-tight"
           :class="lv.cardTitle"
         >
           {{ supply.name }}
@@ -71,7 +71,7 @@
     <div
       v-for="(demand, i) in demands"
       :key="demand.id"
-      class="absolute bg-[#0B1220] border border-[#1E293B] rounded-xl flex items-center hover:border-[#334155] transition-colors duration-200 cursor-default"
+      class="absolute bg-white dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-xl flex items-center hover:border-gray-300 dark:hover:border-slate-700 transition-colors duration-200 cursor-default"
       :class="lv.cardPad"
       :style="demandCardStyle(i)"
       @mouseenter="showTooltip('demand', demand, $event)"
@@ -89,7 +89,7 @@
         :class="isMicro ? '' : lv.cardGap"
       >
         <p
-          class="font-semibold text-white truncate leading-tight"
+          class="font-semibold text-gray-900 dark:text-white truncate leading-tight"
           :class="lv.cardTitle"
         >
           {{ demand.name }}
@@ -130,7 +130,7 @@
       />
       <!-- Bus circle -->
       <div
-        class="relative flex flex-col items-center justify-center rounded-full border-2 bg-[#0B1220] cursor-default"
+        class="relative flex flex-col items-center justify-center rounded-full border-2 bg-white dark:bg-slate-950 cursor-default"
         :style="{ width: `${lv.busSize}px`, height: `${lv.busSize}px` }"
         :class="busBorderColor"
         @mouseenter="showTooltip('bus', null, $event)"
@@ -188,7 +188,7 @@
         <div
           v-for="n in network"
           :key="n.id"
-          class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#0B1220] border border-[#1E293B] text-[11px] cursor-default hover:border-[#334155] transition-colors"
+          class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white dark:bg-slate-950 border border-gray-200 dark:border-slate-800 text-[11px] cursor-default hover:border-gray-300 dark:hover:border-slate-700 transition-colors"
           @mouseenter="showTooltip('network', n, $event)"
           @mousemove="moveTooltip($event)"
           @mouseleave="hideTooltip"
@@ -197,7 +197,7 @@
             :type="n.type"
             :size="18"
           />
-          <span class="text-gray-400 truncate">{{ n.name }}</span>
+          <span class="text-gray-600 dark:text-gray-400 truncate">{{ n.name }}</span>
           <span class="text-gray-600 font-mono ml-auto shrink-0">{{ n.capacity_mva }} MVA</span>
         </div>
       </div>
@@ -212,7 +212,7 @@
         :style="multiBusStyle(idx)"
       >
         <div
-          class="relative flex flex-col items-center justify-center rounded-full border-2 bg-[#0B1220] cursor-default"
+          class="relative flex flex-col items-center justify-center rounded-full border-2 bg-white dark:bg-slate-950 cursor-default"
           :style="{ width: `${multiBusSize}px`, height: `${multiBusSize}px` }"
           :class="busBorderColor"
           @mouseenter="showTooltip('bus', busName as any, $event)"
@@ -267,7 +267,7 @@
     <div
       v-for="(bat, i) in (storage ?? [])"
       :key="`bat-${bat.id}`"
-      class="absolute bg-[#0B1220] border border-green-900/60 rounded-xl flex items-center hover:border-green-700/60 transition-colors duration-200 cursor-default"
+      class="absolute bg-white dark:bg-slate-950 border border-green-200 dark:border-green-900/60 rounded-xl flex items-center hover:border-green-300 dark:hover:border-green-700/60 transition-colors duration-200 cursor-default"
       :class="lv.cardPad"
       :style="storageCardStyle(i)"
       @mouseenter="showTooltip('supply', bat, $event)"
@@ -285,7 +285,7 @@
         :class="isMicro ? '' : lv.cardGap"
       >
         <p
-          class="font-semibold text-white truncate leading-tight"
+          class="font-semibold text-gray-900 dark:text-white truncate leading-tight"
           :class="lv.cardTitle"
         >
           {{ bat.name }}
@@ -366,10 +366,10 @@
         class="fixed z-[9999] pointer-events-none"
         :style="tipScreenStyle"
       >
-        <div class="bg-[#0B1220]/95 border border-[#334155] rounded-xl shadow-2xl p-3 w-56 backdrop-blur-sm">
+        <div class="bg-white/95 dark:bg-slate-950/95 border border-gray-300 dark:border-slate-700 rounded-xl shadow-2xl p-3 w-56 backdrop-blur-sm">
           <!-- Header -->
           <div class="flex items-start justify-between gap-2 mb-2">
-            <p class="text-white font-semibold text-xs leading-tight">
+            <p class="text-gray-900 dark:text-white font-semibold text-xs leading-tight">
               {{ tip.data.name }}
             </p>
             <span
@@ -386,13 +386,13 @@
               class="flex justify-between items-start gap-2"
             >
               <span class="text-gray-500 leading-tight">{{ row.label }}</span>
-              <span class="font-mono text-gray-300 text-right leading-tight shrink-0">{{ row.value }}</span>
+              <span class="font-mono text-gray-700 dark:text-gray-300 text-right leading-tight shrink-0">{{ row.value }}</span>
             </div>
           </div>
 
           <!-- Simulation results (if available) -->
           <template v-if="tip.data.results && tip.data.results.length">
-            <div class="border-t border-[#1E293B] mt-2 pt-2 space-y-1 text-[11px]">
+            <div class="border-t border-gray-200 dark:border-slate-800 mt-2 pt-2 space-y-1 text-[11px]">
               <p class="text-[10px] uppercase tracking-wider text-gray-600 mb-1">
                 Simulation
               </p>
@@ -413,7 +413,7 @@
           <!-- Explanation -->
           <p
             v-if="tip.data.hint"
-            class="text-[10px] text-gray-600 mt-2 leading-relaxed border-t border-[#1E293B] pt-2"
+            class="text-[10px] text-gray-600 mt-2 leading-relaxed border-t border-gray-200 dark:border-slate-800 pt-2"
           >
             {{ tip.data.hint }}
           </p>
@@ -532,7 +532,7 @@ const busR = computed(() => lv.value.busSize / 2)
 // ── Bus style (result-dependent) ──────────────────────────────────────────────
 const busOk = computed(() => props.result?.status === 'converged' || props.result?.status === 'optimized' || props.result?.status === 'optimal')
 const busGlowColor = computed(() => !props.result ? 'bg-gray-600' : busOk.value ? 'bg-emerald-500' : 'bg-red-500')
-const busBorderColor = computed(() => !props.result ? 'border-[#334155]' : busOk.value ? 'border-emerald-600/60' : 'border-red-600/60')
+const busBorderColor = computed(() => !props.result ? 'border-slate-700' : busOk.value ? 'border-emerald-600/60' : 'border-red-600/60')
 const busIconFill = computed(() => !props.result ? '#475569' : busOk.value ? '#34d399' : '#f87171')
 const busStatusColor = computed(() => !props.result ? 'text-gray-600' : busOk.value ? 'text-emerald-400' : 'text-red-400')
 const busStatusLabel = computed(() => {

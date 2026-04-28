@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-h-full bg-[#020617] p-6 gap-6">
+  <div class="flex flex-col min-h-full bg-gray-50 dark:bg-slate-950 p-6 gap-6">
     <!-- Backend unavailable banner -->
     <div
       v-if="referential.backendAvailable === false"
@@ -9,7 +9,24 @@
       <span>Backend unavailable — start the API server to enable live simulations.</span>
     </div>
 
-    <ScenarioBar @loading-change="loadingScenario = $event" />
+    <ScenarioBar
+      @loading-change="loadingScenario = $event"
+      @open-compare="showCompareModal = true"
+    />
+
+    <CompareModal
+      :open="showCompareModal"
+      @update:open="showCompareModal = $event"
+      @compare="onCompare"
+    />
+
+    <!-- Comparison view -->
+    <ScenarioComparison
+      v-if="compareA && compareB"
+      :scenario-a="compareA"
+      :scenario-b="compareB"
+      @close="clearComparison"
+    />
 
     <!-- Loading skeletons -->
     <UiShimmerSkeleton
@@ -21,6 +38,7 @@
       v-else-if="sim.isLiveRunning || sim.isRunning"
       headline="Optimising power flow"
       subtitle="Running LOPF optimisation across all snapshots, results coming shortly..."
+      :badge="sim.elapsedSeconds > 0 ? `Running... ${sim.elapsedSeconds}s` : undefined"
     />
 
     <template v-else-if="result">
@@ -37,14 +55,14 @@
       <!-- Tabs: Résultats / Graphiques / Réseau -->
       <div>
         <!-- Tab bar -->
-        <div class="flex gap-1 border-b border-[#1E293B] mb-6">
+        <div class="flex gap-1 border-b border-gray-200 dark:border-slate-800 mb-6">
           <button
             v-for="tab in tabs"
             :key="tab.key"
             class="px-4 py-2 text-sm font-medium transition-colors"
             :class="activeTab === tab.key
-              ? 'text-white border-b-2 border-blue-500 -mb-px'
-              : 'text-gray-500 hover:text-gray-300'"
+              ? 'text-gray-900 dark:text-white border-b-2 border-blue-500 -mb-px'
+              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
             @click="activeTab = tab.key"
           >
             {{ tab.label }}
@@ -95,6 +113,7 @@
 </template>
 
 <script setup lang="ts">
+import type { SimulationResult } from '~/composables/api'
 import { useSimulationStore } from '~/stores/simulation'
 import { useReferentialStore } from '~/stores/referential'
 import { useHistoryStore } from '~/stores/history'
@@ -106,6 +125,21 @@ const history = useHistoryStore()
 useSimulationUrl()
 
 const loadingScenario = ref(false)
+
+// ─── Comparison ────────────────────────────────────────────────────────────────
+const showCompareModal = ref(false)
+const compareA = ref<SimulationResult | null>(null)
+const compareB = ref<SimulationResult | null>(null)
+
+function onCompare(a: SimulationResult, b: SimulationResult) {
+  compareA.value = a
+  compareB.value = b
+}
+
+function clearComparison() {
+  compareA.value = null
+  compareB.value = null
+}
 const result = computed(() => sim.displayedResult)
 
 const nonBatterySupplies = computed(() =>

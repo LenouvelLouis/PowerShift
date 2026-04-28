@@ -90,7 +90,7 @@
 
   <div
     v-else
-    class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 flex items-center justify-center h-72 text-gray-600 text-sm mt-4"
+    class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-8 flex items-center justify-center h-72 text-gray-600 text-sm mt-4"
   >
     {{ result.status === 'error' ? 'No power flow data — simulation error' : result.status === 'non_converged' ? 'Power flow did not converge' : 'No time-series data available' }}
   </div>

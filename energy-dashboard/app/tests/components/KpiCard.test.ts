@@ -42,12 +42,12 @@ describe('KpiCard', () => {
     expect(valueEl.classes()).toContain('text-green-400')
   })
 
-  it('applies default text-white class when no valueClass', () => {
+  it('applies default text class when no valueClass', () => {
     const wrapper = mount(KpiCard, {
       props: { label: 'Status', value: 'OK' }
     })
     const valueEl = wrapper.find('.text-3xl')
-    expect(valueEl.classes()).toContain('text-white')
+    expect(valueEl.classes()).toContain('dark:text-white')
   })
 
   it('renders slot content', () => {

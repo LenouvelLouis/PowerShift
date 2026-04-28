@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-[#0F172A] border-b border-[#1E293B] shrink-0">
+  <header class="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 shrink-0">
     <SaveChoiceModal
       :open="showSaveChoiceModal"
       :loading="store.isSaving"
@@ -22,6 +22,8 @@
       @toggle-sidebar="$emit('toggle-sidebar')"
       @save="handleSave"
       @export="handleExport"
+      @export-csv="handleExportCsv"
+      @export-pdf="handleExportPdf"
       @open-how-it-works="showHowItWorksModal = true"
       @open-tutorial="$emit('open-tutorial')"
     />
@@ -46,7 +48,7 @@ const referential = useReferentialStore()
 const history = useHistoryStore()
 const toast = useToast()
 const { runPreview, saveSimulation } = useLiveRunner()
-const { handleExport } = useScenarioIO()
+const { handleExport, handleExportCsv, handleExportPdf } = useScenarioIO()
 
 // ─── Computed ─────────────────────────────────────────────────────────────────
 
@@ -131,7 +133,9 @@ async function _doSave(payload: ReturnType<typeof _buildSavePayload>) {
         color: 'error'
       })
     } else {
-      toast.add({ title: 'Simulation saved', description: `Status: ${result.status}`, color: 'success' })
+      const elapsed = store.elapsedSeconds
+      const timing = elapsed > 0 ? ` (took ${elapsed}s)` : ''
+      toast.add({ title: 'Simulation saved', description: `Status: ${result.status}${timing}`, color: 'success' })
       for (const msg of result.result_json?.warnings ?? []) {
         toast.add({ title: 'Weather data warning', description: msg, color: 'warning', duration: 8000 })
       }

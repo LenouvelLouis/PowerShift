@@ -13,7 +13,7 @@
       class="h-8 w-auto"
     >
 
-    <span class="font-semibold text-base text-white hidden sm:block">
+    <span class="font-semibold text-base text-gray-900 dark:text-white hidden sm:block">
       Energy Network Simulator 2026
     </span>
 
@@ -21,10 +21,10 @@
     <span
       class="text-xs px-2 py-1 rounded-full ml-2"
       :class="referential.backendAvailable === true
-        ? 'bg-emerald-900/40 text-emerald-400'
+        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
         : referential.backendAvailable === false
-          ? 'bg-red-900/40 text-red-400'
-          : 'bg-gray-800 text-gray-500'"
+          ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
+          : 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-500'"
     >
       {{ referential.backendAvailable === true ? '● Connected' : referential.backendAvailable === false ? '● Offline' : '● …' }}
     </span>
@@ -33,7 +33,7 @@
 
     <!-- Weather station indicator -->
     <div
-      class="hidden sm:flex items-center gap-1 text-xs text-gray-500 border border-[#1E293B] rounded px-2 h-6 shrink-0"
+      class="hidden sm:flex items-center gap-1 text-xs text-gray-500 border border-gray-200 dark:border-slate-800 rounded px-2 h-6 shrink-0"
       title="Weather data source: KNMI station 06280 — Groningen Eelde. Covers Jan 2025 → Dec 2025."
     >
       <UIcon
@@ -62,6 +62,15 @@
     />
 
     <UButton
+      :icon="colorMode.value === 'dark' ? 'i-heroicons-sun' : 'i-heroicons-moon'"
+      size="sm"
+      color="neutral"
+      variant="ghost"
+      title="Toggle light/dark mode"
+      @click="colorMode.value = colorMode.value === 'dark' ? 'light' : 'dark'"
+    />
+
+    <UButton
       icon="i-heroicons-cloud-arrow-up"
       color="primary"
       :label="store.isSaving ? 'Saving…' : 'Save'"
@@ -71,15 +80,20 @@
       @click="$emit('save')"
     />
 
-    <UButton
-      icon="i-heroicons-arrow-down-tray"
-      label="Export"
-      size="sm"
-      color="neutral"
-      variant="outline"
+    <UDropdownMenu
+      :items="exportItems"
       :disabled="!canExport"
-      @click="$emit('export')"
-    />
+    >
+      <UButton
+        icon="i-heroicons-arrow-down-tray"
+        label="Export"
+        size="sm"
+        color="neutral"
+        variant="outline"
+        :disabled="!canExport"
+        trailing-icon="i-heroicons-chevron-down"
+      />
+    </UDropdownMenu>
   </div>
 </template>
 
@@ -93,10 +107,12 @@ defineProps<{
   canExport: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'toggle-sidebar': []
   'save': []
   'export': []
+  'export-csv': []
+  'export-pdf': []
   'open-how-it-works': []
   'open-tutorial': []
 }>()
@@ -104,4 +120,13 @@ defineEmits<{
 const store = useSimulationStore()
 const referential = useReferentialStore()
 const _history = useHistoryStore()
+const colorMode = useColorMode()
+
+const exportItems = [
+  [
+    { label: 'Scenario (JSON)', icon: 'i-heroicons-document-text', onSelect: () => emit('export') },
+    { label: 'Results (CSV)', icon: 'i-heroicons-table-cells', onSelect: () => emit('export-csv') },
+    { label: 'Report (PDF)', icon: 'i-heroicons-document', onSelect: () => emit('export-pdf') }
+  ]
+]
 </script>

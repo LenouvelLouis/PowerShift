@@ -102,6 +102,7 @@ export const useSimulationStore = defineStore('simulation', () => {
   const isLiveRunning = ref(false)
   const isSaving = ref(false)
   const isLoadingScenario = ref(false)
+  const elapsedSeconds = ref(0)
   const error = ref<string | null>(null)
   const liveError = ref<string | null>(null)
 
@@ -381,6 +382,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     isLiveRunning,
     isSaving,
     isLoadingScenario,
+    elapsedSeconds,
     error,
     liveError,
     snapshotHours,

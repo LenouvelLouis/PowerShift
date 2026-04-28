@@ -14,7 +14,7 @@
       class="w-full h-full"
     />
     <button
-      class="absolute top-2 right-2 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity bg-[#1E293B] hover:bg-[#334155] text-gray-400 hover:text-white z-10"
+      class="absolute top-2 right-2 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity bg-gray-200 hover:bg-gray-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white z-10"
       title="Fullscreen"
       @click="isFullscreen = true"
     >
@@ -28,18 +28,18 @@
   <Teleport to="body">
     <div
       v-if="isFullscreen"
-      class="fixed inset-0 z-[9999] bg-[#020617] flex flex-col p-6"
+      class="fixed inset-0 z-[9999] bg-white dark:bg-slate-950 flex flex-col p-6"
     >
       <div class="flex items-center justify-between mb-4 shrink-0">
         <h2
           v-if="title"
-          class="text-sm font-semibold text-white uppercase tracking-wider"
+          class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider"
         >
           {{ title }}
         </h2>
         <div v-else />
         <button
-          class="p-1.5 rounded bg-[#1E293B] hover:bg-[#334155] text-gray-400 hover:text-white"
+          class="p-1.5 rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
           title="Exit fullscreen"
           @click="isFullscreen = false"
         >

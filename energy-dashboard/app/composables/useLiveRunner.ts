@@ -65,15 +65,49 @@ function _extractErrorMessage(error: unknown): { title: string, description: str
  * saveSimulation — called explicitly on Save button click,
  *                  calls POST /simulation/save (writes to DB),
  *                  prepends to history, updates currentLiveResult with saved IDs.
+ *
+ * elapsedSeconds — reactive counter that ticks every second while a simulation runs.
  */
 export function useLiveRunner() {
   const historyStore = useHistoryStore()
   const simStore = useSimulationStore()
   const toast = useToast()
 
+  let _timerInterval: ReturnType<typeof setInterval> | null = null
+  let _longRunToastShown = false
+
+  function _startTimer() {
+    _stopTimer()
+    simStore.elapsedSeconds = 0
+    _longRunToastShown = false
+    _timerInterval = setInterval(() => {
+      simStore.elapsedSeconds++
+      if (simStore.elapsedSeconds >= 3 && !_longRunToastShown) {
+        _longRunToastShown = true
+        toast.add({
+          title: 'Simulation in progress',
+          description: 'The simulation is taking longer than expected. Please wait...',
+          color: 'info',
+          duration: 0,
+          id: 'sim-long-run'
+        })
+      }
+    }, 1000)
+  }
+
+  function _stopTimer() {
+    if (_timerInterval !== null) {
+      clearInterval(_timerInterval)
+      _timerInterval = null
+    }
+    // Dismiss the long-run toast if it was shown
+    toast.remove('sim-long-run')
+  }
+
   async function runPreview(payload: SimulationRunRequest) {
     simStore.isLiveRunning = true
     simStore.liveError = null
+    _startTimer()
     try {
       const response = await previewSimulation(payload)
       simStore.currentLiveResult = response
@@ -88,12 +122,14 @@ export function useLiveRunner() {
         duration: 6000
       })
     } finally {
+      _stopTimer()
       simStore.isLiveRunning = false
     }
   }
 
   async function saveSimulation(payload: SimulationRunRequest) {
     simStore.isSaving = true
+    _startTimer()
     try {
       const response = await apiSaveSimulation(payload)
       // Update live result with the saved response so the summary table shows real ID/timestamp
@@ -116,9 +152,15 @@ export function useLiveRunner() {
       })
       return response
     } finally {
+      _stopTimer()
       simStore.isSaving = false
     }
   }
+
+  // Cleanup interval when the composable's component is unmounted
+  onScopeDispose(() => {
+    _stopTimer()
+  })
 
   return {
     runPreview: useDebounceFn(runPreview, 400),

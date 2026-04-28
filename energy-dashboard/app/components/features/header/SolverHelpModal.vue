@@ -6,14 +6,14 @@
     <template #header>
       <div class="flex items-center justify-between gap-3 w-full">
         <div>
-          <h3 class="text-base font-semibold text-white">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
             Solver helper
           </h3>
-          <p class="text-xs text-gray-400 mt-0.5">
+          <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
             The solver is used for LOPF (Linear Optimal Power Flow). HiGHS is recommended for all simulations.
           </p>
         </div>
-        <span class="text-xs px-2 py-1 rounded bg-[#1E293B] text-slate-300">
+        <span class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
           Selected: {{ selectedSolverLabel }}
         </span>
       </div>
@@ -23,11 +23,11 @@
         <div
           v-for="solver in solverOptions"
           :key="solver.value"
-          class="rounded-lg border border-[#1E293B] bg-[#0B1220] p-3"
-          :class="solver.value === store.solver ? 'ring-1 ring-[#3C83F8]/60' : ''"
+          class="rounded-lg border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 p-3"
+          :class="solver.value === store.solver ? 'ring-1 ring-blue-500/60' : ''"
         >
           <div class="flex items-center justify-between gap-3 mb-1">
-            <p class="text-sm font-semibold text-white">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white">
               {{ solver.label }}
             </p>
             <div class="flex items-center gap-1.5">
@@ -35,14 +35,14 @@
                 v-if="isSolverUnavailable(solver.value)"
                 class="text-[11px] px-1.5 py-0.5 rounded bg-red-900/30 text-red-300"
               >Unavailable</span>
-              <span class="text-[11px] px-1.5 py-0.5 rounded bg-[#1E293B] text-slate-300">{{ solver.license }}</span>
-              <span class="text-[11px] px-1.5 py-0.5 rounded bg-[#1E293B] text-slate-300">{{ solver.speed }}</span>
+              <span class="text-[11px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">{{ solver.license }}</span>
+              <span class="text-[11px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">{{ solver.speed }}</span>
             </div>
           </div>
-          <p class="text-xs text-slate-300">
+          <p class="text-xs text-slate-700 dark:text-slate-300">
             {{ solver.description }}
           </p>
-          <p class="text-xs text-gray-400 mt-1.5">
+          <p class="text-xs text-gray-600 dark:text-gray-400 mt-1.5">
             Best for: {{ solver.bestFor }}
           </p>
           <p

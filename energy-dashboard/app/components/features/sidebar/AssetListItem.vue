@@ -1,7 +1,7 @@
 <template>
   <div
-    class="rounded-lg bg-[#020617] border overflow-hidden"
-    :class="expanded ? 'border-[#3C83F8]/50' : 'border-[#1E293B]'"
+    class="rounded-lg bg-gray-50 dark:bg-slate-950 border overflow-hidden"
+    :class="expanded ? 'border-blue-500/50' : 'border-gray-200 dark:border-slate-800'"
   >
     <div
       class="p-2 cursor-pointer select-none"
@@ -14,7 +14,7 @@
               :type="asset.type"
               size="xs"
             />
-            <p class="text-xs font-semibold text-white truncate">
+            <p class="text-xs font-semibold text-gray-900 dark:text-white truncate">
               {{ asset.name }}
             </p>
             <span

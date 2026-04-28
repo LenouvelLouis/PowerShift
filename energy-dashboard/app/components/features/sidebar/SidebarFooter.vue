@@ -1,5 +1,5 @@
 <template>
-  <div class="border-t border-[#1E293B] p-3 flex flex-col gap-2 shrink-0">
+  <div class="border-t border-slate-800 p-3 flex flex-col gap-2 shrink-0">
     <div class="text-xs text-gray-600 text-center font-mono">
       {{ store.selectedSupplyIds.length }}S · {{ store.selectedDemandIds.length }}D · {{ store.selectedNetworkIds.length }}N selected
     </div>

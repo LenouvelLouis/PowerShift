@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
-    <h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">
+  <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
       Capacity Factors
     </h3>
     <div class="space-y-3">
@@ -10,7 +10,7 @@
       >
         <div class="flex items-center justify-between mb-1">
           <span
-            class="text-xs text-gray-400 truncate mr-2 flex items-center gap-1"
+            class="text-xs text-gray-600 dark:text-gray-400 truncate mr-2 flex items-center gap-1"
             :title="name"
           >
             <UIcon
@@ -19,9 +19,9 @@
             />
             {{ name }}
           </span>
-          <span class="font-mono text-white text-xs shrink-0">{{ (cf * 100).toFixed(1) }}%</span>
+          <span class="font-mono text-gray-900 dark:text-white text-xs shrink-0">{{ (cf * 100).toFixed(1) }}%</span>
         </div>
-        <div class="w-full bg-[#1E293B] rounded-full h-1.5">
+        <div class="w-full bg-gray-200 dark:bg-slate-800 rounded-full h-1.5">
           <div
             class="h-1.5 rounded-full transition-all duration-700"
             :style="{ width: `${Math.min(cf * 100, 100)}%`, backgroundColor: color }"

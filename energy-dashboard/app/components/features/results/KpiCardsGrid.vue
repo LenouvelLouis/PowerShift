@@ -15,7 +15,7 @@
           class="w-6 h-6"
           :class="isSuccess ? 'text-emerald-400' : result.status === 'error' ? 'text-red-400' : 'text-amber-400'"
         />
-        <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Status</span>
+        <span class="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Status</span>
       </div>
       <p
         class="text-2xl font-bold"
@@ -26,8 +26,8 @@
     </div>
 
     <!-- Balance -->
-    <div class="rounded-2xl border border-[#1E293B] bg-[#0F172A] p-5 flex flex-col gap-2">
-      <div class="flex items-center gap-2 text-gray-400">
+    <div class="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col gap-2">
+      <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
         <UIcon
           name="i-heroicons-scale"
           class="w-6 h-6"
@@ -46,13 +46,13 @@
     </div>
 
     <!-- Supply -->
-    <div class="rounded-2xl border border-[#1E293B] bg-[#0F172A] p-5 flex flex-col gap-2">
+    <div class="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col gap-2">
       <div class="flex items-center gap-2 text-emerald-500">
         <UIcon
           name="i-heroicons-bolt"
           class="w-6 h-6"
         />
-        <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Supply</span>
+        <span class="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Supply</span>
         <UTooltip text="MWh = MW × hours. A 100 MW plant running 24h produces 2,400 MWh.">
           <UIcon
             name="i-heroicons-question-mark-circle"
@@ -69,13 +69,13 @@
     </div>
 
     <!-- Demand -->
-    <div class="rounded-2xl border border-[#1E293B] bg-[#0F172A] p-5 flex flex-col gap-2">
+    <div class="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col gap-2">
       <div class="flex items-center gap-2 text-red-500">
         <UIcon
           name="i-heroicons-home"
           class="w-6 h-6"
         />
-        <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Demand</span>
+        <span class="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Demand</span>
         <UTooltip text="MWh = MW × hours. A 100 MW plant running 24h produces 2,400 MWh.">
           <UIcon
             name="i-heroicons-question-mark-circle"

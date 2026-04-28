@@ -1,9 +1,9 @@
 <template>
-  <div class="border-b border-[#1E293B]">
+  <div class="border-b border-slate-800">
     <!-- Section header -->
     <button
-      class="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium hover:bg-[#1E293B]/60 transition-colors cursor-pointer"
-      :class="active ? 'text-[#3C83F8]' : 'text-gray-300'"
+      class="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium hover:bg-slate-800/60 transition-colors cursor-pointer"
+      :class="active ? 'text-blue-500' : 'text-gray-300'"
       @click="$emit('toggle')"
     >
       <UIcon
@@ -14,7 +14,7 @@
       <span class="uppercase tracking-wider text-xs font-bold flex-1 text-left">{{ config.group }}</span>
       <span
         v-if="selectedIds.length"
-        class="text-xs px-1.5 py-0.5 rounded bg-[#1E293B] text-gray-300 font-mono leading-none"
+        class="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-gray-300 font-mono leading-none"
       >{{ selectedIds.length }}</span>
       <UIcon
         :name="active ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-right'"
@@ -46,7 +46,7 @@
               Add to simulation
             </p>
             <button
-              class="text-xs text-[#3C83F8] hover:text-blue-300 font-medium"
+              class="text-xs text-blue-500 hover:text-blue-300 font-medium"
               :disabled="!backendAvailable"
               @click="showCreateForm = true"
             >
@@ -95,7 +95,7 @@
 
         <div
           v-if="selectedAssets.length"
-          class="border-t border-[#1E293B] pt-2 space-y-1.5"
+          class="border-t border-slate-800 pt-2 space-y-1.5"
         >
           <SidebarAssetListItem
             v-for="asset in selectedAssets"

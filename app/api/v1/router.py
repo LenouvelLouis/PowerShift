@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.api.v1.auth import require_api_key
 from app.api.v1.endpoints import demand, network, referential, simulation, supply
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key)])
 
 router.include_router(referential.router)
 router.include_router(supply.router)

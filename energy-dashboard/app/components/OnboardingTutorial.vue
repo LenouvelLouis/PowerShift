@@ -15,9 +15,9 @@
         </Transition>
 
         <!-- Tutorial card -->
-        <div class="relative pointer-events-auto w-[380px] bg-[#0B1220] border border-[#334155] rounded-2xl shadow-2xl overflow-hidden">
+        <div class="relative pointer-events-auto w-[380px] bg-white dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
           <!-- Progress bar -->
-          <div class="h-0.5 bg-[#1E293B]">
+          <div class="h-0.5 bg-gray-200 dark:bg-slate-800">
             <div
               class="h-full bg-blue-500 transition-all duration-500"
               :style="{ width: `${((step + 1) / steps.length) * 100}%` }"
@@ -30,7 +30,7 @@
               v-for="(_, i) in steps"
               :key="i"
               class="h-1.5 rounded-full transition-all duration-300"
-              :class="i === step ? 'w-5 bg-blue-500' : i < step ? 'w-1.5 bg-blue-800' : 'w-1.5 bg-[#1E293B]'"
+              :class="i === step ? 'w-5 bg-blue-500' : i < step ? 'w-1.5 bg-blue-800' : 'w-1.5 bg-gray-200 dark:bg-slate-800'"
               @click="step = i"
             />
             <span class="ml-auto text-[11px] text-gray-600 font-mono">{{ step + 1 }}/{{ steps.length }}</span>
@@ -56,19 +56,19 @@
                 </div>
 
                 <!-- Title -->
-                <h3 class="text-base font-bold text-white mb-2 leading-snug">
+                <h3 class="text-base font-bold text-gray-900 dark:text-white mb-2 leading-snug">
                   {{ current.title }}
                 </h3>
 
                 <!-- Description -->
-                <p class="text-sm text-gray-400 leading-relaxed mb-3">
+                <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
                   {{ current.description }}
                 </p>
 
                 <!-- Visual detail block -->
                 <div
                   v-if="current.detail"
-                  class="bg-[#020617] rounded-xl border border-[#1E293B] p-3 space-y-2"
+                  class="bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-200 dark:border-slate-800 p-3 space-y-2"
                 >
                   <div
                     v-for="row in current.detail"
@@ -86,7 +86,7 @@
                       />
                     </div>
                     <div class="min-w-0">
-                      <p class="text-xs font-semibold text-white leading-tight">
+                      <p class="text-xs font-semibold text-gray-900 dark:text-white leading-tight">
                         {{ row.label }}
                       </p>
                       <p class="text-[11px] text-gray-500 leading-tight mt-0.5">

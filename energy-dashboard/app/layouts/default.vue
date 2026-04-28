@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-screen bg-[#020617] text-white">
+  <div class="flex flex-col h-screen bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-white">
     <UToaster />
 
     <!-- Delete asset confirmation modal (triggered from sidebar) -->

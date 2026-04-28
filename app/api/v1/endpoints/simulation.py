@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import io
 import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse
 
 from app.api.v1.dependencies import get_simulation_service
 from app.api.v1.schemas.pagination import PaginatedResponse
@@ -18,6 +19,7 @@ from app.api.v1.schemas.simulation_schema import (
     SimulationScenarioExport,
     SimulationSolverInfo,
 )
+from app.application.services.export_service import ExportService
 from app.application.services.simulation_service import SimulationService
 from app.domain.simulation.exceptions import WeatherDataEmptyError
 
@@ -189,6 +191,75 @@ async def export_scenario(
     if scenario is None:
         raise HTTPException(status_code=404, detail="Simulation not found")
     return scenario
+
+
+@router.get(
+    "/{simulation_id}/export/csv",
+    summary="Export simulation results as CSV",
+    response_description="CSV file with time-series data and KPI summary.",
+    responses={404: {"description": "Simulation not found."}},
+)
+async def export_csv(
+    simulation_id: uuid.UUID,
+    service: Annotated[SimulationService, Depends(get_simulation_service)],
+) -> StreamingResponse:
+    """Return a downloadable CSV file containing the simulation time-series data."""
+    result = await service.get_by_id(simulation_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Simulation not found")
+
+    csv_text = ExportService.build_csv(
+        simulation_id=result.id,
+        status=result.status,
+        solver=result.solver,
+        total_supply_mwh=result.total_supply_mwh,
+        total_demand_mwh=result.total_demand_mwh,
+        balance_mwh=result.balance_mwh,
+        result_json=result.result_json,
+        created_at=result.created_at,
+        start_date=str(result.start_date) if result.start_date else None,
+        end_date=str(result.end_date) if result.end_date else None,
+    )
+    return StreamingResponse(
+        io.StringIO(csv_text),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="simulation_{simulation_id}.csv"'},
+    )
+
+
+@router.get(
+    "/{simulation_id}/export/pdf",
+    summary="Export simulation results as PDF",
+    response_description="PDF report with simulation metadata and KPI summary.",
+    responses={404: {"description": "Simulation not found."}},
+)
+async def export_pdf(
+    simulation_id: uuid.UUID,
+    service: Annotated[SimulationService, Depends(get_simulation_service)],
+) -> StreamingResponse:
+    """Return a downloadable PDF report with simulation metadata and KPI tables."""
+    result = await service.get_by_id(simulation_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Simulation not found")
+
+    pdf_bytes = ExportService.build_pdf(
+        simulation_id=result.id,
+        status=result.status,
+        solver=result.solver,
+        total_supply_mwh=result.total_supply_mwh,
+        total_demand_mwh=result.total_demand_mwh,
+        balance_mwh=result.balance_mwh,
+        objective_value=result.objective_value,
+        result_json=result.result_json,
+        created_at=result.created_at,
+        start_date=str(result.start_date) if result.start_date else None,
+        end_date=str(result.end_date) if result.end_date else None,
+    )
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="simulation_{simulation_id}.pdf"'},
+    )
 
 
 @router.get(

@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-[#0F172A] p-6 rounded-xl border border-[#1E293B]">
-    <p class="text-sm font-medium text-gray-400 mb-2">
+  <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-gray-200 dark:border-slate-800">
+    <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
       {{ label }}
     </p>
     <template v-if="loading">
@@ -13,7 +13,7 @@
     <template v-else>
       <p
         class="text-3xl font-bold mb-1"
-        :class="valueClass ?? 'text-white'"
+        :class="valueClass ?? 'text-gray-900 dark:text-white'"
       >
         {{ value }}
       </p>

@@ -1,5 +1,5 @@
 <template>
-  <div class="border-t border-[#1E293B] p-2 space-y-2 bg-[#0a111e]">
+  <div class="border-t border-slate-800 p-2 space-y-2 bg-slate-950">
     <div class="flex items-center justify-between mb-1">
       <p class="text-xs text-gray-500 uppercase tracking-wider">
         Parameters

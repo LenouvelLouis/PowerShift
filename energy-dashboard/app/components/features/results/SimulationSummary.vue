@@ -1,15 +1,15 @@
 <template>
-  <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
-    <h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">
+  <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
       Simulation Summary
     </h3>
     <div class="space-y-2.5 text-sm">
       <div class="flex justify-between items-center">
-        <span class="text-gray-400">ID</span>
-        <span class="font-mono text-gray-300 text-xs">{{ result.id.slice(-8) }}</span>
+        <span class="text-gray-600 dark:text-gray-400">ID</span>
+        <span class="font-mono text-gray-700 dark:text-gray-300 text-xs">{{ result.id.slice(-8) }}</span>
       </div>
       <div class="flex justify-between items-center">
-        <span class="text-gray-400">Status</span>
+        <span class="text-gray-600 dark:text-gray-400">Status</span>
         <span
           class="font-semibold"
           :class="(result.status === 'converged' || result.status === 'optimized' || result.status === 'optimal') ? 'text-emerald-400' : 'text-red-400'"
@@ -18,15 +18,15 @@
         </span>
       </div>
       <div class="flex justify-between items-center">
-        <span class="text-gray-400">Supply</span>
-        <span class="text-white font-mono">{{ result.status === 'error' ? '—' : `${fmt(result.total_supply_mwh)} MWh` }}</span>
+        <span class="text-gray-600 dark:text-gray-400">Supply</span>
+        <span class="text-gray-900 dark:text-white font-mono">{{ result.status === 'error' ? '—' : `${fmt(result.total_supply_mwh)} MWh` }}</span>
       </div>
       <div class="flex justify-between items-center">
-        <span class="text-gray-400">Demand</span>
-        <span class="text-white font-mono">{{ result.status === 'error' ? '—' : `${fmt(result.total_demand_mwh)} MWh` }}</span>
+        <span class="text-gray-600 dark:text-gray-400">Demand</span>
+        <span class="text-gray-900 dark:text-white font-mono">{{ result.status === 'error' ? '—' : `${fmt(result.total_demand_mwh)} MWh` }}</span>
       </div>
       <div class="flex justify-between items-center">
-        <span class="text-gray-400">Balance</span>
+        <span class="text-gray-600 dark:text-gray-400">Balance</span>
         <span
           class="font-mono"
           :class="balanceColor"
@@ -34,7 +34,7 @@
       </div>
       <template v-if="convergence">
         <div class="flex justify-between items-center">
-          <span class="text-gray-400">Convergence</span>
+          <span class="text-gray-600 dark:text-gray-400">Convergence</span>
           <span
             class="font-mono text-xs"
             :class="convergence.all_converged ? 'text-emerald-400' : 'text-amber-400'"
@@ -45,17 +45,17 @@
       </template>
       <template v-if="gridExchange">
         <div class="flex justify-between items-center">
-          <span class="text-gray-400">Grid Import</span>
+          <span class="text-gray-600 dark:text-gray-400">Grid Import</span>
           <span class="font-mono text-blue-400">{{ fmt(gridExchange.total_import_mwh) }} MWh</span>
         </div>
         <div class="flex justify-between items-center">
-          <span class="text-gray-400">Curtailed</span>
+          <span class="text-gray-600 dark:text-gray-400">Curtailed</span>
           <span class="font-mono text-violet-400">{{ fmt(gridExchange.total_export_mwh) }} MWh</span>
         </div>
       </template>
-      <div class="flex justify-between items-center border-t border-[#1E293B] pt-2.5 mt-1">
-        <span class="text-gray-400">Created</span>
-        <span class="font-mono text-gray-300 text-xs">{{ new Date(result.created_at).toLocaleString() }}</span>
+      <div class="flex justify-between items-center border-t border-gray-200 dark:border-slate-800 pt-2.5 mt-1">
+        <span class="text-gray-600 dark:text-gray-400">Created</span>
+        <span class="font-mono text-gray-700 dark:text-gray-300 text-xs">{{ new Date(result.created_at).toLocaleString() }}</span>
       </div>
     </div>
   </div>

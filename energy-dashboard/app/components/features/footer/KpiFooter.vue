@@ -1,5 +1,5 @@
 <template>
-  <footer class="bg-[#0F172A] border-t border-[#1E293B] shrink-0 relative overflow-hidden">
+  <footer class="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 shrink-0 relative overflow-hidden">
     <!-- Running progress line -->
     <div
       v-if="store.isLiveRunning"
@@ -8,7 +8,7 @@
 
     <div class="h-10 flex items-center px-4 gap-0 text-xs">
       <!-- Status -->
-      <div class="flex items-center gap-2 px-3 border-r border-[#1E293B]">
+      <div class="flex items-center gap-2 px-3 border-r border-gray-200 dark:border-slate-800">
         <span class="text-gray-500 uppercase tracking-wider">Status</span>
         <span class="flex items-center gap-1">
           <span
@@ -31,21 +31,21 @@
       </div>
 
       <!-- Total Supply -->
-      <div class="flex items-center gap-2 px-3 border-r border-[#1E293B]">
+      <div class="flex items-center gap-2 px-3 border-r border-gray-200 dark:border-slate-800">
         <span class="text-gray-500 uppercase tracking-wider">Supply</span>
-        <span class="font-mono text-white transition-all duration-300">{{ kpiSupply }}</span>
+        <span class="font-mono text-gray-900 dark:text-white transition-all duration-300">{{ kpiSupply }}</span>
         <span class="text-gray-600">MWh</span>
       </div>
 
       <!-- Total Demand -->
-      <div class="flex items-center gap-2 px-3 border-r border-[#1E293B]">
+      <div class="flex items-center gap-2 px-3 border-r border-gray-200 dark:border-slate-800">
         <span class="text-gray-500 uppercase tracking-wider">Demand</span>
-        <span class="font-mono text-white transition-all duration-300">{{ kpiDemand }}</span>
+        <span class="font-mono text-gray-900 dark:text-white transition-all duration-300">{{ kpiDemand }}</span>
         <span class="text-gray-600">MWh</span>
       </div>
 
       <!-- Balance -->
-      <div class="flex items-center gap-2 px-3 border-r border-[#1E293B]">
+      <div class="flex items-center gap-2 px-3 border-r border-gray-200 dark:border-slate-800">
         <span class="text-gray-500 uppercase tracking-wider">Balance</span>
         <span
           class="font-mono transition-all duration-300"

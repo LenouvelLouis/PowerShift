@@ -1,5 +1,5 @@
 <template>
-  <div class="group p-4 bg-[#0F172A] rounded-xl border border-[#1E293B] flex items-center gap-3">
+  <div class="group p-4 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 flex items-center gap-3">
     <RenameScenarioModal
       :open="showRenameModal"
       :initial-name="renameDraft"
@@ -20,10 +20,10 @@
 
     <div
       v-if="historyLoading"
-      class="flex-1 max-w-xl h-8 rounded-md border border-[#334155] bg-[#0B1220] px-2.5 flex items-center gap-2"
+      class="flex-1 max-w-xl h-8 rounded-md border border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 px-2.5 flex items-center gap-2"
     >
-      <div class="h-3.5 w-3.5 rounded-full border-2 border-[#3C83F8]/40 border-t-[#7DD3FC] animate-spin" />
-      <span class="text-xs text-slate-300/90">Loading past scenarios...</span>
+      <div class="h-3.5 w-3.5 rounded-full border-2 border-blue-500/40 border-t-sky-300 animate-spin" />
+      <span class="text-xs text-slate-600 dark:text-slate-300/90">Loading past scenarios...</span>
     </div>
 
     <USelectMenu
@@ -53,6 +53,17 @@
     >No past scenarios yet — run your first simulation.</span>
 
     <UButton
+      v-if="history.simulationHistory.length >= 2"
+      icon="i-heroicons-arrows-right-left"
+      label="Compare"
+      size="sm"
+      color="neutral"
+      variant="outline"
+      :disabled="loading || historyLoading"
+      @click="$emit('open-compare')"
+    />
+
+    <UButton
       v-if="selectedScenario"
       icon="i-heroicons-pencil-square"
       size="sm"
@@ -77,7 +88,10 @@ import { fetchScenarioExport, type SimulationListItem } from '~/composables/api'
 import { useSimulationStore } from '~/stores/simulation'
 import { useHistoryStore } from '~/stores/history'
 
-const emit = defineEmits<{ 'loading-change': [loading: boolean] }>()
+const emit = defineEmits<{
+  'loading-change': [loading: boolean]
+  'open-compare': []
+}>()
 
 const sim = useSimulationStore()
 const history = useHistoryStore()

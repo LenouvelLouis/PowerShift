@@ -1,8 +1,8 @@
 <template>
   <div class="flex flex-col gap-6 pt-4">
     <!-- Data sources banner -->
-    <div class="flex flex-wrap items-start gap-3 rounded-xl border border-[#1E293B] bg-[#0F172A] px-4 py-3">
-      <div class="flex items-center gap-1.5 text-gray-400">
+    <div class="flex flex-wrap items-start gap-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3">
+      <div class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
         <UIcon
           name="i-heroicons-information-circle"
           class="w-4 h-4 shrink-0"
@@ -56,7 +56,7 @@
         </template>
         <div
           v-else
-          class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 flex items-center justify-center h-72 text-gray-600 text-sm"
+          class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-8 flex items-center justify-center h-72 text-gray-600 text-sm"
         >
           {{ result.status === 'error' ? 'No power flow data — simulation error' : result.status === 'non_converged' ? 'Power flow did not converge' : 'No time-series data available' }}
         </div>

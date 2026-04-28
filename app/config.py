@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # Optional frontend URL appended to the origins list when non-empty
     FRONTEND_URL: str = ""
 
+    # Authentication — empty means auth is disabled (dev mode)
+    API_KEY: str = ""
+
     # Database (PostgreSQL — Docker local or NeonDB cloud)
     DATABASE_URL: str = "postgresql+asyncpg://powershift:powershift@localhost:5432/powershift"
 

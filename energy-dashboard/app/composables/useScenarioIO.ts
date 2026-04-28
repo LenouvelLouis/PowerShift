@@ -25,8 +25,12 @@ export function useScenarioIO() {
     }
   }
 
+  function _getExportId(): string | null {
+    return history.selectedSimulationId ?? history.currentResult?.id ?? null
+  }
+
   async function handleExport() {
-    const id = history.selectedSimulationId ?? history.currentResult?.id
+    const id = _getExportId()
     if (!id) return
     try {
       const scenario = await fetchScenarioExport(id)
@@ -42,6 +46,25 @@ export function useScenarioIO() {
     } catch {
       toast.add({ title: 'Export error', color: 'error' })
     }
+  }
+
+  function _downloadFromApi(id: string, format: 'csv' | 'pdf') {
+    const a = document.createElement('a')
+    a.href = `/api/v1/simulation/${id}/export/${format}`
+    a.download = ''
+    a.click()
+  }
+
+  function handleExportCsv() {
+    const id = _getExportId()
+    if (!id) return
+    _downloadFromApi(id, 'csv')
+  }
+
+  function handleExportPdf() {
+    const id = _getExportId()
+    if (!id) return
+    _downloadFromApi(id, 'pdf')
   }
 
   function handleImport(event: Event) {
@@ -68,6 +91,8 @@ export function useScenarioIO() {
     dateMode,
     setDateMode,
     handleExport,
+    handleExportCsv,
+    handleExportPdf,
     handleImport
   }
 }

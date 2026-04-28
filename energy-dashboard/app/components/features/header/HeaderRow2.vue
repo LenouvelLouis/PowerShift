@@ -1,17 +1,17 @@
 <template>
-  <div class="flex items-center gap-3 px-4 h-10 border-t border-[#1E293B] bg-[#020617]/40">
+  <div class="flex items-center gap-3 px-4 h-10 border-t border-gray-200 dark:border-slate-800 bg-gray-50/40 dark:bg-slate-950/40">
     <!-- Duration mode toggle -->
-    <div class="flex items-center gap-0 rounded border border-[#334155] overflow-hidden shrink-0">
+    <div class="flex items-center gap-0 rounded border border-gray-300 dark:border-slate-700 overflow-hidden shrink-0">
       <button
         class="px-2.5 h-6 text-xs transition-colors"
-        :class="dateMode === 'hours' ? 'bg-[#1E293B] text-white' : 'bg-transparent text-gray-500 hover:text-gray-300'"
+        :class="dateMode === 'hours' ? 'bg-gray-200 text-gray-900 dark:bg-slate-800 dark:text-white' : 'bg-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
         @click="setDateMode('hours')"
       >
         Hours
       </button>
       <button
-        class="px-2.5 h-6 text-xs transition-colors border-l border-[#334155]"
-        :class="dateMode === 'dates' ? 'bg-[#1E293B] text-white' : 'bg-transparent text-gray-500 hover:text-gray-300'"
+        class="px-2.5 h-6 text-xs transition-colors border-l border-gray-300 dark:border-slate-700"
+        :class="dateMode === 'dates' ? 'bg-gray-200 text-gray-900 dark:bg-slate-800 dark:text-white' : 'bg-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
         @click="setDateMode('dates')"
       >
         Date range
@@ -45,26 +45,26 @@
     <!-- Date range picker -->
     <div
       v-else
-      class="flex items-center gap-0 rounded border border-[#334155] overflow-hidden"
+      class="flex items-center gap-0 rounded border border-gray-300 dark:border-slate-700 overflow-hidden"
     >
       <input
         v-model="store.startDate"
         type="date"
         min="2025-01-01"
         max="2025-12-31"
-        class="h-6 px-1.5 text-xs bg-[#0F172A] text-white focus:outline-none focus:bg-[#0F172A]/80 w-32 border-0"
+        class="h-6 px-1.5 text-xs bg-white text-gray-900 dark:bg-slate-900 dark:text-white focus:outline-none focus:bg-gray-50 dark:focus:bg-slate-900/80 w-32 border-0"
       >
-      <span class="text-xs text-gray-600 px-1 shrink-0 border-x border-[#334155]">→</span>
+      <span class="text-xs text-gray-600 px-1 shrink-0 border-x border-gray-300 dark:border-slate-700">→</span>
       <input
         v-model="store.endDate"
         type="date"
         min="2025-01-01"
         max="2025-12-31"
-        class="h-6 px-1.5 text-xs bg-[#0F172A] text-white focus:outline-none focus:bg-[#0F172A]/80 w-32 border-0"
+        class="h-6 px-1.5 text-xs bg-white text-gray-900 dark:bg-slate-900 dark:text-white focus:outline-none focus:bg-gray-50 dark:focus:bg-slate-900/80 w-32 border-0"
       >
       <span
         v-if="store.startDate && store.endDate"
-        class="text-xs text-emerald-400 font-mono px-1.5 border-l border-[#334155] shrink-0"
+        class="text-xs text-emerald-400 font-mono px-1.5 border-l border-gray-300 dark:border-slate-700 shrink-0"
       >{{ store.snapshotHours }}h</span>
     </div>
 

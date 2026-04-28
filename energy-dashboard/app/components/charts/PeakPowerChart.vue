@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-5">
+  <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-sm font-semibold text-white uppercase tracking-wider">
+      <h2 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
         Peak Power
       </h2>
       <span class="text-xs text-gray-500">MW max</span>
