@@ -1,0 +1,119 @@
+name: Release & Publish Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          echo "## What's included" > notes.md
+          echo "" >> notes.md
+          echo "### Backend (FastAPI + PyPSA)" >> notes.md
+          echo "- Multi-bus network topology with automatic voltage bridging" >> notes.md
+          echo "- 3 optimization objectives (min cost, min emissions, max renewable)" >> notes.md
+          echo "- Real KNMI weather data (Groningen-Eelde, 2025)" >> notes.md
+          echo "- Battery storage modeling" >> notes.md
+          echo "- Export CSV/PDF, API key auth, pagination, structured logging" >> notes.md
+          echo "- WebSocket live preview, weather cache, custom demand profiles" >> notes.md
+          echo "- Alembic migrations, 216+ tests" >> notes.md
+          echo "" >> notes.md
+          echo "### Frontend (Nuxt 4 + ECharts)" >> notes.md
+          echo "- Interactive dashboard with live simulation preview" >> notes.md
+          echo "- Dark/light mode, i18n (EN/FR), scenario comparison" >> notes.md
+          echo "- Network canvas visualization, 10+ chart types" >> notes.md
+          echo "- Accessibility (ARIA, keyboard nav, skip nav)" >> notes.md
+          echo "- 30+ frontend tests" >> notes.md
+          echo "" >> notes.md
+          echo "### Docker" >> notes.md
+          echo '```bash' >> notes.md
+          echo "docker compose up --build" >> notes.md
+          echo '```' >> notes.md
+          echo "Services: PostgreSQL 17 + FastAPI backend + Nuxt frontend" >> notes.md
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: notes.md
+          generate_release_notes: true
+
+  publish-backend:
+    name: Publish Backend Image
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/backend
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: app/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  publish-frontend:
+    name: Publish Frontend Image
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/frontend
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./energy-dashboard
+          file: energy-dashboard/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
