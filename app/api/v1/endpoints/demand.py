@@ -1,23 +1,35 @@
-"""Demand CRUD endpoints — GET, POST, PUT, DELETE /api/v1/demands."""
+"""Demand CRUD endpoints — GET, POST, PUT, DELETE /api/v1/demands.
+
+Includes sub-resource endpoints for custom hourly load profiles:
+  POST   /demands/{demand_id}/profile  — upload CSV
+  GET    /demands/{demand_id}/profile  — retrieve stored profile
+  DELETE /demands/{demand_id}/profile  — remove custom profile
+"""
 
 from __future__ import annotations
 
+import csv
+import io
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from fastapi.responses import Response
 
-from app.api.v1.dependencies import get_demand_repository
-from app.api.v1.schemas.demand_schema import DemandCreate, DemandResponse, DemandUpdate
+from app.api.v1.dependencies import get_custom_profile_repository, get_demand_repository
+from app.api.v1.schemas.demand_schema import CustomProfileResponse, DemandCreate, DemandResponse, DemandUpdate
 from app.api.v1.schemas.pagination import PaginatedResponse
 from app.domain.entities.demand.base_demand import BaseDemand
+from app.infrastructure.db.repositories.custom_profile_repository_impl import CustomProfileRepositoryImpl
 from app.infrastructure.db.repositories.demand_repository_impl import DemandRepositoryImpl
 
 router = APIRouter(prefix="/demands", tags=["Demands"])
 
 _404 = {404: {"description": "Demand not found."}}
+
+# Valid profile lengths: 24h (daily), 168h (weekly), 8760h (yearly)
+_VALID_PROFILE_LENGTHS = {24, 168, 8760}
 
 
 def _to_response(demand: BaseDemand) -> DemandResponse:
@@ -153,4 +165,144 @@ async def delete_demand(
     deleted = await repo.delete(str(demand_id))
     if not deleted:
         raise HTTPException(status_code=404, detail="Demand not found")
+    return Response(status_code=204)
+
+
+# ── Custom load profile sub-resource ────────────────────────────────────────
+
+
+def _parse_csv_profile(raw_bytes: bytes) -> list[float]:
+    """Parse a CSV file with columns ``hour`` and ``load_factor``.
+
+    Returns a list of load factors (floats 0.0-1.0) ordered by hour.
+    Raises ``HTTPException(422)`` on any validation error.
+    """
+    try:
+        text = raw_bytes.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=422, detail="CSV file must be UTF-8 encoded.")
+
+    reader = csv.DictReader(io.StringIO(text))
+    if reader.fieldnames is None or set(reader.fieldnames) < {"hour", "load_factor"}:
+        raise HTTPException(
+            status_code=422,
+            detail="CSV must have columns 'hour' and 'load_factor'.",
+        )
+
+    rows: dict[int, float] = {}
+    for line_no, row in enumerate(reader, start=2):
+        try:
+            hour = int(row["hour"])
+            load_factor = float(row["load_factor"])
+        except (ValueError, KeyError):
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid data on line {line_no}: hour and load_factor must be numeric.",
+            )
+        if not 0.0 <= load_factor <= 1.0:
+            raise HTTPException(
+                status_code=422,
+                detail=f"load_factor on line {line_no} is {load_factor}; must be between 0.0 and 1.0.",
+            )
+        if hour in rows:
+            raise HTTPException(status_code=422, detail=f"Duplicate hour {hour} on line {line_no}.")
+        rows[hour] = load_factor
+
+    length = len(rows)
+    if length not in _VALID_PROFILE_LENGTHS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Profile has {length} rows; must be one of {sorted(_VALID_PROFILE_LENGTHS)}.",
+        )
+
+    # Verify hour values are contiguous 0..N-1
+    expected_hours = set(range(length))
+    if set(rows.keys()) != expected_hours:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Hour column must contain contiguous values 0..{length - 1}.",
+        )
+
+    return [rows[h] for h in range(length)]
+
+
+@router.post(
+    "/{demand_id}/profile",
+    response_model=CustomProfileResponse,
+    status_code=201,
+    summary="Upload a custom hourly load profile (CSV)",
+    response_description="The parsed and stored custom profile.",
+    responses=_404,
+)
+async def upload_profile(
+    demand_id: uuid.UUID,
+    file: UploadFile,
+    demand_repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
+    profile_repo: Annotated[CustomProfileRepositoryImpl, Depends(get_custom_profile_repository)],
+) -> CustomProfileResponse:
+    """Upload a CSV with columns ``hour`` (0-based) and ``load_factor`` (0.0-1.0).
+
+    The number of rows must be 24, 168, or 8760.
+    Replaces any previously stored custom profile for this demand.
+    """
+    demand = await demand_repo.get_by_id(str(demand_id))
+    if demand is None:
+        raise HTTPException(status_code=404, detail="Demand not found")
+
+    raw = await file.read()
+    profile_data = _parse_csv_profile(raw)
+    row = await profile_repo.upsert(demand_id, profile_data)
+    return CustomProfileResponse(
+        demand_id=row.demand_id,
+        profile_data=row.profile_data,
+        created_at=row.created_at,
+    )
+
+
+@router.get(
+    "/{demand_id}/profile",
+    response_model=CustomProfileResponse | None,
+    summary="Get the custom load profile for a demand",
+    response_description="The stored custom profile, or null if none exists.",
+    responses=_404,
+)
+async def get_profile(
+    demand_id: uuid.UUID,
+    demand_repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
+    profile_repo: Annotated[CustomProfileRepositoryImpl, Depends(get_custom_profile_repository)],
+) -> CustomProfileResponse | None:
+    """Return the custom hourly load profile for a demand, or null."""
+    demand = await demand_repo.get_by_id(str(demand_id))
+    if demand is None:
+        raise HTTPException(status_code=404, detail="Demand not found")
+
+    row = await profile_repo.get_by_demand_id(demand_id)
+    if row is None:
+        return None
+    return CustomProfileResponse(
+        demand_id=row.demand_id,
+        profile_data=row.profile_data,
+        created_at=row.created_at,
+    )
+
+
+@router.delete(
+    "/{demand_id}/profile",
+    status_code=204,
+    response_class=Response,
+    summary="Delete the custom load profile for a demand",
+    response_description="No content — the custom profile was removed.",
+    responses=_404,
+)
+async def delete_profile(
+    demand_id: uuid.UUID,
+    demand_repo: Annotated[DemandRepositoryImpl, Depends(get_demand_repository)],
+    profile_repo: Annotated[CustomProfileRepositoryImpl, Depends(get_custom_profile_repository)],
+) -> Response:
+    """Remove the custom profile, reverting to the default built-in profile."""
+    demand = await demand_repo.get_by_id(str(demand_id))
+    if demand is None:
+        raise HTTPException(status_code=404, detail="Demand not found")
+
+    await profile_repo.delete_by_demand_id(demand_id)
     return Response(status_code=204)

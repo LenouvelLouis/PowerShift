@@ -1,7 +1,7 @@
 <template>
   <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5">
     <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
-      Line Loading (peak)
+      {{ $t('results.lineLoadingPeak') }}
     </h3>
     <div class="space-y-3">
       <div

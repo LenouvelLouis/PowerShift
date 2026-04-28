@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import Response
 
+from app.api.v1.endpoints.simulation_ws import simulation_ws_endpoint
 from app.api.v1.router import router as v1_router
 from app.config import settings
 from app.infrastructure.db.connection import get_db
@@ -82,6 +83,9 @@ app.add_middleware(SlowAPIMiddleware)
 
 API_V1_PREFIX = "/api/v1"
 app.include_router(v1_router, prefix=API_V1_PREFIX)
+
+# WebSocket endpoint — registered directly (WS cannot use router-level Depends)
+app.websocket("/api/v1/simulation/ws")(simulation_ws_endpoint)
 
 # ---------------------------------------------------------------------------
 # Exception handlers — structured error responses with error codes

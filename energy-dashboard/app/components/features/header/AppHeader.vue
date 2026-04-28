@@ -1,5 +1,8 @@
 <template>
-  <header class="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 shrink-0">
+  <header
+    aria-label="Simulation controls"
+    class="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 shrink-0"
+  >
     <SaveChoiceModal
       :open="showSaveChoiceModal"
       :loading="store.isSaving"

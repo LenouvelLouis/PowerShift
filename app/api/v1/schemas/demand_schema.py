@@ -65,3 +65,13 @@ class DemandUpdate(BaseModel):
     status: ComponentStatus | None = Field(default=None, description="New operational status.")
     unit: str | None = Field(default=None, description="New unit.")
     description: str | None = Field(default=None, description="New description.")
+
+
+class CustomProfileResponse(BaseModel):
+    """Response for a stored custom hourly load profile."""
+
+    model_config = {"from_attributes": True}
+
+    demand_id: uuid.UUID = Field(description="ID of the demand this profile belongs to.")
+    profile_data: list[float] = Field(description="Normalized hourly load factors (0.0-1.0).")
+    created_at: datetime = Field(description="UTC timestamp when the profile was uploaded.")

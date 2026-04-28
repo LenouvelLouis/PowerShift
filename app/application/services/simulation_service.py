@@ -20,6 +20,7 @@ from app.domain.use_cases.preview_simulation import PreviewSimulationUseCase
 from app.domain.use_cases.run_simulation import RunSimulationUseCase
 from app.infrastructure.db.models.simulation_request_model import SimulationRequestModel
 from app.infrastructure.db.models.simulation_result_model import SimulationResultModel
+from app.infrastructure.db.repositories.custom_profile_repository_impl import CustomProfileRepositoryImpl
 
 
 class SimulationService:
@@ -38,12 +39,28 @@ class SimulationService:
         use_case: RunSimulationUseCase,
         persistence: ISimulationPersistenceRepository,
         preview_use_case: PreviewSimulationUseCase | None = None,
+        custom_profile_repo: CustomProfileRepositoryImpl | None = None,
     ) -> None:
         self._use_case = use_case
         self._persistence = persistence
         self._preview_use_case = preview_use_case
+        self._custom_profile_repo = custom_profile_repo
 
     # ── Helpers ──────────────────────────────────────────────────────────────────
+
+    async def _merge_custom_profiles(self, run_input: SimulationRunInput) -> None:
+        """Merge DB-stored custom load profiles into *hourly_load_overrides*.
+
+        Custom profiles are keyed by demand UUID string.  User-supplied
+        overrides (already present in *hourly_load_overrides*) take precedence
+        over DB-stored profiles, so we only fill in missing keys.
+        """
+        if self._custom_profile_repo is None:
+            return
+        db_profiles = await self._custom_profile_repo.get_all_as_dict()
+        for demand_id, profile_data in db_profiles.items():
+            if demand_id not in run_input.hourly_load_overrides:
+                run_input.hourly_load_overrides[demand_id] = profile_data
 
     @staticmethod
     def _to_run_input(body: SimulationRunRequest) -> SimulationRunInput:
@@ -67,6 +84,7 @@ class SimulationService:
 
     async def run(self, body: SimulationRunRequest) -> SimulationRunResponse:
         run_input = self._to_run_input(body)
+        await self._merge_custom_profiles(run_input)
         result_id, output = await self._use_case.execute(run_input)
         row = await self._persistence.get_result_by_id(result_id)
         req = await self._persistence.get_request_by_id(row.request_id)
@@ -80,6 +98,7 @@ class SimulationService:
         if self._preview_use_case is None:
             raise RuntimeError("PreviewSimulationUseCase not wired — check dependencies.py")
         run_input = self._to_run_input(body)
+        await self._merge_custom_profiles(run_input)
         output = await self._preview_use_case.execute(run_input)
         request_id = await self._persistence.save_request(run_input)
         result_row = await self._persistence.save_result(request_id, output)
@@ -96,6 +115,7 @@ class SimulationService:
         if self._preview_use_case is None:
             raise RuntimeError("PreviewSimulationUseCase not wired — check dependencies.py")
         run_input = self._to_run_input(body)
+        await self._merge_custom_profiles(run_input)
         output = await self._preview_use_case.execute(run_input)
         return SimulationRunResponse(
             id=uuid.uuid4(),

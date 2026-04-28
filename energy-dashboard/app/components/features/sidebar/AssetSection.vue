@@ -11,7 +11,7 @@
         class="w-3.5 h-3.5 shrink-0"
         :class="config.iconColor"
       />
-      <span class="uppercase tracking-wider text-xs font-bold flex-1 text-left">{{ config.group }}</span>
+      <span class="uppercase tracking-wider text-xs font-bold flex-1 text-left">{{ $t(`sidebar.${config.group.toLowerCase()}`) }}</span>
       <span
         v-if="selectedIds.length"
         class="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-gray-300 font-mono leading-none"
@@ -43,14 +43,14 @@
         <div class="mt-2">
           <div class="flex items-center justify-between mb-1.5">
             <p class="text-xs text-gray-500 uppercase tracking-wider">
-              Add to simulation
+              {{ $t('sidebar.addToSimulation') }}
             </p>
             <button
               class="text-xs text-blue-500 hover:text-blue-300 font-medium"
               :disabled="!backendAvailable"
               @click="showCreateForm = true"
             >
-              + New
+              {{ $t('sidebar.new') }}
             </button>
           </div>
           <USelectMenu
@@ -58,8 +58,8 @@
             :items="availableForDropdown"
             value-attribute="value"
             searchable
-            search-placeholder="Search assets..."
-            placeholder="Select an asset..."
+            :search-placeholder="$t('sidebar.searchAssets')"
+            :placeholder="$t('sidebar.selectAsset')"
             class="w-full"
             :disabled="!backendAvailable || availableForDropdown.length === 0"
             @update:model-value="handleAdd"
@@ -83,13 +83,13 @@
             v-if="backendAvailable && availableForDropdown.length === 0 && selectedAssets.length > 0"
             class="text-xs text-gray-600 mt-1 text-center"
           >
-            All assets are selected
+            {{ $t('sidebar.allAssetsSelected') }}
           </p>
           <p
             v-else-if="backendAvailable && availableForDropdown.length === 0 && selectedAssets.length === 0"
             class="text-xs text-gray-600 mt-1 text-center"
           >
-            No assets — create one with + New
+            {{ $t('sidebar.noAssetsCreate') }}
           </p>
         </div>
 

@@ -32,6 +32,7 @@ db_connection._session_factory = None
 # Import model modules so SQLModel metadata is fully registered.
 from app.infrastructure.db.models import (  # noqa: F401
     asset_parameters_model,
+    custom_profile_model,
     demand_model,
     network_model,
     simulation_request_model,

@@ -1,12 +1,12 @@
 <template>
   <div class="border-t border-slate-800 p-3 flex flex-col gap-2 shrink-0">
     <div class="text-xs text-gray-600 text-center font-mono">
-      {{ store.selectedSupplyIds.length }}S · {{ store.selectedDemandIds.length }}D · {{ store.selectedNetworkIds.length }}N selected
+      {{ store.selectedSupplyIds.length }}S · {{ store.selectedDemandIds.length }}D · {{ store.selectedNetworkIds.length }}N {{ $t('sidebar.selected') }}
     </div>
     <UButton
       block
       icon="i-heroicons-arrow-path"
-      label="Reload from API"
+      :label="$t('sidebar.reloadFromApi')"
       color="neutral"
       variant="outline"
       size="sm"

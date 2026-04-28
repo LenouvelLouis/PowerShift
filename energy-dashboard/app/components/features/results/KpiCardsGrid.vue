@@ -1,7 +1,12 @@
 <template>
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+  <div
+    role="region"
+    aria-label="Key performance indicators"
+    class="grid grid-cols-2 lg:grid-cols-4 gap-4"
+  >
     <!-- Status -->
     <div
+      :aria-label="`${$t('results.status')}: ${statusLabel}`"
       class="rounded-2xl border p-5 flex flex-col gap-2"
       :class="isSuccess
         ? 'bg-emerald-950/30 border-emerald-800/40'
@@ -15,7 +20,7 @@
           class="w-6 h-6"
           :class="isSuccess ? 'text-emerald-400' : result.status === 'error' ? 'text-red-400' : 'text-amber-400'"
         />
-        <span class="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Status</span>
+        <span class="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">{{ $t('results.status') }}</span>
       </div>
       <p
         class="text-2xl font-bold"
@@ -26,13 +31,16 @@
     </div>
 
     <!-- Balance -->
-    <div class="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col gap-2">
+    <div
+      :aria-label="`Balance: ${result.status === 'error' ? 'unavailable' : fmtShort(result.balance_mwh) + ' MWh'}`"
+      class="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col gap-2"
+    >
       <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
         <UIcon
           name="i-heroicons-scale"
           class="w-6 h-6"
         />
-        <span class="text-xs font-semibold uppercase tracking-wider">Balance</span>
+        <span class="text-xs font-semibold uppercase tracking-wider">{{ $t('results.balance') }}</span>
       </div>
       <p
         class="text-3xl font-bold font-mono"
@@ -40,53 +48,59 @@
       >
         {{ result.status === 'error' ? '—' : fmtShort(result.balance_mwh) }}
       </p>
-      <p class="text-xs text-gray-600">
+      <p class="text-xs text-gray-600 dark:text-gray-400">
         MWh
       </p>
     </div>
 
     <!-- Supply -->
-    <div class="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col gap-2">
+    <div
+      :aria-label="`Supply: ${result.status === 'error' ? 'unavailable' : fmtShort(result.total_supply_mwh) + ' MWh'}`"
+      class="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col gap-2"
+    >
       <div class="flex items-center gap-2 text-emerald-500">
         <UIcon
           name="i-heroicons-bolt"
           class="w-6 h-6"
         />
-        <span class="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Supply</span>
+        <span class="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">{{ $t('results.supply') }}</span>
         <UTooltip text="MWh = MW × hours. A 100 MW plant running 24h produces 2,400 MWh.">
           <UIcon
             name="i-heroicons-question-mark-circle"
-            class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0"
+            class="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 cursor-help shrink-0"
           />
         </UTooltip>
       </div>
       <p class="text-3xl font-bold font-mono text-emerald-400">
         {{ result.status === 'error' ? '—' : fmtShort(result.total_supply_mwh) }}
       </p>
-      <p class="text-xs text-gray-600">
+      <p class="text-xs text-gray-600 dark:text-gray-400">
         MWh
       </p>
     </div>
 
     <!-- Demand -->
-    <div class="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col gap-2">
+    <div
+      :aria-label="`Demand: ${result.status === 'error' ? 'unavailable' : fmtShort(result.total_demand_mwh) + ' MWh'}`"
+      class="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col gap-2"
+    >
       <div class="flex items-center gap-2 text-red-500">
         <UIcon
           name="i-heroicons-home"
           class="w-6 h-6"
         />
-        <span class="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Demand</span>
+        <span class="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">{{ $t('results.demand') }}</span>
         <UTooltip text="MWh = MW × hours. A 100 MW plant running 24h produces 2,400 MWh.">
           <UIcon
             name="i-heroicons-question-mark-circle"
-            class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0"
+            class="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 cursor-help shrink-0"
           />
         </UTooltip>
       </div>
       <p class="text-3xl font-bold font-mono text-red-400">
         {{ result.status === 'error' ? '—' : fmtShort(result.total_demand_mwh) }}
       </p>
-      <p class="text-xs text-gray-600">
+      <p class="text-xs text-gray-600 dark:text-gray-400">
         MWh
       </p>
     </div>
@@ -97,6 +111,8 @@
 import type { SimulationResult } from '~/composables/api'
 
 const props = defineProps<{ result: SimulationResult }>()
+
+const { t } = useI18n()
 
 function fmtShort(v: number | null | undefined): string {
   if (v == null) return '—'
@@ -109,11 +125,11 @@ const isSuccess = computed(() =>
 )
 const statusLabel = computed(() => {
   const s = props.result.status
-  if (s === 'optimized' || s === 'optimal') return 'Optimised'
-  if (s === 'converged') return 'Converged'
-  if (s === 'non_converged') return 'Non-conv.'
-  if (s === 'infeasible') return 'Infeasible'
-  return 'Error'
+  if (s === 'optimized' || s === 'optimal') return t('results.optimised')
+  if (s === 'converged') return t('results.converged')
+  if (s === 'non_converged') return t('results.nonConverged')
+  if (s === 'infeasible') return t('results.infeasible')
+  return t('results.error')
 })
 
 const balanceColor = computed(() => {

@@ -2,9 +2,9 @@
   <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-        Energy Flow
+        {{ $t('results.energyFlow') }}
       </h3>
-      <UTooltip text="How electricity moved through the system. The optimizer (LOPF) dispatches generators at minimum cost, uses batteries to shift surplus energy, and only imports from the grid as a last resort.">
+      <UTooltip :text="$t('results.energyFlowTooltip')">
         <UIcon
           name="i-heroicons-information-circle"
           class="w-4 h-4 text-gray-600 cursor-help"
@@ -16,7 +16,7 @@
       <!-- Local production -->
       <div class="flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-emerald-400 shrink-0" />
-        <span class="text-gray-600 dark:text-gray-400 flex-1">Local production</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">{{ $t('results.localProduction') }}</span>
         <span class="font-mono text-emerald-400 text-right">{{ fmt(result.total_supply_mwh) }} MWh</span>
       </div>
 
@@ -40,7 +40,7 @@
         class="flex items-center gap-3"
       >
         <div class="w-3 h-3 rounded-full bg-yellow-400 shrink-0" />
-        <span class="text-gray-600 dark:text-gray-400 flex-1">Battery discharge</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">{{ $t('results.batteryDischarge') }}</span>
         <span class="font-mono text-yellow-400">+{{ fmt(batteryDischarge) }} MWh</span>
       </div>
 
@@ -50,22 +50,22 @@
         class="flex items-center gap-3"
       >
         <div class="w-3 h-3 rounded-full bg-blue-400 shrink-0" />
-        <span class="text-gray-600 dark:text-gray-400 flex-1">Grid import</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">{{ $t('results.gridImport') }}</span>
         <span class="font-mono text-blue-400">+{{ fmt(gridImport) }} MWh</span>
       </div>
 
       <!-- Divider: total available -->
       <div class="border-t border-gray-200 dark:border-slate-800 my-2 pt-2 flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-slate-500 shrink-0" />
-        <span class="text-gray-700 dark:text-gray-300 flex-1 font-medium">Total available</span>
+        <span class="text-gray-700 dark:text-gray-300 flex-1 font-medium">{{ $t('results.totalAvailable') }}</span>
         <span class="font-mono text-gray-900 dark:text-white">{{ fmt(totalAvailable) }} MWh</span>
       </div>
 
       <!-- Consumption -->
       <div class="flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-red-400 shrink-0" />
-        <span class="text-gray-600 dark:text-gray-400 flex-1">Consumption (loads)</span>
-        <span class="font-mono text-red-400">−{{ fmt(result.total_demand_mwh) }} MWh</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">{{ $t('results.consumptionLoads') }}</span>
+        <span class="font-mono text-red-400">&minus;{{ fmt(result.total_demand_mwh) }} MWh</span>
       </div>
 
       <!-- Battery charge (only if > 0) -->
@@ -74,8 +74,8 @@
         class="flex items-center gap-3"
       >
         <div class="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
-        <span class="text-gray-600 dark:text-gray-400 flex-1">Battery charge</span>
-        <span class="font-mono text-amber-500">−{{ fmt(batteryCharge) }} MWh</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">{{ $t('results.batteryCharge') }}</span>
+        <span class="font-mono text-amber-500">&minus;{{ fmt(batteryCharge) }} MWh</span>
       </div>
 
       <!-- Curtailed / grid export (only if > 0) -->
@@ -84,8 +84,8 @@
         class="flex items-center gap-3"
       >
         <div class="w-3 h-3 rounded-full bg-violet-400 shrink-0" />
-        <span class="text-gray-600 dark:text-gray-400 flex-1">Curtailed (excess)</span>
-        <span class="font-mono text-violet-400">−{{ fmt(gridExport) }} MWh</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">{{ $t('results.curtailedExcess') }}</span>
+        <span class="font-mono text-violet-400">&minus;{{ fmt(gridExport) }} MWh</span>
       </div>
 
       <!-- Balance -->
@@ -95,7 +95,7 @@
           class="w-3.5 h-3.5 shrink-0"
           :class="balanceColor"
         />
-        <span class="text-gray-600 dark:text-gray-400 flex-1">Balance</span>
+        <span class="text-gray-600 dark:text-gray-400 flex-1">{{ $t('results.balance') }}</span>
         <span
           class="font-mono"
           :class="balanceColor"
@@ -114,8 +114,8 @@
           class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"
         />
         <p class="text-[11px] text-amber-300 leading-relaxed">
-          <strong>{{ (curtailmentRatio * 100).toFixed(0) }}% of available renewable energy is curtailed.</strong>
-          Adding battery storage would allow storing excess production for later use and reduce grid dependency.
+          <strong>{{ $t('results.curtailmentWarning', { percent: (curtailmentRatio * 100).toFixed(0) }) }}</strong>
+          {{ $t('results.curtailmentAdvice') }}
         </p>
       </div>
 
@@ -126,8 +126,8 @@
           class="w-4 h-4 text-slate-400 shrink-0 mt-0.5"
         />
         <p class="text-[11px] text-slate-300 leading-relaxed">
-          <strong>Dispatch priority (merit order):</strong>
-          1. Solar &amp; Wind (free) &rarr; 2. Battery (stored energy) &rarr; 3. Nuclear &rarr; 4. Grid import (last resort, 500 &euro;/MWh)
+          <strong>{{ $t('results.dispatchPriority') }}</strong>
+          {{ $t('results.dispatchOrder') }}
         </p>
       </div>
 
@@ -135,23 +135,23 @@
       <p class="text-[11px] text-gray-600 leading-relaxed pt-1">
         <template v-if="result.status === 'optimized' || result.status === 'optimal'">
           <template v-if="Math.abs(balance) < 2">
-            LOPF balanced the system. Any residual reflects battery round-trip losses.
+            {{ $t('results.lopfBalanced') }}
           </template>
           <template v-else-if="gridImport > 0.1">
-            {{ fmt(gridImport) }} MWh imported from grid — local resources couldn't fully cover demand.
+            {{ $t('results.gridImportExplanation', { amount: fmt(gridImport) }) }}
           </template>
           <template v-else>
-            LOPF optimised dispatch. Small imbalance ({{ fmt(Math.abs(balance)) }} MWh) reflects storage losses.
+            {{ $t('results.lopfOptimised', { amount: fmt(Math.abs(balance)) }) }}
           </template>
         </template>
         <template v-else-if="Math.abs(balance) < 1">
-          Production matched consumption — the system was balanced.
+          {{ $t('results.productionMatched') }}
         </template>
         <template v-else-if="balance > 0">
-          {{ fmt(balance) }} MWh surplus: local generators over-produced. Excess is curtailed or exported.
+          {{ $t('results.surplusExplanation', { amount: fmt(balance) }) }}
         </template>
         <template v-else>
-          {{ fmt(Math.abs(balance)) }} MWh deficit: local production couldn't meet demand.
+          {{ $t('results.deficitExplanation', { amount: fmt(Math.abs(balance)) }) }}
         </template>
       </p>
     </div>

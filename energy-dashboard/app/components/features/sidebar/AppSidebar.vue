@@ -1,5 +1,8 @@
 <template>
-  <aside class="w-60 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col shrink-0 overflow-hidden">
+  <aside
+    aria-label="Asset selection sidebar"
+    class="w-60 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col shrink-0 overflow-hidden"
+  >
     <div class="flex-1 overflow-y-auto">
       <SidebarAssetSection
         v-for="section in sections"
@@ -20,7 +23,11 @@
         v-if="referential.referentialLoading"
         class="flex justify-center py-4"
       >
-        <div class="animate-spin h-5 w-5 border-t-2 border-blue-500 rounded-full" />
+        <div
+          class="animate-spin h-5 w-5 border-t-2 border-blue-500 rounded-full"
+          role="status"
+          aria-label="Loading assets"
+        />
       </div>
     </div>
 

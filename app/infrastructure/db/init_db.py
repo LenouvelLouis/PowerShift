@@ -9,6 +9,7 @@ async def init_db() -> None:
     from sqlmodel import SQLModel
 
     import app.infrastructure.db.models.asset_parameters_model  # noqa: F401
+    import app.infrastructure.db.models.custom_profile_model  # noqa: F401
     import app.infrastructure.db.models.demand_model  # noqa: F401
     import app.infrastructure.db.models.network_model  # noqa: F401
     import app.infrastructure.db.models.simulation_request_model  # noqa: F401

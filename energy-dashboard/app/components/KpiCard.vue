@@ -1,5 +1,8 @@
 <template>
-  <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-gray-200 dark:border-slate-800">
+  <div
+    :aria-label="loading ? `${label}: loading` : `${label}: ${value ?? 'no data'}`"
+    class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-gray-200 dark:border-slate-800"
+  >
     <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
       {{ label }}
     </p>

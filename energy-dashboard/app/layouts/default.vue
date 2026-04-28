@@ -1,5 +1,13 @@
 <template>
   <div class="flex flex-col h-screen bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-white">
+    <!-- Skip to main content link (a11y) -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[10000] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded focus:ring-2 focus:ring-blue-400 focus:outline-none"
+    >
+      Skip to main content
+    </a>
+
     <UToaster />
 
     <!-- Delete asset confirmation modal (triggered from sidebar) -->
@@ -27,7 +35,10 @@
           @delete-asset="deleteTarget = $event"
         />
       </Transition>
-      <main class="flex-1 overflow-y-auto pb-10">
+      <main
+        id="main-content"
+        class="flex-1 overflow-y-auto pb-10"
+      >
         <NuxtPage />
       </main>
     </div>

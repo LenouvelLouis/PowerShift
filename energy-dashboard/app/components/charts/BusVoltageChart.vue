@@ -18,6 +18,7 @@
 import type { SimulationResult } from '~/composables/api'
 
 const props = defineProps<{ result: SimulationResult, startDate?: string | null }>()
+const { t } = useI18n()
 const { lineOption } = useEChartsTheme()
 const { buildLabels, axisLabelFormatter, tooltipLabelFormatter } = useTimeLabels(() => props.startDate)
 
@@ -32,7 +33,7 @@ const dataField = computed(() => {
   return 'v_mag_pu'
 })
 
-const chartTitle = computed(() => dataField.value === 'marginal_price' ? 'Bus Marginal Prices' : 'Bus Voltages')
+const chartTitle = computed(() => dataField.value === 'marginal_price' ? t('charts.busMarginalPrices') : t('charts.busVoltages'))
 const chartUnit = computed(() => dataField.value === 'marginal_price' ? '\u20AC/MWh' : 'pu')
 
 const timeLabels = computed(() => {

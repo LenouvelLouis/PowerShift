@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # Optional frontend URL appended to the origins list when non-empty
     FRONTEND_URL: str = ""
 
+    # Weather cache TTL (seconds) — how long solar/wind profiles stay cached in memory
+    WEATHER_CACHE_TTL_SECONDS: int = 3600
+
     # Authentication — empty means auth is disabled (dev mode)
     API_KEY: str = ""
 

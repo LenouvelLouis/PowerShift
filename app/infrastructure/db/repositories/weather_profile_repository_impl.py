@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.domain.interfaces.pv_profile_repository import IPVProfileRepository
+from app.infrastructure.cache.weather_cache import get_weather_cache
 from app.infrastructure.db.models.weather_profile_model import WeatherProfileModel
 
 _log = logging.getLogger(__name__)
@@ -35,6 +36,17 @@ class WeatherProfileRepositoryImpl(IPVProfileRepository):
         self._session = session
 
     async def get_solar_profile(self, start_date: date, end_date: date) -> list[float]:
+        cache = get_weather_cache()
+        cached = await cache.get("solar", start_date, end_date)
+        if cached is not None:
+            _log.debug("Weather cache HIT for solar %s → %s", start_date, end_date)
+            return cached
+
+        profile = await self._fetch_solar_profile(start_date, end_date)
+        await cache.set("solar", start_date, end_date, profile)
+        return profile
+
+    async def _fetch_solar_profile(self, start_date: date, end_date: date) -> list[float]:
         # Inclusive: start 00:00 → end 23:30 (last slot of end_date)
         start_dt = datetime.combine(start_date, time.min).replace(tzinfo=UTC)
         end_dt   = datetime.combine(end_date,   time.max).replace(tzinfo=UTC)
@@ -94,6 +106,17 @@ class WeatherProfileRepositoryImpl(IPVProfileRepository):
           - above rated → 1.0
         Aggregates 30-min slots into hourly buckets (same logic as get_solar_profile).
         """
+        cache = get_weather_cache()
+        cached = await cache.get("wind", start_date, end_date)
+        if cached is not None:
+            _log.debug("Weather cache HIT for wind %s → %s", start_date, end_date)
+            return cached
+
+        profile = await self._fetch_wind_profile(start_date, end_date)
+        await cache.set("wind", start_date, end_date, profile)
+        return profile
+
+    async def _fetch_wind_profile(self, start_date: date, end_date: date) -> list[float]:
         _CUT_IN_MS  = 3.0
         _RATED_MS   = 12.0
         _CUT_OUT_MS = 25.0

@@ -5,8 +5,8 @@
   >
     <!-- Production section -->
     <div>
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">
-        Production
+      <p class="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-widest mb-4 px-1">
+        {{ $t('charts.production') }}
       </p>
       <div class="flex flex-col gap-6">
         <ProductionChart
@@ -32,8 +32,8 @@
 
     <!-- Demand section -->
     <div v-if="hasConsumptionData">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">
-        Demand
+      <p class="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-widest mb-4 px-1">
+        {{ $t('charts.demand') }}
       </p>
       <ConsumptionChart
         :result="result"
@@ -43,8 +43,8 @@
 
     <!-- Storage section -->
     <div v-if="hasStorageData">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">
-        Storage
+      <p class="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-widest mb-4 px-1">
+        {{ $t('charts.storage') }}
       </p>
       <BatteryStorageChart
         :result="result"
@@ -52,10 +52,10 @@
       />
     </div>
 
-    <!-- Bilan section -->
+    <!-- Summary section -->
     <div>
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">
-        Bilan
+      <p class="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-widest mb-4 px-1">
+        {{ $t('charts.summary') }}
       </p>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SupplyDemandChart
@@ -71,8 +71,8 @@
 
     <!-- Network section (PF-specific) -->
     <div v-if="hasBusData || hasLineData">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">
-        Network
+      <p class="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-widest mb-4 px-1">
+        {{ $t('results.network') }}
       </p>
       <div class="flex flex-col gap-6">
         <BusVoltageChart
@@ -90,9 +90,9 @@
 
   <div
     v-else
-    class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-8 flex items-center justify-center h-72 text-gray-600 text-sm mt-4"
+    class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-8 flex items-center justify-center h-72 text-gray-600 dark:text-gray-300 text-sm mt-4"
   >
-    {{ result.status === 'error' ? 'No power flow data — simulation error' : result.status === 'non_converged' ? 'Power flow did not converge' : 'No time-series data available' }}
+    {{ result.status === 'error' ? $t('results.noDataError') : result.status === 'non_converged' ? $t('results.noConvergence') : $t('results.noTimeSeriesData') }}
   </div>
 </template>
 

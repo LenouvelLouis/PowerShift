@@ -2,14 +2,14 @@
   <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-        Battery Storage
+        {{ $t('charts.batteryStorage') }}
       </h2>
       <span class="text-xs text-gray-500">MW &amp; MWh</span>
     </div>
     <BaseChart
       :option="chartOption"
       height="h-72"
-      title="Battery Storage"
+      :title="$t('charts.batteryStorage')"
     />
   </div>
 </template>

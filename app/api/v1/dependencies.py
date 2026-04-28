@@ -13,6 +13,7 @@ from app.domain.use_cases.get_referential import GetReferentialUseCase
 from app.domain.use_cases.preview_simulation import PreviewSimulationUseCase
 from app.domain.use_cases.run_simulation import RunSimulationUseCase
 from app.infrastructure.db.connection import get_db
+from app.infrastructure.db.repositories.custom_profile_repository_impl import CustomProfileRepositoryImpl
 from app.infrastructure.db.repositories.demand_repository_impl import DemandRepositoryImpl
 from app.infrastructure.db.repositories.network_repository_impl import NetworkRepositoryImpl
 from app.infrastructure.db.repositories.simulation_repository_impl import SimulationRepositoryImpl
@@ -35,6 +36,10 @@ def get_supply_repository(db: DbSession) -> SupplyRepositoryImpl:
 
 def get_demand_repository(db: DbSession) -> DemandRepositoryImpl:
     return DemandRepositoryImpl(db)
+
+
+def get_custom_profile_repository(db: DbSession) -> CustomProfileRepositoryImpl:
+    return CustomProfileRepositoryImpl(db)
 
 
 def get_network_repository(db: DbSession) -> NetworkRepositoryImpl:
@@ -117,9 +122,11 @@ def get_simulation_service(
     use_case: Annotated[RunSimulationUseCase, Depends(get_simulation_use_case)],
     persistence: Annotated[SimulationRepositoryImpl, Depends(get_simulation_persistence_repository)],
     preview_use_case: Annotated[PreviewSimulationUseCase, Depends(get_preview_simulation_use_case)],
+    custom_profile_repo: Annotated[CustomProfileRepositoryImpl, Depends(get_custom_profile_repository)],
 ) -> SimulationService:
     return SimulationService(
         use_case=use_case,
         persistence=persistence,
         preview_use_case=preview_use_case,
+        custom_profile_repo=custom_profile_repo,
     )

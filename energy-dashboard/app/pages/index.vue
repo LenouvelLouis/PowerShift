@@ -3,10 +3,11 @@
     <!-- Backend unavailable banner -->
     <div
       v-if="referential.backendAvailable === false"
+      role="alert"
       class="px-4 py-3 bg-amber-900/30 border border-amber-600/60 rounded-lg text-amber-400 text-sm flex items-center gap-2"
     >
       <span>⚠</span>
-      <span>Backend unavailable — start the API server to enable live simulations.</span>
+      <span>{{ $t('results.backendUnavailable') }}</span>
     </div>
 
     <ScenarioBar
@@ -31,13 +32,13 @@
     <!-- Loading skeletons -->
     <UiShimmerSkeleton
       v-if="loadingScenario"
-      headline="Preparing your scenario"
-      subtitle="Restoring KPIs, charts, and simulation context..."
+      :headline="$t('results.preparingScenario')"
+      :subtitle="$t('results.restoringKpis')"
     />
     <UiShimmerSkeleton
       v-else-if="sim.isLiveRunning || sim.isRunning"
-      headline="Optimising power flow"
-      subtitle="Running LOPF optimisation across all snapshots, results coming shortly..."
+      :headline="$t('results.optimisingPowerFlow')"
+      :subtitle="$t('results.runningLopf')"
       :badge="sim.elapsedSeconds > 0 ? `Running... ${sim.elapsedSeconds}s` : undefined"
     />
 
@@ -55,15 +56,24 @@
       <!-- Tabs: Résultats / Graphiques / Réseau -->
       <div>
         <!-- Tab bar -->
-        <div class="flex gap-1 border-b border-gray-200 dark:border-slate-800 mb-6">
+        <div
+          role="tablist"
+          aria-label="Simulation result views"
+          class="flex gap-1 border-b border-gray-200 dark:border-slate-800 mb-6"
+        >
           <button
             v-for="tab in tabs"
+            :id="`tab-${tab.key}`"
             :key="tab.key"
-            class="px-4 py-2 text-sm font-medium transition-colors"
+            role="tab"
+            :aria-selected="activeTab === tab.key"
+            :aria-controls="`tabpanel-${tab.key}`"
+            class="px-4 py-2 text-sm font-medium transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none rounded-t"
             :class="activeTab === tab.key
               ? 'text-gray-900 dark:text-white border-b-2 border-blue-500 -mb-px'
-              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
+              : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200'"
             @click="activeTab = tab.key"
+            @keydown="handleTabKeydown($event, tab.key)"
           >
             {{ tab.label }}
           </button>
@@ -71,14 +81,30 @@
 
         <!-- Tab content — use v-show so NetworkCanvas stays mounted and the
              ResizeObserver can read clientWidth on the first paint -->
-        <div v-show="activeTab === 'results'">
+        <div
+          v-show="activeTab === 'results'"
+          id="tabpanel-results"
+          role="tabpanel"
+          aria-labelledby="tab-results"
+          tabindex="0"
+        >
           <ResultsTab :result="result" />
         </div>
-        <div v-show="activeTab === 'graphics'">
+        <div
+          v-show="activeTab === 'graphics'"
+          id="tabpanel-graphics"
+          role="tabpanel"
+          aria-labelledby="tab-graphics"
+          tabindex="0"
+        >
           <GraphicsTab :result="result" />
         </div>
         <div
           v-show="activeTab === 'network'"
+          id="tabpanel-network"
+          role="tabpanel"
+          aria-labelledby="tab-network"
+          tabindex="0"
           class="flex flex-col gap-6"
         >
           <NetworkCanvas
@@ -105,8 +131,8 @@
         :result="null"
       />
       <GuidedScenarioWizard
-        v-else
-        @complete="activeTab = 'results'"
+        v-else-if="!wizardSkipped"
+        @complete="wizardSkipped = true"
       />
     </template>
   </div>
@@ -125,6 +151,7 @@ const history = useHistoryStore()
 useSimulationUrl()
 
 const loadingScenario = ref(false)
+const wizardSkipped = ref(false)
 
 // ─── Comparison ────────────────────────────────────────────────────────────────
 const showCompareModal = ref(false)
@@ -149,12 +176,35 @@ const batterySupplies = computed(() =>
   sim.selectedSuppliesWithOverrides.filter(s => s.type === 'battery_storage')
 )
 
-const tabs = [
-  { key: 'results', label: 'Results' },
-  { key: 'graphics', label: 'Charts' },
-  { key: 'network', label: 'Network' }
-]
+const { t } = useI18n()
+
+const tabs = computed(() => [
+  { key: 'results', label: t('results.results') },
+  { key: 'graphics', label: t('results.charts') },
+  { key: 'network', label: t('results.network') }
+])
 const activeTab = ref('results')
+
+function handleTabKeydown(event: KeyboardEvent, _currentKey: string) {
+  const keys = tabs.value.map(tab => tab.key)
+  const currentIndex = keys.indexOf(activeTab.value)
+  let newIndex = -1
+  if (event.key === 'ArrowRight') {
+    newIndex = (currentIndex + 1) % keys.length
+  } else if (event.key === 'ArrowLeft') {
+    newIndex = (currentIndex - 1 + keys.length) % keys.length
+  } else if (event.key === 'Home') {
+    newIndex = 0
+  } else if (event.key === 'End') {
+    newIndex = keys.length - 1
+  }
+  const target = keys[newIndex]
+  if (newIndex >= 0 && target) {
+    event.preventDefault()
+    activeTab.value = target
+    document.getElementById(`tab-${target}`)?.focus()
+  }
+}
 
 const errorHeadline = computed(() => {
   const status = result.value?.status

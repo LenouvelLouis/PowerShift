@@ -7,14 +7,14 @@
         :class="dateMode === 'hours' ? 'bg-gray-200 text-gray-900 dark:bg-slate-800 dark:text-white' : 'bg-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
         @click="setDateMode('hours')"
       >
-        Hours
+        {{ $t('header.hours') }}
       </button>
       <button
         class="px-2.5 h-6 text-xs transition-colors border-l border-gray-300 dark:border-slate-700"
         :class="dateMode === 'dates' ? 'bg-gray-200 text-gray-900 dark:bg-slate-800 dark:text-white' : 'bg-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
         @click="setDateMode('dates')"
       >
-        Date range
+        {{ $t('header.dateRange') }}
       </button>
     </div>
 
@@ -73,7 +73,7 @@
       class="flex items-center gap-1.5"
       :title="selectedSolverTitle"
     >
-      <label class="text-xs text-gray-500">Solver</label>
+      <label class="text-xs text-gray-500">{{ $t('header.solver') }}</label>
       <USelect
         v-model="store.solver"
         :items="solverSelectItems"
@@ -86,14 +86,14 @@
         size="xs"
         color="neutral"
         variant="ghost"
-        title="Open solver helper"
+        :title="$t('header.openSolverHelp')"
         @click="$emit('open-solver-help')"
       />
     </div>
 
     <!-- Optimization Objective selector -->
     <div class="flex items-center gap-1.5">
-      <label class="text-xs text-gray-500">Objective</label>
+      <label class="text-xs text-gray-500">{{ $t('header.objective') }}</label>
       <USelect
         v-model="store.optimizationObjective"
         :items="objectiveSelectItems"
@@ -106,7 +106,7 @@
     <div class="flex items-center gap-1">
       <UInput
         v-model="store.scenarioName"
-        placeholder="Scenario name (optional)"
+        :placeholder="$t('header.scenarioNamePlaceholder')"
         size="xs"
         class="w-44"
       />
@@ -115,7 +115,7 @@
         size="xs"
         color="neutral"
         variant="ghost"
-        title="Rename selected scenario"
+        :title="$t('header.renameScenario')"
         :disabled="!history.selectedSimulationId"
         @click="$emit('header-rename')"
       />
@@ -131,7 +131,7 @@
     >
     <UButton
       icon="i-heroicons-arrow-up-tray"
-      label="Import"
+      :label="$t('header.import')"
       size="xs"
       color="neutral"
       variant="outline"
@@ -164,7 +164,7 @@
             ? 'text-emerald-400'
             : 'text-gray-600'"
       >
-        {{ store.isLiveRunning ? 'Running…' : store.hasMinimumAssets && referential.backendAvailable ? 'Live' : 'Idle' }}
+        {{ store.isLiveRunning ? $t('header.running') : store.hasMinimumAssets && referential.backendAvailable ? $t('header.live') : $t('header.idle') }}
       </span>
     </div>
   </div>
@@ -183,13 +183,14 @@ defineEmits<{
 const store = useSimulationStore()
 const referential = useReferentialStore()
 const history = useHistoryStore()
+const { t } = useI18n()
 
 const { dateMode, setDateMode, handleImport, fileInputRef } = useScenarioIO()
 const { solverSelectItems, solverAvailabilityLoading, selectedSolverTitle } = useSolverAvailability()
 
-const objectiveSelectItems = [
-  { label: 'Minimize cost', value: 'min_cost' },
-  { label: 'Minimize emissions', value: 'min_emissions' },
-  { label: 'Maximize renewable', value: 'max_renewable' }
-]
+const objectiveSelectItems = computed(() => [
+  { label: t('header.minimizeCost'), value: 'min_cost' },
+  { label: t('header.minimizeEmissions'), value: 'min_emissions' },
+  { label: t('header.maximizeRenewable'), value: 'max_renewable' }
+])
 </script>

@@ -2,12 +2,12 @@
   <div class="flex flex-col gap-6 pt-4">
     <!-- Data sources banner -->
     <div class="flex flex-wrap items-start gap-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3">
-      <div class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+      <div class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
         <UIcon
           name="i-heroicons-information-circle"
           class="w-4 h-4 shrink-0"
         />
-        <span class="text-xs font-semibold uppercase tracking-wider">Data sources</span>
+        <span class="text-xs font-semibold uppercase tracking-wider">{{ $t('results.dataSources') }}</span>
       </div>
       <div class="flex flex-wrap gap-2 text-[11px]">
         <span class="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 text-blue-300">
@@ -56,9 +56,9 @@
         </template>
         <div
           v-else
-          class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-8 flex items-center justify-center h-72 text-gray-600 text-sm"
+          class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-8 flex items-center justify-center h-72 text-gray-600 dark:text-gray-300 text-sm"
         >
-          {{ result.status === 'error' ? 'No power flow data — simulation error' : result.status === 'non_converged' ? 'Power flow did not converge' : 'No time-series data available' }}
+          {{ result.status === 'error' ? $t('results.noDataError') : result.status === 'non_converged' ? $t('results.noConvergence') : $t('results.noTimeSeriesData') }}
         </div>
       </div>
     </div>

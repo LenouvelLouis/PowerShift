@@ -2,14 +2,14 @@
   <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-        Supply vs Demand
+        {{ $t('charts.supplyVsDemand') }}
       </h2>
       <span class="text-xs text-gray-500">MW / hour</span>
     </div>
     <BaseChart
       :option="chartOption"
       height="h-64"
-      title="Supply vs Demand"
+      :title="$t('charts.supplyVsDemand')"
     />
   </div>
 </template>
@@ -18,6 +18,7 @@
 import type { SimulationResult } from '~/composables/api'
 
 const props = defineProps<{ result: SimulationResult, startDate?: string | null }>()
+const { t } = useI18n()
 const { lineOption } = useEChartsTheme()
 const { buildLabels, axisLabelFormatter, tooltipLabelFormatter } = useTimeLabels(() => props.startDate)
 
@@ -36,8 +37,8 @@ const chartOption = computed(() => {
   return lineOption({
     labels: timeLabels.value,
     series: [
-      { name: 'Total Supply', data: supplyPerHour.map(v => +v.toFixed(3)), color: '#10B981' },
-      { name: 'Total Demand', data: demandPerHour.map(v => +v.toFixed(3)), color: '#EF4444' }
+      { name: t('charts.totalSupply'), data: supplyPerHour.map(v => +v.toFixed(3)), color: '#10B981' },
+      { name: t('charts.totalDemand'), data: demandPerHour.map(v => +v.toFixed(3)), color: '#EF4444' }
     ],
     yTitle: 'MW',
     axisLabelFormatter,

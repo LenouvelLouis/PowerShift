@@ -1,5 +1,8 @@
 <template>
-  <footer class="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 shrink-0 relative overflow-hidden">
+  <footer
+    aria-label="Simulation KPI summary"
+    class="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 shrink-0 relative overflow-hidden"
+  >
     <!-- Running progress line -->
     <div
       v-if="store.isLiveRunning"
@@ -9,7 +12,7 @@
     <div class="h-10 flex items-center px-4 gap-0 text-xs">
       <!-- Status -->
       <div class="flex items-center gap-2 px-3 border-r border-gray-200 dark:border-slate-800">
-        <span class="text-gray-500 uppercase tracking-wider">Status</span>
+        <span class="text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ $t('footer.status') }}</span>
         <span class="flex items-center gap-1">
           <span
             class="inline-block h-1.5 w-1.5 rounded-full"
@@ -25,47 +28,47 @@
                 : kpiStatus === 'running' ? 'text-amber-400'
                   : 'text-gray-500'"
           >
-            {{ kpiStatus === 'converged' ? 'Converged' : kpiStatus === 'non_converged' ? 'Non-converged' : kpiStatus === 'error' ? 'Error' : kpiStatus === 'running' ? 'Running…' : '—' }}
+            {{ kpiStatus === 'converged' ? $t('footer.converged') : kpiStatus === 'non_converged' ? $t('footer.nonConverged') : kpiStatus === 'error' ? $t('footer.error') : kpiStatus === 'running' ? $t('footer.running') : '—' }}
           </span>
         </span>
       </div>
 
       <!-- Total Supply -->
       <div class="flex items-center gap-2 px-3 border-r border-gray-200 dark:border-slate-800">
-        <span class="text-gray-500 uppercase tracking-wider">Supply</span>
+        <span class="text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ $t('footer.supply') }}</span>
         <span class="font-mono text-gray-900 dark:text-white transition-all duration-300">{{ kpiSupply }}</span>
-        <span class="text-gray-600">MWh</span>
+        <span class="text-gray-600 dark:text-gray-400">MWh</span>
       </div>
 
       <!-- Total Demand -->
       <div class="flex items-center gap-2 px-3 border-r border-gray-200 dark:border-slate-800">
-        <span class="text-gray-500 uppercase tracking-wider">Demand</span>
+        <span class="text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ $t('footer.demand') }}</span>
         <span class="font-mono text-gray-900 dark:text-white transition-all duration-300">{{ kpiDemand }}</span>
-        <span class="text-gray-600">MWh</span>
+        <span class="text-gray-600 dark:text-gray-400">MWh</span>
       </div>
 
       <!-- Balance -->
       <div class="flex items-center gap-2 px-3 border-r border-gray-200 dark:border-slate-800">
-        <span class="text-gray-500 uppercase tracking-wider">Balance</span>
+        <span class="text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ $t('footer.balance') }}</span>
         <span
           class="font-mono transition-all duration-300"
           :class="kpiBalanceColor"
         >{{ kpiBalance }}</span>
-        <span class="text-gray-600">MWh</span>
+        <span class="text-gray-600 dark:text-gray-400">MWh</span>
       </div>
 
       <!-- Asset counts + MW -->
       <div class="flex items-center gap-3 px-3">
-        <span class="text-gray-500 uppercase tracking-wider">Assets</span>
+        <span class="text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ $t('footer.assets') }}</span>
         <span class="flex items-center gap-1.5 font-mono">
           <span class="text-amber-400">{{ store.selectedSupplyIds.length }}S</span>
           <span
             class="text-[10px] font-semibold px-1 py-0.5 rounded text-amber-300/70 bg-amber-950/40"
           >{{ totalSupplyMw }} MW</span>
-          <span class="text-gray-600">·</span>
+          <span class="text-gray-600 dark:text-gray-400">·</span>
           <span class="text-emerald-400">{{ store.selectedDemandIds.length }}D</span>
           <span class="text-[10px] text-emerald-300/70 bg-emerald-950/40 font-semibold px-1 py-0.5 rounded">{{ totalDemandMw }} MW</span>
-          <span class="text-gray-600">·</span>
+          <span class="text-gray-600 dark:text-gray-400">·</span>
           <span class="text-blue-400">{{ store.selectedNetworkIds.length }}N</span>
           <span class="text-[10px] text-blue-300/70 bg-blue-950/40 font-semibold px-1 py-0.5 rounded">{{ totalNetworkMva }} MVA</span>
         </span>
@@ -79,7 +82,7 @@
         class="flex items-center gap-1.5 text-amber-400 pr-2"
       >
         <div class="animate-spin h-3 w-3 border-t border-amber-400 rounded-full" />
-        <span>Computing PF…</span>
+        <span>{{ $t('results.computingPf') }}</span>
       </div>
     </div>
   </footer>
