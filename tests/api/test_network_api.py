@@ -10,9 +10,32 @@ class TestListNetwork:
         response = client.get("/api/v1/network")
         assert response.status_code == 200
 
-    def test_returns_list(self, client: TestClient):
+    def test_returns_paginated_response(self, client: TestClient):
         data = client.get("/api/v1/network").json()
-        assert isinstance(data, list)
+        assert "items" in data
+        assert "total" in data
+        assert "page" in data
+        assert "size" in data
+        assert "pages" in data
+        assert isinstance(data["items"], list)
+
+    def test_default_pagination(self, client: TestClient):
+        data = client.get("/api/v1/network").json()
+        assert data["page"] == 1
+        assert data["size"] == 20
+
+    def test_custom_page_and_size(self, client: TestClient):
+        data = client.get("/api/v1/network?page=1&size=5").json()
+        assert data["page"] == 1
+        assert data["size"] == 5
+
+    def test_page_zero_returns_422(self, client: TestClient):
+        response = client.get("/api/v1/network?page=0")
+        assert response.status_code == 422
+
+    def test_size_over_100_returns_422(self, client: TestClient):
+        response = client.get("/api/v1/network?size=101")
+        assert response.status_code == 422
 
 
 class TestCreateTransformer:

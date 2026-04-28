@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -94,3 +95,19 @@ class SimulationRepositoryImpl(ISimulationPersistenceRepository):
         )
         result = await self._session.execute(stmt)
         return [(row[0], row[1]) for row in result.all()]
+
+    async def list_results_paginated(self, *, offset: int, limit: int) -> list:
+        stmt = (
+            select(SimulationResultModel, SimulationRequestModel)
+            .join(SimulationRequestModel,
+                  SimulationResultModel.request_id == SimulationRequestModel.id)
+            .order_by(SimulationResultModel.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self._session.execute(stmt)
+        return [(row[0], row[1]) for row in result.all()]
+
+    async def count_results(self) -> int:
+        result = await self._session.execute(select(func.count()).select_from(SimulationResultModel))
+        return result.scalar_one()

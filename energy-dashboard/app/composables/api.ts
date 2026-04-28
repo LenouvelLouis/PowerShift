@@ -88,6 +88,7 @@ export interface SimulationRunRequest {
   end_date?: string
   pypsa_params?: Record<string, unknown>
   asset_overrides?: Record<string, Record<string, number>>
+  fail_on_empty_weather?: boolean
 }
 
 export interface SimulationResultJson {
@@ -155,7 +156,15 @@ export interface SimulationSolverInfo {
 
 // ─── Supply ───────────────────────────────────────────────────────────────────
 
-export const fetchSupplies = () => $fetch<Supply[]>('/api/v1/supplies')
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  size: number
+  pages: number
+}
+
+export const fetchSupplies = () => $fetch<PaginatedResponse<Supply>>('/api/v1/supplies')
 
 export const fetchSupplyById = (id: string) =>
   $fetch<Supply>(`/api/v1/supplies/${id}`)
@@ -171,7 +180,7 @@ export const deleteSupply = (id: string) =>
 
 // ─── Demand ───────────────────────────────────────────────────────────────────
 
-export const fetchDemands = () => $fetch<Demand[]>('/api/v1/demands')
+export const fetchDemands = () => $fetch<PaginatedResponse<Demand>>('/api/v1/demands')
 
 export const fetchDemandById = (id: string) =>
   $fetch<Demand>(`/api/v1/demands/${id}`)
@@ -184,7 +193,7 @@ export const deleteDemand = (id: string) =>
 
 // ─── Network ──────────────────────────────────────────────────────────────────
 
-export const fetchNetwork = () => $fetch<NetworkComponent[]>('/api/v1/network')
+export const fetchNetwork = () => $fetch<PaginatedResponse<NetworkComponent>>('/api/v1/network')
 
 export const createNetworkComponent = (data: NetworkCreate) =>
   $fetch<NetworkComponent>('/api/v1/network', { method: 'POST', body: data })
@@ -222,7 +231,7 @@ export const previewSimulation = (params: SimulationRunRequest) =>
   $fetch<SimulationResult>('/api/v1/simulation/preview', { method: 'POST', body: params })
 
 export const fetchSimulations = () =>
-  $fetch<SimulationListItem[]>('/api/v1/simulation')
+  $fetch<PaginatedResponse<SimulationListItem>>('/api/v1/simulation')
 
 export const fetchSimulationById = (id: string) =>
   $fetch<SimulationResult>(`/api/v1/simulation/${id}`)

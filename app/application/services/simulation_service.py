@@ -60,6 +60,7 @@ class SimulationService:
             pypsa_params=body.pypsa_params or {},
             asset_overrides=body.asset_overrides or {},
             hourly_load_overrides=body.hourly_load_overrides or {},
+            fail_on_empty_weather=body.fail_on_empty_weather,
         )
 
     # ── Public methods ────────────────────────────────────────────────────────────
@@ -114,6 +115,15 @@ class SimulationService:
     async def list(self) -> list[SimulationListItem]:
         pairs = await self._persistence.list_results()
         return [self._to_list_item(result, request) for result, request in pairs]
+
+    async def list_paginated(
+        self, *, offset: int, limit: int
+    ) -> tuple[list[SimulationListItem], int]:
+        """Return a page of simulation summaries and the total count."""
+        pairs = await self._persistence.list_results_paginated(offset=offset, limit=limit)
+        total = await self._persistence.count_results()
+        items = [self._to_list_item(result, request) for result, request in pairs]
+        return items, total
 
     async def get_by_id(self, simulation_id: uuid.UUID) -> SimulationRunResponse | None:
         row = await self._persistence.get_result_by_id(simulation_id)

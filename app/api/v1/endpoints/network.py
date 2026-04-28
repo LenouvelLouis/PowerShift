@@ -6,11 +6,12 @@ import uuid
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 
 from app.api.v1.dependencies import get_network_repository
 from app.api.v1.schemas.network_schema import NetworkCreate, NetworkResponse, NetworkUpdate
+from app.api.v1.schemas.pagination import PaginatedResponse
 from app.domain.entities.network.base_network import BaseNetwork
 from app.domain.entities.network.cable import Cable
 from app.domain.entities.network.transformer import Transformer
@@ -81,15 +82,20 @@ def _create_body_to_entity(body: NetworkCreate) -> BaseNetwork:
 
 @router.get(
     "",
-    response_model=list[NetworkResponse],
-    summary="List all network components",
-    response_description="Array of all network components (transformers and cables).",
+    response_model=PaginatedResponse[NetworkResponse],
+    summary="List network components (paginated)",
+    response_description="Paginated list of network components (transformers and cables).",
 )
 async def list_network(
     repo: Annotated[NetworkRepositoryImpl, Depends(get_network_repository)],
-) -> list[NetworkResponse]:
-    """Return every network component stored in the database."""
-    return [_to_response(c) for c in await repo.get_all()]
+    page: int = Query(default=1, ge=1, description="Page number (1-indexed)."),
+    size: int = Query(default=20, ge=1, le=100, description="Items per page."),
+) -> PaginatedResponse[NetworkResponse]:
+    """Return a paginated list of network components."""
+    offset = (page - 1) * size
+    items = [_to_response(c) for c in await repo.get_paginated(offset=offset, limit=size)]
+    total = await repo.count()
+    return PaginatedResponse[NetworkResponse].build(items=items, total=total, page=page, size=size)
 
 
 @router.get(

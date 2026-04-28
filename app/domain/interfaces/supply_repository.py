@@ -13,6 +13,14 @@ class ISupplyRepository(ABC):
         """Return all supply components."""
 
     @abstractmethod
+    async def get_paginated(self, *, offset: int, limit: int) -> list[BaseSupply]:
+        """Return a page of supply components using OFFSET/LIMIT."""
+
+    @abstractmethod
+    async def count(self) -> int:
+        """Return the total number of supply components."""
+
+    @abstractmethod
     async def get_by_id(self, supply_id: str) -> BaseSupply | None:
         """Return a single supply component by UUID string, or None."""
 

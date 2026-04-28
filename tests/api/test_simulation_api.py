@@ -37,9 +37,32 @@ class TestSimulationList:
         response = client.get("/api/v1/simulation")
         assert response.status_code == 200
 
-    def test_list_returns_array(self, client: TestClient):
+    def test_list_returns_paginated_response(self, client: TestClient):
         data = client.get("/api/v1/simulation").json()
-        assert isinstance(data, list)
+        assert "items" in data
+        assert "total" in data
+        assert "page" in data
+        assert "size" in data
+        assert "pages" in data
+        assert isinstance(data["items"], list)
+
+    def test_list_default_pagination(self, client: TestClient):
+        data = client.get("/api/v1/simulation").json()
+        assert data["page"] == 1
+        assert data["size"] == 20
+
+    def test_list_custom_pagination(self, client: TestClient):
+        data = client.get("/api/v1/simulation?page=1&size=5").json()
+        assert data["page"] == 1
+        assert data["size"] == 5
+
+    def test_list_page_zero_returns_422(self, client: TestClient):
+        response = client.get("/api/v1/simulation?page=0")
+        assert response.status_code == 422
+
+    def test_list_size_over_100_returns_422(self, client: TestClient):
+        response = client.get("/api/v1/simulation?size=101")
+        assert response.status_code == 422
 
 
 class TestSimulationGetById:

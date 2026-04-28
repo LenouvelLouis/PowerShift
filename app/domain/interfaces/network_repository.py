@@ -13,6 +13,14 @@ class INetworkRepository(ABC):
         """Return all network components."""
 
     @abstractmethod
+    async def get_paginated(self, *, offset: int, limit: int) -> list[BaseNetwork]:
+        """Return a page of network components using OFFSET/LIMIT."""
+
+    @abstractmethod
+    async def count(self) -> int:
+        """Return the total number of network components."""
+
+    @abstractmethod
     async def get_by_id(self, component_id: str) -> BaseNetwork | None:
         """Return a single network component by UUID string, or None."""
 

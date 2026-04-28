@@ -21,6 +21,7 @@ class SimulationRunInput:
     pypsa_params: dict = field(default_factory=dict)
     asset_overrides: dict = field(default_factory=dict)
     hourly_load_overrides: dict[str, list[float]] = field(default_factory=dict)
+    fail_on_empty_weather: bool = True
 
 
 @dataclass

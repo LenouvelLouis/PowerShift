@@ -1,6 +1,7 @@
 """FastAPI application factory — registers the v1 router and the /health check."""
 
 import logging
+import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request
@@ -14,11 +15,18 @@ from slowapi.util import get_remote_address
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import Response
 
 from app.api.v1.router import router as v1_router
 from app.config import settings
 from app.infrastructure.db.connection import get_db
 from app.infrastructure.db.init_db import init_db
+from app.infrastructure.logging import request_id_ctx, setup_logging
+
+# ---------------------------------------------------------------------------
+# Logging — must be configured before anything else emits logs
+# ---------------------------------------------------------------------------
+setup_logging(environment=settings.ENVIRONMENT)
 
 
 @asynccontextmanager
@@ -49,6 +57,20 @@ app.add_middleware(
 )
 
 _log = logging.getLogger("app")
+
+
+# ---------------------------------------------------------------------------
+# Request-ID middleware — correlates every log line within one request
+# ---------------------------------------------------------------------------
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next) -> Response:  # noqa: ANN001
+    """Attach a unique request_id to every request via contextvars."""
+    rid = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    request_id_ctx.set(rid)
+    response: Response = await call_next(request)
+    response.headers["X-Request-ID"] = rid
+    return response
+
 
 # ---------------------------------------------------------------------------
 # Rate limiting (slowapi)

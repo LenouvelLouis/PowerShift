@@ -10,9 +10,43 @@ class TestListSupplies:
         response = client.get("/api/v1/supplies")
         assert response.status_code == 200
 
-    def test_returns_list(self, client: TestClient):
+    def test_returns_paginated_response(self, client: TestClient):
         data = client.get("/api/v1/supplies").json()
-        assert isinstance(data, list)
+        assert "items" in data
+        assert "total" in data
+        assert "page" in data
+        assert "size" in data
+        assert "pages" in data
+        assert isinstance(data["items"], list)
+
+    def test_default_pagination(self, client: TestClient):
+        data = client.get("/api/v1/supplies").json()
+        assert data["page"] == 1
+        assert data["size"] == 20
+
+    def test_custom_page_and_size(self, client: TestClient):
+        data = client.get("/api/v1/supplies?page=1&size=5").json()
+        assert data["page"] == 1
+        assert data["size"] == 5
+
+    def test_page_zero_returns_422(self, client: TestClient):
+        response = client.get("/api/v1/supplies?page=0")
+        assert response.status_code == 422
+
+    def test_size_over_100_returns_422(self, client: TestClient):
+        response = client.get("/api/v1/supplies?size=101")
+        assert response.status_code == 422
+
+    def test_size_zero_returns_422(self, client: TestClient):
+        response = client.get("/api/v1/supplies?size=0")
+        assert response.status_code == 422
+
+    def test_pages_field_computed(self, client: TestClient):
+        data = client.get("/api/v1/supplies?size=1").json()
+        total = data["total"]
+        assert data["pages"] >= 1
+        if total > 0:
+            assert data["pages"] == (total + 0) // 1  # ceil(total/1) == total
 
 
 class TestCreateSupply:

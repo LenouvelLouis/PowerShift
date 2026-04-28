@@ -13,6 +13,14 @@ class IDemandRepository(ABC):
         """Return all demand components."""
 
     @abstractmethod
+    async def get_paginated(self, *, offset: int, limit: int) -> list[BaseDemand]:
+        """Return a page of demand components using OFFSET/LIMIT."""
+
+    @abstractmethod
+    async def count(self) -> int:
+        """Return the total number of demand components."""
+
+    @abstractmethod
     async def get_by_id(self, demand_id: str) -> BaseDemand | None:
         """Return a single demand component by UUID string, or None."""
 

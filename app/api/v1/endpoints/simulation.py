@@ -5,10 +5,11 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 
 from app.api.v1.dependencies import get_simulation_service
+from app.api.v1.schemas.pagination import PaginatedResponse
 from app.api.v1.schemas.simulation_schema import (
     SimulationListItem,
     SimulationRenameRequest,
@@ -18,6 +19,7 @@ from app.api.v1.schemas.simulation_schema import (
     SimulationSolverInfo,
 )
 from app.application.services.simulation_service import SimulationService
+from app.domain.simulation.exceptions import WeatherDataEmptyError
 
 router = APIRouter(prefix="/simulation", tags=["Simulation"])
 
@@ -37,20 +39,30 @@ async def save_simulation(
     Uses the same PyPSA execution path as POST /preview (LP, no unit-commitment),
     then writes the request and result to the database.
     """
-    return await service.save(body)
+    try:
+        return await service.save(body)
+    except WeatherDataEmptyError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"detail": str(exc), "code": "ERR_WEATHER_DATA_EMPTY"},
+        ) from exc
 
 
 @router.get(
     "",
-    response_model=list[SimulationListItem],
-    summary="List past simulations",
-    response_description="Array of simulation summaries ordered by creation date.",
+    response_model=PaginatedResponse[SimulationListItem],
+    summary="List past simulations (paginated)",
+    response_description="Paginated list of simulation summaries ordered by creation date.",
 )
 async def list_simulations(
     service: Annotated[SimulationService, Depends(get_simulation_service)],
-) -> list[SimulationListItem]:
-    """Return a summary list of all previously run simulations."""
-    return await service.list()
+    page: int = Query(default=1, ge=1, description="Page number (1-indexed)."),
+    size: int = Query(default=20, ge=1, le=100, description="Items per page."),
+) -> PaginatedResponse[SimulationListItem]:
+    """Return a paginated list of simulation summaries."""
+    offset = (page - 1) * size
+    items, total = await service.list_paginated(offset=offset, limit=size)
+    return PaginatedResponse[SimulationListItem].build(items=items, total=total, page=page, size=size)
 
 
 @router.get(
@@ -84,7 +96,13 @@ async def preview_simulation(
 
     Used by the frontend live-preview mode — safe to call on every parameter change.
     """
-    return await service.preview(body)
+    try:
+        return await service.preview(body)
+    except WeatherDataEmptyError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"detail": str(exc), "code": "ERR_WEATHER_DATA_EMPTY"},
+        ) from exc
 
 
 @router.post(
@@ -110,7 +128,13 @@ async def import_scenario(
         pypsa_params=body.pypsa_params,
         hourly_load_overrides=body.hourly_load_overrides,
     )
-    return await service.save(run_request)
+    try:
+        return await service.save(run_request)
+    except WeatherDataEmptyError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"detail": str(exc), "code": "ERR_WEATHER_DATA_EMPTY"},
+        ) from exc
 
 
 @router.delete(

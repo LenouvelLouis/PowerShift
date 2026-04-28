@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -31,6 +32,16 @@ class DemandRepositoryImpl(IDemandRepository):
         result = await self._session.execute(select(DemandModel))
         rows = result.scalars().all()
         return [self._to_domain(row) for row in rows]
+
+    async def get_paginated(self, *, offset: int, limit: int) -> list[BaseDemand]:
+        stmt = select(DemandModel).offset(offset).limit(limit)
+        result = await self._session.execute(stmt)
+        rows = result.scalars().all()
+        return [self._to_domain(row) for row in rows]
+
+    async def count(self) -> int:
+        result = await self._session.execute(select(func.count()).select_from(DemandModel))
+        return result.scalar_one()
 
     async def get_by_id(self, demand_id: str) -> BaseDemand | None:
         result = await self._session.execute(

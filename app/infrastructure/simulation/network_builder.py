@@ -16,6 +16,7 @@ from app.domain.interfaces.simulation_repository import (
     SimulationRunOutput,
 )
 from app.domain.nuclear.services import NuclearConstraintsBuilder
+from app.domain.simulation.exceptions import WeatherDataEmptyError
 from app.infrastructure.nuclear.repository import NuclearRepositoryImpl
 from app.infrastructure.simulation.pypsa_adapter import (
     AbstractGridSimulation,
@@ -457,6 +458,18 @@ class PyPSANetworkBuilder(ISimulationRepository):
                             f"Wind asset '{supply.name}': no KNMI data for "
                             f"{effective_start} → {effective_end}. Running at rated capacity (p_nom)."
                         )
+
+        # ── Fail-fast validation: reject all-zero weather profiles ────────────
+        all_zero_generators: list[str] = []
+        for gen_name, profile in solar_profiles.items():
+            if profile and all(v == 0.0 for v in profile):
+                all_zero_generators.append(gen_name)
+        for gen_name, profile in wind_profiles.items():
+            if profile and all(v == 0.0 for v in profile):
+                all_zero_generators.append(gen_name)
+
+        if all_zero_generators and run_input.fail_on_empty_weather:
+            raise WeatherDataEmptyError(all_zero_generators)
 
         # Build nuclear operational constraints
         nuclear_constraints: dict[str, dict] = {}

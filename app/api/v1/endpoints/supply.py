@@ -6,10 +6,11 @@ import uuid
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 
 from app.api.v1.dependencies import get_supply_repository
+from app.api.v1.schemas.pagination import PaginatedResponse
 from app.api.v1.schemas.supply_schema import SupplyCreate, SupplyResponse, SupplyUpdate
 from app.domain.entities.supply.base_supply import BaseSupply
 from app.infrastructure.db.repositories.supply_repository_impl import SupplyRepositoryImpl
@@ -39,15 +40,20 @@ def _to_response(supply: BaseSupply) -> SupplyResponse:
 
 @router.get(
     "",
-    response_model=list[SupplyResponse],
-    summary="List all supply sources",
-    response_description="Array of all supply components.",
+    response_model=PaginatedResponse[SupplyResponse],
+    summary="List supply sources (paginated)",
+    response_description="Paginated list of supply components.",
 )
 async def list_supplies(
     repo: Annotated[SupplyRepositoryImpl, Depends(get_supply_repository)],
-) -> list[SupplyResponse]:
-    """Return every supply component stored in the database."""
-    return [_to_response(s) for s in await repo.get_all()]
+    page: int = Query(default=1, ge=1, description="Page number (1-indexed)."),
+    size: int = Query(default=20, ge=1, le=100, description="Items per page."),
+) -> PaginatedResponse[SupplyResponse]:
+    """Return a paginated list of supply components."""
+    offset = (page - 1) * size
+    items = [_to_response(s) for s in await repo.get_paginated(offset=offset, limit=size)]
+    total = await repo.count()
+    return PaginatedResponse[SupplyResponse].build(items=items, total=total, page=page, size=size)
 
 
 @router.get(

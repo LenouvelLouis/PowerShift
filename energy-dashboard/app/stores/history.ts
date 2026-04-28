@@ -18,7 +18,8 @@ export const useHistoryStore = defineStore('history', () => {
 
   async function loadHistory() {
     try {
-      simulationHistory.value = await fetchSimulations()
+      const response = await fetchSimulations()
+      simulationHistory.value = response.items
     } catch {
       // silently fail — history is non-critical
     }

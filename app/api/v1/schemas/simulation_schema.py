@@ -24,6 +24,14 @@ class SimulationRunRequest(BaseModel):
     pypsa_params: dict | None = None
     asset_overrides: dict | None = None
     hourly_load_overrides: dict[str, list[float]] | None = None
+    fail_on_empty_weather: bool = Field(
+        default=True,
+        description=(
+            "When True (default), the simulation returns a 422 error if any wind/solar generator "
+            "has an all-zero capacity factor profile (i.e. no weather data for the requested period). "
+            "When False, a warning is logged and the simulation proceeds."
+        ),
+    )
 
     @model_validator(mode="after")
     def validate_hourly_load_overrides(self) -> SimulationRunRequest:
