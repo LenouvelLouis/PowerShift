@@ -29,7 +29,7 @@ const chartOption = computed(() =>
     labels: timeLabels.value,
     series: Object.entries(generatorsT.value).map(([name, data], i) => ({
       name,
-      data: (data as { p: number[] }).p,
+      data: (data as { p: number[] }).p.map(v => (Object.is(v, -0) ? 0 : v)),
       color: generatorColor(name, i)
     })),
     yTitle: 'MW',

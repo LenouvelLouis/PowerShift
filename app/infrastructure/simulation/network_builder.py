@@ -88,12 +88,17 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
             default_demand_bus = bus_by_voltage[sorted_voltages[-1]]
 
             # 3) Add network components as PyPSA Lines / Transformers
+            #    Track which bus pairs are explicitly connected by user components.
+            connected_pairs: set[tuple[str, str]] = set()
+
             for nc in config.network_components:
                 nc_params = nc.to_pypsa_params()
                 if isinstance(nc, Transformer):
                     bus0 = bus_by_voltage.get(nc.voltage_hv_kv, default_supply_bus)
                     bus1 = bus_by_voltage.get(nc.voltage_lv_kv, default_demand_bus)
                     n.add("Transformer", nc.name, bus0=bus0, bus1=bus1, **nc_params)
+                    connected_pairs.add((bus0, bus1))
+                    connected_pairs.add((bus1, bus0))
                 elif isinstance(nc, Cable):
                     # Each cable creates a secondary bus at its voltage level
                     # and connects it to the main bus at that level, modeling
@@ -103,6 +108,30 @@ class _DefaultPyPSASimulation(AbstractGridSimulation):
                     n.add("Bus", cable_bus, v_nom=nc.voltage_kv)
                     nc_params["s_nom"] = nc.capacity_mva if nc.capacity_mva else 100.0
                     n.add("Line", nc.name, bus0=base_bus, bus1=cable_bus, **nc_params)
+                    connected_pairs.add((base_bus, cable_bus))
+                    connected_pairs.add((cable_bus, base_bus))
+
+            # 4) Auto-bridge disconnected voltage levels.
+            #    If adjacent voltage buses aren't linked by a user transformer,
+            #    add an ideal (lossless, high-capacity) link so energy can flow
+            #    through the full voltage cascade.  Without this, generators on
+            #    one voltage level cannot serve loads on another.
+            for i in range(len(sorted_voltages) - 1):
+                hv = sorted_voltages[i]
+                lv = sorted_voltages[i + 1]
+                bus_hv = bus_by_voltage[hv]
+                bus_lv = bus_by_voltage[lv]
+                if (bus_hv, bus_lv) not in connected_pairs:
+                    _log.debug("Auto-bridging %s ↔ %s (no user transformer)", bus_hv, bus_lv)
+                    n.add(
+                        "Link",
+                        f"__auto_bridge_{bus_hv}_{bus_lv}__",
+                        bus0=bus_hv,
+                        bus1=bus_lv,
+                        p_nom=1e9,
+                        efficiency=1.0,
+                        marginal_cost=0.0,
+                    )
         else:
             # No network components → single copper-plate bus
             n.add("Bus", "main_bus", v_nom=380.0)

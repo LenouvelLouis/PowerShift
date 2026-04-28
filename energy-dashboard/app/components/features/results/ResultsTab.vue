@@ -43,7 +43,7 @@
 
       <!-- RIGHT: production + consumption + storage line charts -->
       <div class="flex flex-col gap-6">
-        <template v-if="(result.status === 'converged' || result.status === 'optimized') && hasChartData">
+        <template v-if="(result.status === 'converged' || result.status === 'optimized' || result.status === 'optimal') && hasChartData">
           <ProductionChart :result="result" />
           <ConsumptionChart
             v-if="hasConsumptionData"

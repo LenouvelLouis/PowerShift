@@ -105,13 +105,14 @@ function fmtShort(v: number | null | undefined): string {
 }
 
 const isSuccess = computed(() =>
-  props.result.status === 'converged' || props.result.status === 'optimized'
+  props.result.status === 'converged' || props.result.status === 'optimized' || props.result.status === 'optimal'
 )
 const statusLabel = computed(() => {
   const s = props.result.status
-  if (s === 'optimized') return 'Optimised'
+  if (s === 'optimized' || s === 'optimal') return 'Optimised'
   if (s === 'converged') return 'Converged'
   if (s === 'non_converged') return 'Non-conv.'
+  if (s === 'infeasible') return 'Infeasible'
   return 'Error'
 })
 

@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="(result.status === 'converged' || result.status === 'optimized') && hasChartData"
+    v-if="(result.status === 'converged' || result.status === 'optimized' || result.status === 'optimal') && hasChartData"
     class="flex flex-col gap-8 pt-4"
   >
     <!-- Production section -->

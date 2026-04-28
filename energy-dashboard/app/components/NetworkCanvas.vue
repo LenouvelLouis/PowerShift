@@ -530,7 +530,7 @@ const busY = computed(() => {
 const busR = computed(() => lv.value.busSize / 2)
 
 // ── Bus style (result-dependent) ──────────────────────────────────────────────
-const busOk = computed(() => props.result?.status === 'converged' || props.result?.status === 'optimized')
+const busOk = computed(() => props.result?.status === 'converged' || props.result?.status === 'optimized' || props.result?.status === 'optimal')
 const busGlowColor = computed(() => !props.result ? 'bg-gray-600' : busOk.value ? 'bg-emerald-500' : 'bg-red-500')
 const busBorderColor = computed(() => !props.result ? 'border-[#334155]' : busOk.value ? 'border-emerald-600/60' : 'border-red-600/60')
 const busIconFill = computed(() => !props.result ? '#475569' : busOk.value ? '#34d399' : '#f87171')
@@ -831,7 +831,7 @@ function buildTipData(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyA
   // Bus
   const busResults: TipRow[] = r
     ? [
-        { label: 'Status', value: r.status === 'optimized' ? 'Optimised' : r.status === 'converged' ? 'Converged' : r.status === 'non_converged' ? 'Non-converged' : 'Error', color: (r.status === 'converged' || r.status === 'optimized') ? 'text-emerald-400' : 'text-red-400' },
+        { label: 'Status', value: (r.status === 'optimized' || r.status === 'optimal') ? 'Optimised' : r.status === 'converged' ? 'Converged' : r.status === 'non_converged' ? 'Non-converged' : r.status === 'infeasible' ? 'Infeasible' : 'Error', color: (r.status === 'converged' || r.status === 'optimized' || r.status === 'optimal') ? 'text-emerald-400' : 'text-red-400' },
         { label: 'Total supply', value: `${r.total_supply_mwh?.toFixed(0) ?? '—'} MWh`, color: 'text-emerald-400' },
         { label: 'Total demand', value: `${r.total_demand_mwh?.toFixed(0) ?? '—'} MWh`, color: 'text-red-400' },
         { label: 'Balance', value: `${r.balance_mwh != null ? (r.balance_mwh > 0 ? '+' : '') + r.balance_mwh.toFixed(0) : '—'} MWh`, color: r.balance_mwh != null && Math.abs(r.balance_mwh) < 0.1 ? 'text-emerald-400' : r.balance_mwh != null && r.balance_mwh > 0 ? 'text-blue-400' : 'text-amber-400' }

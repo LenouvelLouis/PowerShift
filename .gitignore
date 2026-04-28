@@ -90,3 +90,10 @@ energy-dashboard/.env.*
 !energy-dashboard/.env.example
 energy-dashboard/package-lock.json
 test-results.xml
+scripts/debug_chart.py
+scripts/debug_chart2.py
+scripts/debug_chart3.py
+scripts/debug_chart4.py
+scripts/debug_chart5.py
+docs/PLAN-PRODUCTION.md
+docs/Screenshot 2026-04-28 185321.png

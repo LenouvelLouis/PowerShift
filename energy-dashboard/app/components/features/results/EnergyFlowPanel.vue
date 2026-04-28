@@ -133,7 +133,7 @@
 
       <!-- Balance explanation -->
       <p class="text-[11px] text-gray-600 leading-relaxed pt-1">
-        <template v-if="result.status === 'optimized'">
+        <template v-if="result.status === 'optimized' || result.status === 'optimal'">
           <template v-if="Math.abs(balance) < 2">
             LOPF balanced the system. Any residual reflects battery round-trip losses.
           </template>
