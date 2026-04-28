@@ -10,7 +10,7 @@ export type ComponentStatus = 'active' | 'inactive' | 'maintenance'
 export interface Supply {
   id: string
   name: string
-  type: 'wind_turbine' | 'solar_panel' | 'nuclear_plant'
+  type: 'wind_turbine' | 'solar_panel' | 'nuclear_plant' | 'battery_storage'
   capacity_mw: number
   efficiency: number
   status: ComponentStatus
@@ -95,7 +95,7 @@ export interface SimulationResultJson {
   generators_t: Record<string, { p: number[], q?: number[] }>
   storage_units_t?: Record<string, { p: number[], state_of_charge: number[] }>
   loads_t: Record<string, { p: number[], q?: number[] }>
-  buses_t?: Record<string, { v_mag_pu: number[], v_ang: number[] }>
+  buses_t?: Record<string, { v_mag_pu?: number[], v_ang?: number[], marginal_price?: number[] }>
   lines_t?: Record<string, { p0: number[], loading: number[] }>
   // Aggregates
   capacity_factors: Record<string, number>
@@ -120,7 +120,7 @@ export interface SimulationResultJson {
 export interface SimulationResult {
   id: string
   request_id: string
-  status: 'converged' | 'optimized' | 'non_converged' | 'error'
+  status: 'converged' | 'optimized' | 'optimal' | 'infeasible' | 'non_converged' | 'error'
   solver: string
   name?: string | null
   start_date?: string | null
@@ -136,7 +136,7 @@ export interface SimulationResult {
 export interface SimulationListItem {
   id: string
   request_id: string
-  status: 'converged' | 'optimized' | 'non_converged' | 'error'
+  status: 'converged' | 'optimized' | 'optimal' | 'infeasible' | 'non_converged' | 'error'
   solver: string
   name?: string | null
   supply_ids: string[]

@@ -1,7 +1,7 @@
 <template>
   <UModal
     :open="open"
-    :ui="{ width: 'max-w-2xl' }"
+    class="max-w-2xl"
     @update:open="$emit('update:open', $event)"
   >
     <template #header>

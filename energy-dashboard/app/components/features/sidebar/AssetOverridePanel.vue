@@ -157,7 +157,7 @@ const store = useSimulationStore()
 
 function getVal(field: string, defaultVal: number): number {
   const overrides = store.getOverrides(props.groupType, props.asset.id)
-  return field in overrides ? overrides[field] : defaultVal
+  return field in overrides ? overrides[field] ?? defaultVal : defaultVal
 }
 
 function setVal(field: string, rawValue: string | number) {

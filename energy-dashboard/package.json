@@ -20,11 +20,13 @@
     "@tanstack/vue-query": "^5.92.12",
     "@unovis/ts": "^1.6.4",
     "@unovis/vue": "^1.6.4",
+    "@vueuse/core": "^14.2.1",
     "@vueuse/nuxt": "14.2.1",
     "chart.js": "^4.5.1",
     "echarts": "^6.0.0",
     "lucide-vue-next": "^0.577.0",
     "nuxt": "^4.4.2",
+    "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.4",
@@ -35,6 +37,7 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
     "@primevue/nuxt-module": "^4.5.4",
+    "@types/node": "^25.6.0",
     "eslint": "^10.0.3",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.2.5"

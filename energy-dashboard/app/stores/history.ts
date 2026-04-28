@@ -40,7 +40,8 @@ export const useHistoryStore = defineStore('history', () => {
   async function renameEntry(id: string, name: string) {
     const updated = await renameSimulation(id, name)
     const idx = simulationHistory.value.findIndex(s => s.id === id)
-    if (idx !== -1) simulationHistory.value[idx] = { ...simulationHistory.value[idx], name }
+    const existing = idx !== -1 ? simulationHistory.value[idx] : undefined
+    if (existing) simulationHistory.value[idx] = { ...existing, name }
     if (currentResult.value?.id === id) currentResult.value = { ...currentResult.value, name: updated.name ?? name }
   }
 

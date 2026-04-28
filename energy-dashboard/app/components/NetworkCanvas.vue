@@ -556,8 +556,9 @@ const multiBusSize = computed(() => Math.max(48, lv.value.busSize - 16))
 function formatBusName(name: string): string {
   const m = name.match(/bus_([\d.]+)kV/)
   if (!m) return name
-  const suffix = name.includes('kV_') && name.split('kV_')[1]
-    ? ` (${name.split('kV_')[1].replace(/_/g, ' ').replace(/ - /g, '-')})`
+  const afterKv = name.split('kV_')[1]
+  const suffix = name.includes('kV_') && afterKv
+    ? ` (${afterKv.replace(/_/g, ' ').replace(/ - /g, '-')})`
     : ''
   return `${m[1]} kV${suffix}`
 }
@@ -841,7 +842,7 @@ function buildTipData(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyA
   if (isMultiBus.value && typeof asset === 'string') {
     const busName = asset as string
     const voltageLabel = formatBusName(busName)
-    const busData = r?.buses_t?.[busName]
+    const busData = r?.result_json?.buses_t?.[busName]
     const mbResults: TipRow[] = [...busResults]
     if (busData?.marginal_price) {
       const prices = busData.marginal_price as number[]
@@ -920,8 +921,8 @@ let ro: ResizeObserver | null = null
 
 onMounted(() => {
   if (canvasRef.value) {
-    ro = new ResizeObserver(([e]) => {
-      canvasW.value = e.contentRect.width
+    ro = new ResizeObserver((entries) => {
+      if (entries[0]) canvasW.value = entries[0].contentRect.width
     })
     ro.observe(canvasRef.value)
     nextTick(readWidth)

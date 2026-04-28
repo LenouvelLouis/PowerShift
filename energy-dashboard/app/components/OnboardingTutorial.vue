@@ -270,7 +270,7 @@ const steps: Step[] = [
   }
 ]
 
-const current = computed(() => steps[step.value])
+const current = computed(() => steps[step.value]!)
 </script>
 
 <style scoped>
