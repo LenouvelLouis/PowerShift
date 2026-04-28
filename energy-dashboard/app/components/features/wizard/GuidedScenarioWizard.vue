@@ -12,7 +12,10 @@
 
     <!-- Step indicator -->
     <div class="flex items-center gap-2 mb-8">
-      <template v-for="(s, i) in steps" :key="i">
+      <template
+        v-for="(s, i) in steps"
+        :key="i"
+      >
         <button
           class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors"
           :class="
@@ -36,7 +39,6 @@
 
     <!-- Step card -->
     <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
-
       <!-- Step 1: Demand -->
       <div v-if="step === 0">
         <h2 class="text-lg font-semibold text-white mb-1">
@@ -47,10 +49,16 @@
           peaking at 6-7 PM (evening cooking, heating). Electric vehicles charge mainly at night.
         </p>
 
-        <div v-if="referential.availableDemands.length === 0" class="text-sm text-gray-500 italic">
+        <div
+          v-if="referential.availableDemands.length === 0"
+          class="text-sm text-gray-500 italic"
+        >
           No demand assets available. Add some from the sidebar first.
         </div>
-        <div v-else class="flex flex-col gap-3">
+        <div
+          v-else
+          class="flex flex-col gap-3"
+        >
           <label
             v-for="d in referential.availableDemands"
             :key="d.id"
@@ -88,10 +96,16 @@
           import as last resort.
         </p>
 
-        <div v-if="referential.availableSupplies.length === 0" class="text-sm text-gray-500 italic">
+        <div
+          v-if="referential.availableSupplies.length === 0"
+          class="text-sm text-gray-500 italic"
+        >
           No supply assets available. Add some from the sidebar first.
         </div>
-        <div v-else class="flex flex-col gap-3">
+        <div
+          v-else
+          class="flex flex-col gap-3"
+        >
           <label
             v-for="s in referential.availableSupplies"
             :key="s.id"
@@ -214,7 +228,10 @@
               >
                 {{ demandIcon(d.type) }} {{ d.name }}
               </span>
-              <span v-if="selectedDemandsList.length === 0" class="text-xs text-gray-600 italic">
+              <span
+                v-if="selectedDemandsList.length === 0"
+                class="text-xs text-gray-600 italic"
+              >
                 None selected
               </span>
             </div>
@@ -229,7 +246,10 @@
               >
                 {{ supplyIcon(s.type) }} {{ s.name }}
               </span>
-              <span v-if="selectedSuppliesList.length === 0" class="text-xs text-gray-600 italic">
+              <span
+                v-if="selectedSuppliesList.length === 0"
+                class="text-xs text-gray-600 italic"
+              >
                 None selected
               </span>
             </div>
@@ -237,7 +257,9 @@
           <div class="flex gap-6">
             <div>
               <span class="text-xs text-gray-500 uppercase tracking-wide">Duration</span>
-              <p class="text-sm text-white">{{ sim.snapshotHours }}h</p>
+              <p class="text-sm text-white">
+                {{ sim.snapshotHours }}h
+              </p>
             </div>
             <div>
               <span class="text-xs text-gray-500 uppercase tracking-wide">Objective</span>
@@ -255,13 +277,23 @@
           :disabled="!canRun || sim.isRunning"
           @click="handleRun"
         >
-          <template v-if="sim.isRunning">Running...</template>
-          <template v-else>Run Simulation</template>
+          <template v-if="sim.isRunning">
+            Running...
+          </template>
+          <template v-else>
+            Run Simulation
+          </template>
         </button>
-        <p v-if="!canRun" class="text-xs text-amber-500 mt-2 text-center">
+        <p
+          v-if="!canRun"
+          class="text-xs text-amber-500 mt-2 text-center"
+        >
           Select at least one demand and one supply asset to run.
         </p>
-        <p v-if="sim.error" class="text-xs text-red-400 mt-2 text-center">
+        <p
+          v-if="sim.error"
+          class="text-xs text-red-400 mt-2 text-center"
+        >
           {{ sim.error }}
         </p>
       </div>
@@ -350,7 +382,7 @@ const durationPresets = [
   { label: '24h (1 day)', value: 24 },
   { label: '168h (1 week)', value: 168 },
   { label: '720h (1 month)', value: 720 },
-  { label: '8760h (1 year)', value: 8760 },
+  { label: '8760h (1 year)', value: 8760 }
 ]
 
 // --- Objectives ---
@@ -359,18 +391,18 @@ const objectives = [
   {
     value: 'min_cost' as const,
     label: 'Minimize cost',
-    description: 'Find the cheapest dispatch to meet demand. Prioritizes low marginal-cost sources (renewables, nuclear).',
+    description: 'Find the cheapest dispatch to meet demand. Prioritizes low marginal-cost sources (renewables, nuclear).'
   },
   {
     value: 'min_emissions' as const,
     label: 'Minimize emissions',
-    description: 'Reduce CO2 by favoring zero-carbon sources, even if more expensive.',
+    description: 'Reduce CO2 by favoring zero-carbon sources, even if more expensive.'
   },
   {
     value: 'max_renewable' as const,
     label: 'Maximize renewables',
-    description: 'Maximize the share of wind and solar in the energy mix.',
-  },
+    description: 'Maximize the share of wind and solar in the energy mix.'
+  }
 ]
 
 // --- Icons and colors ---

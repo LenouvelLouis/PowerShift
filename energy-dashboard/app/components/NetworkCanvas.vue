@@ -29,14 +29,39 @@
       @mousemove="moveTooltip($event)"
       @mouseleave="hideTooltip"
     >
-      <NetworkCanvasAssetIcon v-if="!isMicro" :type="supply.type" :size="lv.iconSize" class="shrink-0" />
-      <div class="min-w-0 flex-1" :class="isMicro ? '' : lv.cardGap">
-        <p class="font-semibold text-white truncate leading-tight" :class="lv.cardTitle">{{ supply.name }}</p>
-        <p class="text-gray-500 leading-tight" :class="lv.cardSub">{{ supply.capacity_mw }} MW</p>
-        <p v-if="result && !isMicro" class="font-mono text-emerald-400 leading-tight" :class="lv.cardSub">
+      <NetworkCanvasAssetIcon
+        v-if="!isMicro"
+        :type="supply.type"
+        :size="lv.iconSize"
+        class="shrink-0"
+      />
+      <div
+        class="min-w-0 flex-1"
+        :class="isMicro ? '' : lv.cardGap"
+      >
+        <p
+          class="font-semibold text-white truncate leading-tight"
+          :class="lv.cardTitle"
+        >
+          {{ supply.name }}
+        </p>
+        <p
+          class="text-gray-500 leading-tight"
+          :class="lv.cardSub"
+        >
+          {{ supply.capacity_mw }} MW
+        </p>
+        <p
+          v-if="result && !isMicro"
+          class="font-mono text-emerald-400 leading-tight"
+          :class="lv.cardSub"
+        >
           ⚡ {{ fmtPow(supplyAvg(supply)) }} MW avg
         </p>
-        <p v-else-if="result && isMicro" class="font-mono text-emerald-400 leading-tight text-[9px]">
+        <p
+          v-else-if="result && isMicro"
+          class="font-mono text-emerald-400 leading-tight text-[9px]"
+        >
           {{ fmtPow(supplyAvg(supply)) }} MW
         </p>
       </div>
@@ -53,14 +78,39 @@
       @mousemove="moveTooltip($event)"
       @mouseleave="hideTooltip"
     >
-      <NetworkCanvasAssetIcon v-if="!isMicro" :type="demand.type" :size="lv.iconSize" class="shrink-0" />
-      <div class="min-w-0 flex-1" :class="isMicro ? '' : lv.cardGap">
-        <p class="font-semibold text-white truncate leading-tight" :class="lv.cardTitle">{{ demand.name }}</p>
-        <p class="text-gray-500 leading-tight" :class="lv.cardSub">{{ demand.load_mw }} MW</p>
-        <p v-if="result && !isMicro" class="font-mono text-red-400 leading-tight" :class="lv.cardSub">
+      <NetworkCanvasAssetIcon
+        v-if="!isMicro"
+        :type="demand.type"
+        :size="lv.iconSize"
+        class="shrink-0"
+      />
+      <div
+        class="min-w-0 flex-1"
+        :class="isMicro ? '' : lv.cardGap"
+      >
+        <p
+          class="font-semibold text-white truncate leading-tight"
+          :class="lv.cardTitle"
+        >
+          {{ demand.name }}
+        </p>
+        <p
+          class="text-gray-500 leading-tight"
+          :class="lv.cardSub"
+        >
+          {{ demand.load_mw }} MW
+        </p>
+        <p
+          v-if="result && !isMicro"
+          class="font-mono text-red-400 leading-tight"
+          :class="lv.cardSub"
+        >
           🔌 {{ fmtPow(demandAvg(demand)) }} MW avg
         </p>
-        <p v-else-if="result && isMicro" class="font-mono text-red-400 leading-tight text-[9px]">
+        <p
+          v-else-if="result && isMicro"
+          class="font-mono text-red-400 leading-tight text-[9px]"
+        >
           {{ fmtPow(demandAvg(demand)) }} MW
         </p>
       </div>
@@ -87,19 +137,54 @@
         @mousemove="moveTooltip($event)"
         @mouseleave="hideTooltip"
       >
-        <svg :width="lv.busIconSize" :height="lv.busIconSize" viewBox="0 0 24 24" fill="none">
-          <path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z" :fill="busIconFill" stroke="none" />
+        <svg
+          :width="lv.busIconSize"
+          :height="lv.busIconSize"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"
+            :fill="busIconFill"
+            stroke="none"
+          />
         </svg>
-        <span v-if="!isCompact" class="text-[9px] text-gray-500 font-mono leading-none mt-0.5">380 kV</span>
+        <span
+          v-if="!isCompact"
+          class="text-[9px] text-gray-500 font-mono leading-none mt-0.5"
+        >380 kV</span>
       </div>
       <!-- Bus label -->
-      <div class="mt-1.5 text-center" :style="{ maxWidth: `${lv.busSize + 40}px` }">
-        <p class="font-semibold text-gray-400 truncate" :class="lv.busLabel">Main Bus</p>
-        <p v-if="result" class="font-semibold mt-0.5" :class="[lv.busLabel, busStatusColor]">{{ busStatusLabel }}</p>
-        <p v-else class="text-gray-700 mt-0.5" :class="lv.busLabel">No result</p>
+      <div
+        class="mt-1.5 text-center"
+        :style="{ maxWidth: `${lv.busSize + 40}px` }"
+      >
+        <p
+          class="font-semibold text-gray-400 truncate"
+          :class="lv.busLabel"
+        >
+          Main Bus
+        </p>
+        <p
+          v-if="result"
+          class="font-semibold mt-0.5"
+          :class="[lv.busLabel, busStatusColor]"
+        >
+          {{ busStatusLabel }}
+        </p>
+        <p
+          v-else
+          class="text-gray-700 mt-0.5"
+          :class="lv.busLabel"
+        >
+          No result
+        </p>
       </div>
       <!-- Network component badges (full layout only) -->
-      <div v-if="network.length && isFull" class="mt-3 flex flex-col gap-1.5 w-44">
+      <div
+        v-if="network.length && isFull"
+        class="mt-3 flex flex-col gap-1.5 w-44"
+      >
         <div
           v-for="n in network"
           :key="n.id"
@@ -108,7 +193,10 @@
           @mousemove="moveTooltip($event)"
           @mouseleave="hideTooltip"
         >
-          <NetworkCanvasAssetIcon :type="n.type" :size="18" />
+          <NetworkCanvasAssetIcon
+            :type="n.type"
+            :size="18"
+          />
           <span class="text-gray-400 truncate">{{ n.name }}</span>
           <span class="text-gray-600 font-mono ml-auto shrink-0">{{ n.capacity_mva }} MVA</span>
         </div>
@@ -131,12 +219,26 @@
           @mousemove="moveTooltip($event)"
           @mouseleave="hideTooltip"
         >
-          <svg :width="20" :height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z" :fill="busIconFill" stroke="none" />
+          <svg
+            :width="20"
+            :height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"
+              :fill="busIconFill"
+              stroke="none"
+            />
           </svg>
         </div>
-        <div class="mt-1 text-center" style="max-width: 120px;">
-          <p class="font-semibold text-gray-400 text-[10px] truncate">{{ formatBusName(busName) }}</p>
+        <div
+          class="mt-1 text-center"
+          style="max-width: 120px;"
+        >
+          <p class="font-semibold text-gray-400 text-[10px] truncate">
+            {{ formatBusName(busName) }}
+          </p>
         </div>
       </div>
       <!-- Status label below last bus -->
@@ -144,8 +246,20 @@
         class="absolute text-center"
         :style="{ left: `${canvasW / 2}px`, top: `${demandBusY + multiBusSize / 2 + 20}px`, transform: 'translateX(-50%)' }"
       >
-        <p v-if="result" class="font-semibold" :class="[lv.busLabel, busStatusColor]">{{ busStatusLabel }}</p>
-        <p v-else class="text-gray-700" :class="lv.busLabel">No result</p>
+        <p
+          v-if="result"
+          class="font-semibold"
+          :class="[lv.busLabel, busStatusColor]"
+        >
+          {{ busStatusLabel }}
+        </p>
+        <p
+          v-else
+          class="text-gray-700"
+          :class="lv.busLabel"
+        >
+          No result
+        </p>
       </div>
     </template>
 
@@ -160,44 +274,88 @@
       @mousemove="moveTooltip($event)"
       @mouseleave="hideTooltip"
     >
-      <NetworkCanvasAssetIcon v-if="!isMicro" type="battery_storage" :size="lv.iconSize" class="shrink-0" />
-      <div class="min-w-0 flex-1" :class="isMicro ? '' : lv.cardGap">
-        <p class="font-semibold text-white truncate leading-tight" :class="lv.cardTitle">{{ bat.name }}</p>
-        <p class="text-green-500 leading-tight" :class="lv.cardSub">{{ bat.capacity_mw }} MW</p>
-        <p v-if="result && storageAvg(bat)" class="font-mono text-green-400 leading-tight" :class="lv.cardSub">
+      <NetworkCanvasAssetIcon
+        v-if="!isMicro"
+        type="battery_storage"
+        :size="lv.iconSize"
+        class="shrink-0"
+      />
+      <div
+        class="min-w-0 flex-1"
+        :class="isMicro ? '' : lv.cardGap"
+      >
+        <p
+          class="font-semibold text-white truncate leading-tight"
+          :class="lv.cardTitle"
+        >
+          {{ bat.name }}
+        </p>
+        <p
+          class="text-green-500 leading-tight"
+          :class="lv.cardSub"
+        >
+          {{ bat.capacity_mw }} MW
+        </p>
+        <p
+          v-if="result && storageAvg(bat)"
+          class="font-mono text-green-400 leading-tight"
+          :class="lv.cardSub"
+        >
           🔋 {{ fmtPow(Math.abs(storageAvg(bat))) }} MW avg
         </p>
       </div>
     </div>
 
     <!-- ── Timestamp ──────────────────────────────────────────────────────── -->
-    <div v-if="result && isFull" class="absolute top-3 right-4 text-xs font-mono text-gray-600 select-none">
+    <div
+      v-if="result && isFull"
+      class="absolute top-3 right-4 text-xs font-mono text-gray-600 select-none"
+    >
       {{ timestamp }}
     </div>
 
     <!-- ── Side / section labels ─────────────────────────────────────────── -->
     <template v-if="!isColumn">
-      <div v-if="supplies.length" class="absolute top-3 left-4 text-[10px] font-semibold uppercase tracking-widest text-gray-700 select-none">
+      <div
+        v-if="supplies.length"
+        class="absolute top-3 left-4 text-[10px] font-semibold uppercase tracking-widest text-gray-700 select-none"
+      >
         Supply
       </div>
-      <div v-if="demands.length" class="absolute top-3 text-[10px] font-semibold uppercase tracking-widest text-gray-700 select-none" :style="{ right: `${lv.padX + 2}px` }">
+      <div
+        v-if="demands.length"
+        class="absolute top-3 text-[10px] font-semibold uppercase tracking-widest text-gray-700 select-none"
+        :style="{ right: `${lv.padX + 2}px` }"
+      >
         Demand
       </div>
     </template>
     <template v-else>
-      <div v-if="supplies.length" class="absolute text-[10px] font-semibold uppercase tracking-widest text-gray-700 select-none" :style="{ top: `${COL_PAD_Y - 14}px`, left: `${lv.padX}px` }">
+      <div
+        v-if="supplies.length"
+        class="absolute text-[10px] font-semibold uppercase tracking-widest text-gray-700 select-none"
+        :style="{ top: `${COL_PAD_Y - 14}px`, left: `${lv.padX}px` }"
+      >
         Supply
       </div>
-      <div v-if="demands.length" class="absolute text-[10px] font-semibold uppercase tracking-widest text-gray-700 select-none" :style="{ top: `${colDemandStart - 14}px`, left: `${lv.padX}px` }">
+      <div
+        v-if="demands.length"
+        class="absolute text-[10px] font-semibold uppercase tracking-widest text-gray-700 select-none"
+        :style="{ top: `${colDemandStart - 14}px`, left: `${lv.padX}px` }"
+      >
         Demand
       </div>
     </template>
 
     <!-- ── Empty state ────────────────────────────────────────────────────── -->
-    <div v-if="!supplies.length && !demands.length" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <p class="text-gray-700 text-sm text-center px-6">Add supply and demand assets to visualize the network</p>
+    <div
+      v-if="!supplies.length && !demands.length"
+      class="absolute inset-0 flex items-center justify-center pointer-events-none"
+    >
+      <p class="text-gray-700 text-sm text-center px-6">
+        Add supply and demand assets to visualize the network
+      </p>
     </div>
-
   </div>
 
   <!-- ── Floating tooltip (teleported to body to escape overflow-hidden) ── -->
@@ -211,7 +369,9 @@
         <div class="bg-[#0B1220]/95 border border-[#334155] rounded-xl shadow-2xl p-3 w-56 backdrop-blur-sm">
           <!-- Header -->
           <div class="flex items-start justify-between gap-2 mb-2">
-            <p class="text-white font-semibold text-xs leading-tight">{{ tip.data.name }}</p>
+            <p class="text-white font-semibold text-xs leading-tight">
+              {{ tip.data.name }}
+            </p>
             <span
               class="shrink-0 text-[10px] px-1.5 py-0.5 rounded font-medium"
               :class="tipBadgeClass"
@@ -233,20 +393,28 @@
           <!-- Simulation results (if available) -->
           <template v-if="tip.data.results && tip.data.results.length">
             <div class="border-t border-[#1E293B] mt-2 pt-2 space-y-1 text-[11px]">
-              <p class="text-[10px] uppercase tracking-wider text-gray-600 mb-1">Simulation</p>
+              <p class="text-[10px] uppercase tracking-wider text-gray-600 mb-1">
+                Simulation
+              </p>
               <div
                 v-for="row in tip.data.results"
                 :key="row.label"
                 class="flex justify-between items-start gap-2"
               >
                 <span class="text-gray-500 leading-tight">{{ row.label }}</span>
-                <span class="font-mono leading-tight shrink-0" :class="row.color ?? 'text-white'">{{ row.value }}</span>
+                <span
+                  class="font-mono leading-tight shrink-0"
+                  :class="row.color ?? 'text-white'"
+                >{{ row.value }}</span>
               </div>
             </div>
           </template>
 
           <!-- Explanation -->
-          <p v-if="tip.data.hint" class="text-[10px] text-gray-600 mt-2 leading-relaxed border-t border-[#1E293B] pt-2">
+          <p
+            v-if="tip.data.hint"
+            class="text-[10px] text-gray-600 mt-2 leading-relaxed border-t border-[#1E293B] pt-2"
+          >
             {{ tip.data.hint }}
           </p>
         </div>
@@ -258,27 +426,27 @@
 <script setup lang="ts">
 import type { Supply, Demand, NetworkComponent, SimulationResult } from '~/composables/api'
 import NetworkCanvasCableLayer from '~/components/network-canvas/CableLayer.vue'
-import NetworkCanvasAssetIcon  from '~/components/network-canvas/AssetIcon.vue'
+import NetworkCanvasAssetIcon from '~/components/network-canvas/AssetIcon.vue'
 import type { CableLine } from '~/components/network-canvas/CableLayer.vue'
 
 const props = defineProps<{
   supplies: Supply[]
   storage?: Supply[]
-  demands:  Demand[]
-  network:  NetworkComponent[]
-  result:   SimulationResult | null
+  demands: Demand[]
+  network: NetworkComponent[]
+  result: SimulationResult | null
   visible?: boolean
 }>()
 
 // ── Canvas measure ────────────────────────────────────────────────────────────
 const canvasRef = ref<HTMLElement | null>(null)
-const canvasW   = ref(0)
+const canvasW = ref(0)
 
 // ── Responsive flags ──────────────────────────────────────────────────────────
-const isColumn  = computed(() => canvasW.value > 0 && canvasW.value < 500)
-const isMicro   = computed(() => canvasW.value > 0 && canvasW.value < 400)
+const isColumn = computed(() => canvasW.value > 0 && canvasW.value < 500)
+const isMicro = computed(() => canvasW.value > 0 && canvasW.value < 400)
 const isCompact = computed(() => canvasW.value > 0 && canvasW.value < 650)
-const isFull    = computed(() => canvasW.value >= 900)
+const isFull = computed(() => canvasW.value >= 900)
 
 // ── Layout values per breakpoint ──────────────────────────────────────────────
 const lv = computed(() => {
@@ -289,50 +457,50 @@ const lv = computed(() => {
     busSize: w < 400 ? 52 : 64, busIconSize: w < 400 ? 18 : 22, gap: 8,
     cardPad: w < 400 ? 'p-1.5 gap-1' : 'p-2 gap-1.5', cardGap: w < 400 ? '' : 'ml-1.5',
     cardTitle: w < 400 ? 'text-[9px]' : 'text-[10px]', cardSub: w < 400 ? 'text-[9px]' : 'text-[10px]',
-    busLabel: w < 400 ? 'text-[9px]' : 'text-[10px]',
+    busLabel: w < 400 ? 'text-[9px]' : 'text-[10px]'
   }
   if (w < 600) return {
     padX: 10, cardW: 130, cardH: 60, iconSize: 28, busSize: 60, busIconSize: 20, gap: 10,
     cardPad: 'p-2 gap-1.5', cardGap: 'ml-1.5', cardTitle: 'text-[10px]', cardSub: 'text-[10px]',
-    busLabel: 'text-[10px]',
+    busLabel: 'text-[10px]'
   }
   if (w < 800) return {
     padX: 16, cardW: 158, cardH: 68, iconSize: 36, busSize: 72, busIconSize: 24, gap: 12,
     cardPad: 'p-2 gap-2', cardGap: 'ml-2', cardTitle: 'text-[11px]', cardSub: 'text-[10px]',
-    busLabel: 'text-[10px]',
+    busLabel: 'text-[10px]'
   }
   if (w < 1100) return {
     padX: 22, cardW: 182, cardH: 76, iconSize: 44, busSize: 84, busIconSize: 30, gap: 14,
     cardPad: 'p-2.5 gap-2.5', cardGap: 'ml-2', cardTitle: 'text-xs', cardSub: 'text-[11px]',
-    busLabel: 'text-[11px]',
+    busLabel: 'text-[11px]'
   }
   return {
     padX: 28, cardW: 210, cardH: 82, iconSize: 52, busSize: 96, busIconSize: 36, gap: 14,
     cardPad: 'p-3 gap-3', cardGap: 'ml-1', cardTitle: 'text-xs', cardSub: 'text-[11px]',
-    busLabel: 'text-xs',
+    busLabel: 'text-xs'
   }
 })
 
 // ── Column-mode constants & derived heights ───────────────────────────────────
 const COL_PAD_Y = 28
-const COL_GAP   = 20
+const COL_GAP = 20
 
-const colCardW        = computed(() => canvasW.value - 2 * lv.value.padX)
+const colCardW = computed(() => canvasW.value - 2 * lv.value.padX)
 const colSupplyBlockH = computed(() => {
   const { cardH, gap } = lv.value
   const n = props.supplies.length
   return n ? n * cardH + (n - 1) * gap : 0
 })
-const colBusBlockH    = computed(() => lv.value.busSize + 28)
+const colBusBlockH = computed(() => lv.value.busSize + 28)
 const colDemandBlockH = computed(() => {
   const { cardH, gap } = lv.value
   const n = props.demands.length
   return n ? n * cardH + (n - 1) * gap : 0
 })
-const colBusStart     = computed(() =>
+const colBusStart = computed(() =>
   COL_PAD_Y + (props.supplies.length ? colSupplyBlockH.value + COL_GAP : 0)
 )
-const colDemandStart  = computed(() =>
+const colDemandStart = computed(() =>
   colBusStart.value + colBusBlockH.value + COL_GAP
 )
 
@@ -362,10 +530,10 @@ const busY = computed(() => {
 const busR = computed(() => lv.value.busSize / 2)
 
 // ── Bus style (result-dependent) ──────────────────────────────────────────────
-const busOk          = computed(() => props.result?.status === 'converged' || props.result?.status === 'optimized')
-const busGlowColor   = computed(() => !props.result ? 'bg-gray-600' : busOk.value ? 'bg-emerald-500' : 'bg-red-500')
+const busOk = computed(() => props.result?.status === 'converged' || props.result?.status === 'optimized')
+const busGlowColor = computed(() => !props.result ? 'bg-gray-600' : busOk.value ? 'bg-emerald-500' : 'bg-red-500')
 const busBorderColor = computed(() => !props.result ? 'border-[#334155]' : busOk.value ? 'border-emerald-600/60' : 'border-red-600/60')
-const busIconFill    = computed(() => !props.result ? '#475569' : busOk.value ? '#34d399' : '#f87171')
+const busIconFill = computed(() => !props.result ? '#475569' : busOk.value ? '#34d399' : '#f87171')
 const busStatusColor = computed(() => !props.result ? 'text-gray-600' : busOk.value ? 'text-emerald-400' : 'text-red-400')
 const busStatusLabel = computed(() => {
   if (!props.result) return ''
@@ -401,7 +569,7 @@ function multiBusStyle(idx: number) {
   return {
     left: `${canvasW.value / 2}px`,
     top: `${startY + idx * spacing}px`,
-    transform: 'translate(-50%, -50%)',
+    transform: 'translate(-50%, -50%)'
   }
 }
 
@@ -453,24 +621,33 @@ function storageCardStyle(i: number) {
   }
   // Horizontal mode: place batteries below the bus, centered
   const batW = Math.min(lv.value.cardW, 180)
-  const totalH = batCount * cardH + (batCount - 1) * gap
+  const _totalH = batCount * cardH + (batCount - 1) * gap
   const topStart = busY.value + busR.value + 24
   return {
     left: `${canvasW.value / 2 - batW / 2}px`,
     top: `${topStart + i * (cardH + gap)}px`,
-    width: `${batW}px`,
+    width: `${batW}px`
   }
 }
 
 // ── Power helpers ─────────────────────────────────────────────────────────────
-const genT     = computed(() => props.result?.result_json?.generators_t ?? {})
-const loadT    = computed(() => props.result?.result_json?.loads_t      ?? {})
+const genT = computed(() => props.result?.result_json?.generators_t ?? {})
+const loadT = computed(() => props.result?.result_json?.loads_t ?? {})
 const storageT = computed(() => props.result?.result_json?.storage_units_t ?? {})
-const avg   = (s: number[]) => s.length ? s.reduce((a, v) => a + v, 0) / s.length : 0
-const supplyAvg  = (s: Supply) => { const ts = genT.value[s.name];  return ts ? avg(ts.p) : s.capacity_mw }
-const demandAvg  = (d: Demand) => { const ts = loadT.value[d.name]; return ts ? avg(ts.p) : d.load_mw }
-const storageAvg = (s: Supply) => { const ts = storageT.value[s.name]; return ts ? avg(ts.p) : 0 }
-const fmtPow     = (v: number) => v.toFixed(1)
+const avg = (s: number[]) => s.length ? s.reduce((a, v) => a + v, 0) / s.length : 0
+const supplyAvg = (s: Supply) => {
+  const ts = genT.value[s.name]
+  return ts ? avg(ts.p) : s.capacity_mw
+}
+const demandAvg = (d: Demand) => {
+  const ts = loadT.value[d.name]
+  return ts ? avg(ts.p) : d.load_mw
+}
+const storageAvg = (s: Supply) => {
+  const ts = storageT.value[s.name]
+  return ts ? avg(ts.p) : 0
+}
+const fmtPow = (v: number) => v.toFixed(1)
 
 // ── Cable lines ───────────────────────────────────────────────────────────────
 const cableLines = computed<CableLine[]>(() => {
@@ -525,7 +702,7 @@ const cableLines = computed<CableLine[]>(() => {
         // Find the network component connecting these two voltage levels
         const busA = buses.value[idx]
         const busB = buses.value[idx + 1]
-        const nc = props.network.find(n => {
+        const nc = props.network.find((n) => {
           if (n.type === 'transformer') {
             const hvBus = `bus_${n.voltage_hv_kv}kV`
             const lvBus = `bus_${n.voltage_lv_kv}kV`
@@ -540,7 +717,7 @@ const cableLines = computed<CableLine[]>(() => {
           isSupply: false,
           isBusCable: true,
           power: nc?.capacity_mva ?? 0,
-          label,
+          label
         })
       }
     }
@@ -550,7 +727,7 @@ const cableLines = computed<CableLine[]>(() => {
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
 
-interface TipRow { label: string; value: string; color?: string }
+interface TipRow { label: string, value: string, color?: string }
 interface TipData {
   name: string
   typeLabel: string
@@ -560,27 +737,36 @@ interface TipData {
   hint?: string
 }
 
-const tip = ref<{ visible: boolean; x: number; y: number; data: TipData | null }>({
-  visible: false, x: 0, y: 0, data: null,
+const tip = ref<{ visible: boolean, x: number, y: number, data: TipData | null }>({
+  visible: false, x: 0, y: 0, data: null
 })
 
 const SUPPLY_HINTS: Record<string, string> = {
   wind_turbine: 'Output depends on wind speed. PyPSA scales capacity by an hourly weather factor (0–1) from KNMI data.',
   solar_panel: 'Output depends on solar irradiance. Zero at night, peaks around noon.',
-  nuclear_plant: 'Dispatchable baseload — runs at a fixed fraction of capacity regardless of weather.',
+  nuclear_plant: 'Dispatchable baseload — runs at a fixed fraction of capacity regardless of weather.'
 }
 const DEMAND_HINTS: Record<string, string> = {
   house: 'Residential load. Profile peaks in morning and evening, lower overnight.',
-  electric_vehicle: 'EV charging load. Concentrated in evening/night hours.',
+  electric_vehicle: 'EV charging load. Concentrated in evening/night hours.'
 }
 const NETWORK_HINTS: Record<string, string> = {
   transformer: 'Steps voltage up or down between buses. Loading % = actual MVA / rated MVA.',
-  cable: 'Transmits power between buses. Overloading (>100%) indicates a thermal limit violation.',
+  cable: 'Transmits power between buses. Overloading (>100%) indicates a thermal limit violation.'
 }
 
-const supplyMwh  = (s: Supply) => { const ts = genT.value[s.name];  return ts ? ts.p.reduce((a: number, v: number) => a + v, 0) : null }
-const demandMwh  = (d: Demand) => { const ts = loadT.value[d.name]; return ts ? ts.p.reduce((a: number, v: number) => a + v, 0) : null }
-const supplyCF   = (s: Supply) => { const a = supplyAvg(s); return s.capacity_mw > 0 ? a / s.capacity_mw : 0 }
+const supplyMwh = (s: Supply) => {
+  const ts = genT.value[s.name]
+  return ts ? ts.p.reduce((a: number, v: number) => a + v, 0) : null
+}
+const demandMwh = (d: Demand) => {
+  const ts = loadT.value[d.name]
+  return ts ? ts.p.reduce((a: number, v: number) => a + v, 0) : null
+}
+const supplyCF = (s: Supply) => {
+  const a = supplyAvg(s)
+  return s.capacity_mw > 0 ? a / s.capacity_mw : 0
+}
 
 type AnyAsset = Supply | Demand | NetworkComponent | null
 
@@ -592,19 +778,21 @@ function buildTipData(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyA
     const cf = supplyCF(s)
     const mwh = supplyMwh(s)
     const typeLabel = s.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-    const results: TipRow[] = r ? [
-      { label: 'Avg output', value: `${fmtPow(supplyAvg(s))} MW`, color: 'text-emerald-400' },
-      { label: 'Capacity factor', value: `${(cf * 100).toFixed(1)} %`, color: cf < 0.2 ? 'text-amber-400' : 'text-emerald-400' },
-      ...(mwh != null ? [{ label: 'Energy produced', value: `${mwh.toFixed(0)} MWh`, color: 'text-blue-300' }] : []),
-    ] : []
+    const results: TipRow[] = r
+      ? [
+          { label: 'Avg output', value: `${fmtPow(supplyAvg(s))} MW`, color: 'text-emerald-400' },
+          { label: 'Capacity factor', value: `${(cf * 100).toFixed(1)} %`, color: cf < 0.2 ? 'text-amber-400' : 'text-emerald-400' },
+          ...(mwh != null ? [{ label: 'Energy produced', value: `${mwh.toFixed(0)} MWh`, color: 'text-blue-300' }] : [])
+        ]
+      : []
     return {
       name: s.name, typeLabel, kind: 'supply',
       params: [
         { label: 'Installed capacity', value: `${s.capacity_mw} MW` },
-        { label: 'Efficiency', value: `${(s.efficiency * 100).toFixed(0)} %` },
+        { label: 'Efficiency', value: `${(s.efficiency * 100).toFixed(0)} %` }
       ],
       results,
-      hint: SUPPLY_HINTS[s.type] ?? 'Supply asset injecting power into the network.',
+      hint: SUPPLY_HINTS[s.type] ?? 'Supply asset injecting power into the network.'
     }
   }
 
@@ -612,15 +800,17 @@ function buildTipData(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyA
     const d = asset as Demand
     const mwh = demandMwh(d)
     const typeLabel = d.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-    const results: TipRow[] = r ? [
-      { label: 'Avg consumption', value: `${fmtPow(demandAvg(d))} MW`, color: 'text-red-400' },
-      ...(mwh != null ? [{ label: 'Energy consumed', value: `${mwh.toFixed(0)} MWh`, color: 'text-blue-300' }] : []),
-    ] : []
+    const results: TipRow[] = r
+      ? [
+          { label: 'Avg consumption', value: `${fmtPow(demandAvg(d))} MW`, color: 'text-red-400' },
+          ...(mwh != null ? [{ label: 'Energy consumed', value: `${mwh.toFixed(0)} MWh`, color: 'text-blue-300' }] : [])
+        ]
+      : []
     return {
       name: d.name, typeLabel, kind: 'demand',
       params: [{ label: 'Peak load', value: `${d.load_mw} MW` }],
       results,
-      hint: DEMAND_HINTS[d.type] ?? 'Load consuming power from the network.',
+      hint: DEMAND_HINTS[d.type] ?? 'Load consuming power from the network.'
     }
   }
 
@@ -631,19 +821,21 @@ function buildTipData(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyA
       name: n.name, typeLabel, kind: 'network',
       params: [
         { label: 'Rated capacity', value: `${n.capacity_mva} MVA` },
-        ...(n.voltage_kv != null ? [{ label: 'Voltage', value: `${n.voltage_kv} kV` }] : []),
+        ...(n.voltage_kv != null ? [{ label: 'Voltage', value: `${n.voltage_kv} kV` }] : [])
       ],
-      hint: NETWORK_HINTS[n.type] ?? 'Network component connecting buses.',
+      hint: NETWORK_HINTS[n.type] ?? 'Network component connecting buses.'
     }
   }
 
   // Bus
-  const busResults: TipRow[] = r ? [
-    { label: 'Status', value: r.status === 'optimized' ? 'Optimised' : r.status === 'converged' ? 'Converged' : r.status === 'non_converged' ? 'Non-converged' : 'Error', color: (r.status === 'converged' || r.status === 'optimized') ? 'text-emerald-400' : 'text-red-400' },
-    { label: 'Total supply', value: `${r.total_supply_mwh?.toFixed(0) ?? '—'} MWh`, color: 'text-emerald-400' },
-    { label: 'Total demand', value: `${r.total_demand_mwh?.toFixed(0) ?? '—'} MWh`, color: 'text-red-400' },
-    { label: 'Balance', value: `${r.balance_mwh != null ? (r.balance_mwh > 0 ? '+' : '') + r.balance_mwh.toFixed(0) : '—'} MWh`, color: r.balance_mwh != null && Math.abs(r.balance_mwh) < 0.1 ? 'text-emerald-400' : r.balance_mwh != null && r.balance_mwh > 0 ? 'text-blue-400' : 'text-amber-400' },
-  ] : []
+  const busResults: TipRow[] = r
+    ? [
+        { label: 'Status', value: r.status === 'optimized' ? 'Optimised' : r.status === 'converged' ? 'Converged' : r.status === 'non_converged' ? 'Non-converged' : 'Error', color: (r.status === 'converged' || r.status === 'optimized') ? 'text-emerald-400' : 'text-red-400' },
+        { label: 'Total supply', value: `${r.total_supply_mwh?.toFixed(0) ?? '—'} MWh`, color: 'text-emerald-400' },
+        { label: 'Total demand', value: `${r.total_demand_mwh?.toFixed(0) ?? '—'} MWh`, color: 'text-red-400' },
+        { label: 'Balance', value: `${r.balance_mwh != null ? (r.balance_mwh > 0 ? '+' : '') + r.balance_mwh.toFixed(0) : '—'} MWh`, color: r.balance_mwh != null && Math.abs(r.balance_mwh) < 0.1 ? 'text-emerald-400' : r.balance_mwh != null && r.balance_mwh > 0 ? 'text-blue-400' : 'text-amber-400' }
+      ]
+    : []
 
   // Multi-bus: asset is the bus name string
   if (isMultiBus.value && typeof asset === 'string') {
@@ -660,7 +852,7 @@ function buildTipData(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyA
       name: voltageLabel, typeLabel: 'Bus', kind: 'bus',
       params: [{ label: 'Bus ID', value: busName }, { label: 'Voltage', value: voltageLabel }],
       results: mbResults,
-      hint: 'Bus node in multi-voltage topology. Connected via transformers and lines to other voltage levels.',
+      hint: 'Bus node in multi-voltage topology. Connected via transformers and lines to other voltage levels.'
     }
   }
 
@@ -668,7 +860,7 @@ function buildTipData(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyA
     name: 'Main Bus', typeLabel: '380 kV', kind: 'bus',
     params: [{ label: 'Voltage', value: '380 kV' }, { label: 'Type', value: 'AC bus (slack)' }],
     results: busResults,
-    hint: 'Central bus connecting all generators, batteries, and loads. LOPF balances supply and demand optimally across all hours.',
+    hint: 'Central bus connecting all generators, batteries, and loads. LOPF balances supply and demand optimally across all hours.'
   }
 }
 
@@ -677,7 +869,7 @@ function showTooltip(kind: 'supply' | 'demand' | 'network' | 'bus', asset: AnyAs
     visible: true,
     x: e.clientX,
     y: e.clientY,
-    data: buildTipData(kind, asset),
+    data: buildTipData(kind, asset)
   }
 }
 
@@ -703,15 +895,15 @@ const tipScreenStyle = computed(() => {
   const flipY = y + TIP_OFFSET + 260 > vh
   return {
     left: flipX ? `${x - TIP_W - TIP_OFFSET}px` : `${x + TIP_OFFSET}px`,
-    top:  flipY ? `${y - TIP_OFFSET - 10}px` : `${y + TIP_OFFSET}px`,
-    transform: flipY ? 'translateY(-100%)' : 'none',
+    top: flipY ? `${y - TIP_OFFSET - 10}px` : `${y + TIP_OFFSET}px`,
+    transform: flipY ? 'translateY(-100%)' : 'none'
   }
 })
 
 const tipBadgeClass = computed(() => {
   const kind = tip.value.data?.kind
-  if (kind === 'supply')  return 'bg-amber-900/40 text-amber-300'
-  if (kind === 'demand')  return 'bg-emerald-900/40 text-emerald-300'
+  if (kind === 'supply') return 'bg-amber-900/40 text-amber-300'
+  if (kind === 'demand') return 'bg-emerald-900/40 text-emerald-300'
   if (kind === 'network') return 'bg-blue-900/40 text-blue-300'
   return 'bg-slate-800 text-slate-300'
 })
@@ -728,7 +920,9 @@ let ro: ResizeObserver | null = null
 
 onMounted(() => {
   if (canvasRef.value) {
-    ro = new ResizeObserver(([e]) => { canvasW.value = e.contentRect.width })
+    ro = new ResizeObserver(([e]) => {
+      canvasW.value = e.contentRect.width
+    })
     ro.observe(canvasRef.value)
     nextTick(readWidth)
   }

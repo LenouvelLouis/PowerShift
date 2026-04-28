@@ -39,7 +39,7 @@ import { useHistoryStore } from '~/stores/history'
 import { useLiveRunner } from '~/composables/useLiveRunner'
 import type { SimulationRunRequest } from '~/composables/api'
 
-const emit = defineEmits<{ 'toggle-sidebar': []; 'open-tutorial': [] }>()
+const _emit = defineEmits<{ 'toggle-sidebar': [], 'open-tutorial': [] }>()
 
 const store = useSimulationStore()
 const referential = useReferentialStore()
@@ -67,7 +67,7 @@ watch(
     store.solver,
     store.startDate,
     store.endDate,
-    JSON.stringify(store.buildPayload().asset_overrides),
+    JSON.stringify(store.buildPayload().asset_overrides)
   ],
   () => {
     if (store.isLoadingScenario) return
@@ -76,13 +76,15 @@ watch(
   }
 )
 
-
 // Warn when solar/wind assets are selected without a date range
 const _noDateWarnShown = ref(false)
 watch(
   () => ({ ids: store.selectedSupplyIds, start: store.startDate }),
   ({ ids: _ids, start }) => {
-    if (start) { _noDateWarnShown.value = false; return }
+    if (start) {
+      _noDateWarnShown.value = false
+      return
+    }
     if (_noDateWarnShown.value) return
     const hasWeatherAsset = store.selectedSupplies.some(
       (s: { type: string }) => s.type === 'solar_panel' || s.type === 'wind_turbine'

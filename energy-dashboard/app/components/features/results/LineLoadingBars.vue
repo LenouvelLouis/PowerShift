@@ -13,7 +13,10 @@
             class="text-xs text-gray-400 truncate mr-2 flex items-center gap-1"
             :title="name"
           >
-            <UIcon name="i-heroicons-link" class="w-3 h-3 shrink-0" />
+            <UIcon
+              name="i-heroicons-link"
+              class="w-3 h-3 shrink-0"
+            />
             {{ name }}
           </span>
           <span

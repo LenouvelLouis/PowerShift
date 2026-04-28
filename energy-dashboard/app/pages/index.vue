@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col min-h-full bg-[#020617] p-6 gap-6">
-
     <!-- Backend unavailable banner -->
     <div
       v-if="referential.backendAvailable === false"
@@ -60,7 +59,10 @@
         <div v-show="activeTab === 'graphics'">
           <GraphicsTab :result="result" />
         </div>
-        <div v-show="activeTab === 'network'" class="flex flex-col gap-6">
+        <div
+          v-show="activeTab === 'network'"
+          class="flex flex-col gap-6"
+        >
           <NetworkCanvas
             :supplies="nonBatterySupplies"
             :storage="batterySupplies"
@@ -84,7 +86,10 @@
         :network="sim.selectedNetworkWithOverrides"
         :result="null"
       />
-      <GuidedScenarioWizard v-else @complete="activeTab = 'results'" />
+      <GuidedScenarioWizard
+        v-else
+        @complete="activeTab = 'results'"
+      />
     </template>
   </div>
 </template>
@@ -94,9 +99,9 @@ import { useSimulationStore } from '~/stores/simulation'
 import { useReferentialStore } from '~/stores/referential'
 import { useHistoryStore } from '~/stores/history'
 
-const sim        = useSimulationStore()
+const sim = useSimulationStore()
 const referential = useReferentialStore()
-const history    = useHistoryStore()
+const history = useHistoryStore()
 
 useSimulationUrl()
 
@@ -111,9 +116,9 @@ const batterySupplies = computed(() =>
 )
 
 const tabs = [
-  { key: 'results',  label: 'Results' },
+  { key: 'results', label: 'Results' },
   { key: 'graphics', label: 'Charts' },
-  { key: 'network',  label: 'Network' },
+  { key: 'network', label: 'Network' }
 ]
 const activeTab = ref('results')
 
@@ -131,7 +136,7 @@ const errorDescription = computed(() => {
   const details = result.value?.result_json?.error
   if (status === 'non_converged') {
     const conv = result.value?.result_json?.convergence
-    const bad  = conv?.non_converged_snapshots?.length ?? 0
+    const bad = conv?.non_converged_snapshots?.length ?? 0
     return details ?? `The power flow optimisation did not find a feasible solution for ${bad} snapshot(s). Check that generation can meet demand and that network parameters are physically consistent.`
   }
   if (result.value?.result_json?.error_type === 'convergence_error') {

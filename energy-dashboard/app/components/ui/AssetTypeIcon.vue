@@ -1,5 +1,8 @@
 <template>
-  <UIcon :name="iconName" :class="['shrink-0', sizeClass, colorClass]" />
+  <UIcon
+    :name="iconName"
+    :class="['shrink-0', sizeClass, colorClass]"
+  />
 </template>
 
 <script setup lang="ts">
@@ -16,7 +19,7 @@ const iconMap: Record<string, string> = {
   house: 'i-heroicons-home',
   electric_vehicle: 'i-heroicons-truck',
   cable: 'i-heroicons-link',
-  transformer: 'i-heroicons-cpu-chip',
+  transformer: 'i-heroicons-cpu-chip'
 }
 
 const colorMap: Record<string, string> = {
@@ -26,7 +29,7 @@ const colorMap: Record<string, string> = {
   house: 'text-blue-400',
   electric_vehicle: 'text-emerald-400',
   cable: 'text-gray-400',
-  transformer: 'text-orange-400',
+  transformer: 'text-orange-400'
 }
 
 const sizeMap = { xs: 'w-3 h-3', sm: 'w-3.5 h-3.5', md: 'w-4 h-4' }

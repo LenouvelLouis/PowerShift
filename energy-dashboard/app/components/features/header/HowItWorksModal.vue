@@ -6,7 +6,10 @@
   >
     <template #header>
       <div class="flex items-center gap-3">
-        <UIcon name="i-heroicons-book-open" class="w-5 h-5 text-blue-400" />
+        <UIcon
+          name="i-heroicons-book-open"
+          class="w-5 h-5 text-blue-400"
+        />
         <div>
           <h3 class="text-base font-semibold text-white">
             How the simulation works
@@ -20,12 +23,13 @@
 
     <template #body>
       <div class="space-y-6 max-h-[70vh] overflow-y-auto pr-1 text-sm">
-
         <!-- Step 1: Asset selection -->
         <section>
           <div class="flex items-center gap-2 mb-2">
             <span class="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold shrink-0">1</span>
-            <h4 class="text-white font-semibold">Select your assets</h4>
+            <h4 class="text-white font-semibold">
+              Select your assets
+            </h4>
           </div>
           <p class="text-gray-400 leading-relaxed">
             Use the sidebar to pick <span class="text-amber-400">Supply</span> (generators),
@@ -35,16 +39,28 @@
           </p>
           <div class="mt-2 grid grid-cols-3 gap-2">
             <div class="bg-[#0B1220] rounded p-2 border border-[#1E293B]">
-              <p class="text-amber-400 text-xs font-semibold mb-1">Supply (MW)</p>
-              <p class="text-gray-500 text-xs">Max power a generator can inject. Wind/solar are weather-limited.</p>
+              <p class="text-amber-400 text-xs font-semibold mb-1">
+                Supply (MW)
+              </p>
+              <p class="text-gray-500 text-xs">
+                Max power a generator can inject. Wind/solar are weather-limited.
+              </p>
             </div>
             <div class="bg-[#0B1220] rounded p-2 border border-[#1E293B]">
-              <p class="text-emerald-400 text-xs font-semibold mb-1">Demand (MW)</p>
-              <p class="text-gray-500 text-xs">Peak consumption. Scaled hourly by a normalised load profile.</p>
+              <p class="text-emerald-400 text-xs font-semibold mb-1">
+                Demand (MW)
+              </p>
+              <p class="text-gray-500 text-xs">
+                Peak consumption. Scaled hourly by a normalised load profile.
+              </p>
             </div>
             <div class="bg-[#0B1220] rounded p-2 border border-[#1E293B]">
-              <p class="text-blue-400 text-xs font-semibold mb-1">Network (MVA)</p>
-              <p class="text-gray-500 text-xs">Lines and transformers with a rated capacity. Overloading is flagged.</p>
+              <p class="text-blue-400 text-xs font-semibold mb-1">
+                Network (MVA)
+              </p>
+              <p class="text-gray-500 text-xs">
+                Lines and transformers with a rated capacity. Overloading is flagged.
+              </p>
             </div>
           </div>
         </section>
@@ -55,7 +71,9 @@
         <section>
           <div class="flex items-center gap-2 mb-2">
             <span class="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold shrink-0">2</span>
-            <h4 class="text-white font-semibold">Choose a time window</h4>
+            <h4 class="text-white font-semibold">
+              Choose a time window
+            </h4>
           </div>
           <p class="text-gray-400 leading-relaxed">
             The optimizer solves all hours simultaneously. Choosing a longer window gives more representative results:
@@ -63,19 +81,27 @@
           <div class="mt-2 space-y-1.5">
             <div class="flex items-start gap-2">
               <span class="text-blue-400 font-mono text-xs w-14 shrink-0 pt-0.5">1 h</span>
-              <p class="text-gray-500 text-xs">Single snapshot — good for testing a specific peak moment.</p>
+              <p class="text-gray-500 text-xs">
+                Single snapshot — good for testing a specific peak moment.
+              </p>
             </div>
             <div class="flex items-start gap-2">
               <span class="text-blue-400 font-mono text-xs w-14 shrink-0 pt-0.5">24 h</span>
-              <p class="text-gray-500 text-xs">One full day — captures the day/night solar cycle and demand variations.</p>
+              <p class="text-gray-500 text-xs">
+                One full day — captures the day/night solar cycle and demand variations.
+              </p>
             </div>
             <div class="flex items-start gap-2">
               <span class="text-blue-400 font-mono text-xs w-14 shrink-0 pt-0.5">168 h</span>
-              <p class="text-gray-500 text-xs">One week — reveals weekday/weekend load patterns and multi-day wind lulls.</p>
+              <p class="text-gray-500 text-xs">
+                One week — reveals weekday/weekend load patterns and multi-day wind lulls.
+              </p>
             </div>
             <div class="flex items-start gap-2">
               <span class="text-blue-400 font-mono text-xs w-14 shrink-0 pt-0.5">8760 h</span>
-              <p class="text-gray-500 text-xs">Full year — most realistic, averages over all seasons and weather events.</p>
+              <p class="text-gray-500 text-xs">
+                Full year — most realistic, averages over all seasons and weather events.
+              </p>
             </div>
           </div>
           <div class="mt-2 bg-[#0B1220] rounded p-2 border border-[#1E293B]">
@@ -94,7 +120,9 @@
         <section>
           <div class="flex items-center gap-2 mb-2">
             <span class="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold shrink-0">3</span>
-            <h4 class="text-white font-semibold">Weather data (wind &amp; solar only)</h4>
+            <h4 class="text-white font-semibold">
+              Weather data (wind &amp; solar only)
+            </h4>
           </div>
           <p class="text-gray-400 leading-relaxed">
             When you select a <span class="text-white">date range</span>, the platform fetches real hourly wind speed and solar irradiance data
@@ -113,7 +141,9 @@
         <section>
           <div class="flex items-center gap-2 mb-2">
             <span class="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold shrink-0">4</span>
-            <h4 class="text-white font-semibold">The optimizer (PyPSA LOPF)</h4>
+            <h4 class="text-white font-semibold">
+              The optimizer (PyPSA LOPF)
+            </h4>
           </div>
           <p class="text-gray-400 leading-relaxed">
             The backend uses <span class="text-white">PyPSA</span> (Python for Power System Analysis) with
@@ -136,32 +166,43 @@
         <section>
           <div class="flex items-center gap-2 mb-2">
             <span class="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold shrink-0">5</span>
-            <h4 class="text-white font-semibold">Reading the results</h4>
+            <h4 class="text-white font-semibold">
+              Reading the results
+            </h4>
           </div>
           <div class="space-y-1.5">
             <div class="flex items-start gap-2">
               <span class="text-blue-400 font-semibold text-xs w-28 shrink-0 pt-0.5">Supply (MWh)</span>
-              <p class="text-gray-500 text-xs">Total energy injected by all generators over the simulation period.</p>
+              <p class="text-gray-500 text-xs">
+                Total energy injected by all generators over the simulation period.
+              </p>
             </div>
             <div class="flex items-start gap-2">
               <span class="text-blue-400 font-semibold text-xs w-28 shrink-0 pt-0.5">Demand (MWh)</span>
-              <p class="text-gray-500 text-xs">Total energy consumed by all loads over the simulation period.</p>
+              <p class="text-gray-500 text-xs">
+                Total energy consumed by all loads over the simulation period.
+              </p>
             </div>
             <div class="flex items-start gap-2">
               <span class="text-blue-400 font-semibold text-xs w-28 shrink-0 pt-0.5">Balance (MWh)</span>
-              <p class="text-gray-500 text-xs">Supply minus Demand. Positive = surplus (grid export). Negative = deficit (grid import).</p>
+              <p class="text-gray-500 text-xs">
+                Supply minus Demand. Positive = surplus (grid export). Negative = deficit (grid import).
+              </p>
             </div>
             <div class="flex items-start gap-2">
               <span class="text-blue-400 font-semibold text-xs w-28 shrink-0 pt-0.5">Capacity factor</span>
-              <p class="text-gray-500 text-xs">Actual energy produced ÷ theoretical maximum. A wind farm at 30% CF produced 30% of what it could at full power 24/7.</p>
+              <p class="text-gray-500 text-xs">
+                Actual energy produced ÷ theoretical maximum. A wind farm at 30% CF produced 30% of what it could at full power 24/7.
+              </p>
             </div>
             <div class="flex items-start gap-2">
               <span class="text-blue-400 font-semibold text-xs w-28 shrink-0 pt-0.5">Line loading %</span>
-              <p class="text-gray-500 text-xs">Power flowing through a line as a percentage of its rated MVA capacity. Above 100% = overloaded — reduce connected generation or increase the line rating.</p>
+              <p class="text-gray-500 text-xs">
+                Power flowing through a line as a percentage of its rated MVA capacity. Above 100% = overloaded — reduce connected generation or increase the line rating.
+              </p>
             </div>
           </div>
         </section>
-
       </div>
     </template>
 

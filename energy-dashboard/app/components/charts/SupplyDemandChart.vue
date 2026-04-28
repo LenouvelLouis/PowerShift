@@ -6,14 +6,18 @@
       </h2>
       <span class="text-xs text-gray-500">MW / hour</span>
     </div>
-    <BaseChart :option="chartOption" height="h-64" title="Supply vs Demand" />
+    <BaseChart
+      :option="chartOption"
+      height="h-64"
+      title="Supply vs Demand"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SimulationResult } from '~/composables/api'
 
-const props = defineProps<{ result: SimulationResult; startDate?: string | null }>()
+const props = defineProps<{ result: SimulationResult, startDate?: string | null }>()
 const { lineOption } = useEChartsTheme()
 const { buildLabels, axisLabelFormatter, tooltipLabelFormatter } = useTimeLabels(() => props.startDate)
 

@@ -5,7 +5,7 @@ import {
   deleteSimulation,
   renameSimulation,
   type SimulationResult,
-  type SimulationListItem,
+  type SimulationListItem
 } from '~/composables/api'
 
 export const useHistoryStore = defineStore('history', () => {
@@ -19,8 +19,7 @@ export const useHistoryStore = defineStore('history', () => {
   async function loadHistory() {
     try {
       simulationHistory.value = await fetchSimulations()
-    }
-    catch {
+    } catch {
       // silently fail — history is non-critical
     }
   }
@@ -54,6 +53,6 @@ export const useHistoryStore = defineStore('history', () => {
     loadHistory,
     loadSimulationById,
     deleteEntry,
-    renameEntry,
+    renameEntry
   }
 })

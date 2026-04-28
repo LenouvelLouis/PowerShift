@@ -140,5 +140,4 @@ const totalNetworkMva = computed(() =>
     return sum + (overrides.capacity_mva ?? n.capacity_mva ?? 0)
   }, 0)
 )
-
 </script>

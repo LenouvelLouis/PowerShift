@@ -14,7 +14,7 @@ import {
   type SupplyCreate,
   type SupplyUpdate,
   type DemandCreate,
-  type NetworkCreate,
+  type NetworkCreate
 } from '~/composables/api'
 
 export const useReferentialStore = defineStore('referential', () => {
@@ -37,11 +37,9 @@ export const useReferentialStore = defineStore('referential', () => {
       availableNetwork.value = data.network
       referentialLoaded.value = true
       backendAvailable.value = true
-    }
-    catch {
+    } catch {
       backendAvailable.value = false
-    }
-    finally {
+    } finally {
       referentialLoading.value = false
     }
   }
@@ -108,6 +106,6 @@ export const useReferentialStore = defineStore('referential', () => {
     addDemand,
     removeDemand,
     addNetworkComponent,
-    removeNetworkComponent,
+    removeNetworkComponent
   }
 })

@@ -6,14 +6,18 @@
       </h2>
       <span class="text-xs text-gray-500">MW &amp; MWh</span>
     </div>
-    <BaseChart :option="chartOption" height="h-72" title="Battery Storage" />
+    <BaseChart
+      :option="chartOption"
+      height="h-72"
+      title="Battery Storage"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SimulationResult } from '~/composables/api'
 
-const props = defineProps<{ result: SimulationResult; startDate?: string | null }>()
+const props = defineProps<{ result: SimulationResult, startDate?: string | null }>()
 const { lineOption } = useEChartsTheme()
 const { buildLabels, axisLabelFormatter, tooltipLabelFormatter } = useTimeLabels(() => props.startDate)
 
@@ -27,7 +31,7 @@ const firstUnit = computed(() => {
 const timeLabels = computed(() => buildLabels(firstUnit.value?.p?.length ?? 0))
 
 const chartOption = computed(() => {
-  const series: { name: string; data: number[]; color: string }[] = []
+  const series: { name: string, data: number[], color: string }[] = []
 
   for (const [name, data] of Object.entries(storageUnitsT.value)) {
     series.push({

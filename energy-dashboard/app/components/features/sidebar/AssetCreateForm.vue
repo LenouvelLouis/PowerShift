@@ -37,8 +37,14 @@
       >
         <label class="text-xs text-gray-400 flex items-center gap-1 mb-0.5">
           {{ field.label }}
-          <UTooltip v-if="field.tooltip" :text="field.tooltip">
-            <UIcon name="i-heroicons-information-circle" class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0" />
+          <UTooltip
+            v-if="field.tooltip"
+            :text="field.tooltip"
+          >
+            <UIcon
+              name="i-heroicons-information-circle"
+              class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0"
+            />
           </UTooltip>
         </label>
         <UInput

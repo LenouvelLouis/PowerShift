@@ -6,14 +6,18 @@
       </h2>
       <span class="text-xs text-gray-500">MWh</span>
     </div>
-    <BaseChart :option="chartOption" :height="height" title="Energy Summary" />
+    <BaseChart
+      :option="chartOption"
+      :height="height"
+      title="Energy Summary"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SimulationResult } from '~/composables/api'
 
-const props = defineProps<{ result: SimulationResult; height?: string }>()
+const props = defineProps<{ result: SimulationResult, height?: string }>()
 const { barOption } = useEChartsTheme()
 
 const generatorsT = computed(() => props.result.result_json?.generators_t ?? {})

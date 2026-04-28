@@ -18,7 +18,7 @@ export const SOLVER_OPTIONS: readonly SolverOption[] = [
   { label: 'SCIP', value: 'scip', description: 'Academic MIP/NLP solver — supports constrained and non-linear power flow formulations.', speed: 'Medium', license: 'Academic', bestFor: 'Research-grade constrained power flow problems' },
   { label: 'Gurobi', value: 'gurobi', description: 'Commercial LP/MIP solver — ultra-fast for large-scale OPF. Requires a valid license.', speed: 'Very fast', license: 'Commercial', bestFor: 'Large-scale OPF with strict performance targets' },
   { label: 'CPLEX', value: 'cplex', description: 'IBM commercial LP/MIP — enterprise-grade robustness for large OPF workloads. Requires a valid license.', speed: 'Very fast', license: 'Commercial', bestFor: 'Enterprise OPF on large utility-scale networks' },
-  { label: 'Xpress', value: 'xpress', description: 'FICO commercial LP/MIP — high-performance large-scale OPF. Requires a valid license.', speed: 'Very fast', license: 'Commercial', bestFor: 'High-performance OPF on large transmission networks' },
+  { label: 'Xpress', value: 'xpress', description: 'FICO commercial LP/MIP — high-performance large-scale OPF. Requires a valid license.', speed: 'Very fast', license: 'Commercial', bestFor: 'High-performance OPF on large transmission networks' }
 ] as const
 
 export function useSolverAvailability() {

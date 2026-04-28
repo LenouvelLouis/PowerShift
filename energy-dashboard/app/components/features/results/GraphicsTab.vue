@@ -9,7 +9,10 @@
         Production
       </p>
       <div class="flex flex-col gap-6">
-        <ProductionChart :result="result" :start-date="startDate" />
+        <ProductionChart
+          :result="result"
+          :start-date="startDate"
+        />
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <CapacityFactorChart
             v-if="hasCapacityFactors"
@@ -32,7 +35,10 @@
       <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">
         Demand
       </p>
-      <ConsumptionChart :result="result" :start-date="startDate" />
+      <ConsumptionChart
+        :result="result"
+        :start-date="startDate"
+      />
     </div>
 
     <!-- Storage section -->
@@ -40,7 +46,10 @@
       <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 px-1">
         Storage
       </p>
-      <BatteryStorageChart :result="result" :start-date="startDate" />
+      <BatteryStorageChart
+        :result="result"
+        :start-date="startDate"
+      />
     </div>
 
     <!-- Bilan section -->
@@ -49,7 +58,10 @@
         Bilan
       </p>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SupplyDemandChart :result="result" :start-date="startDate" />
+        <SupplyDemandChart
+          :result="result"
+          :start-date="startDate"
+        />
         <EnergySummaryChart
           :result="result"
           height="h-64"
@@ -63,8 +75,15 @@
         Network
       </p>
       <div class="flex flex-col gap-6">
-        <BusVoltageChart v-if="hasBusData" :result="result" :start-date="startDate" />
-        <LineLoadingBars v-if="hasLineData" :result="result" />
+        <BusVoltageChart
+          v-if="hasBusData"
+          :result="result"
+          :start-date="startDate"
+        />
+        <LineLoadingBars
+          v-if="hasLineData"
+          :result="result"
+        />
       </div>
     </div>
   </div>

@@ -50,7 +50,9 @@ const emit = defineEmits<{
 
 const draft = ref(props.initialName)
 
-watch(() => props.initialName, (val) => { draft.value = val })
+watch(() => props.initialName, (val) => {
+  draft.value = val
+})
 
 function confirm() {
   if (!draft.value.trim()) return

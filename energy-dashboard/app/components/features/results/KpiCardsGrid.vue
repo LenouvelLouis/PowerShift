@@ -1,6 +1,5 @@
 <template>
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-
     <!-- Status -->
     <div
       class="rounded-2xl border p-5 flex flex-col gap-2"
@@ -29,43 +28,67 @@
     <!-- Balance -->
     <div class="rounded-2xl border border-[#1E293B] bg-[#0F172A] p-5 flex flex-col gap-2">
       <div class="flex items-center gap-2 text-gray-400">
-        <UIcon name="i-heroicons-scale" class="w-6 h-6" />
+        <UIcon
+          name="i-heroicons-scale"
+          class="w-6 h-6"
+        />
         <span class="text-xs font-semibold uppercase tracking-wider">Balance</span>
       </div>
-      <p class="text-3xl font-bold font-mono" :class="balanceColor">
+      <p
+        class="text-3xl font-bold font-mono"
+        :class="balanceColor"
+      >
         {{ result.status === 'error' ? '—' : fmtShort(result.balance_mwh) }}
       </p>
-      <p class="text-xs text-gray-600">MWh</p>
+      <p class="text-xs text-gray-600">
+        MWh
+      </p>
     </div>
 
     <!-- Supply -->
     <div class="rounded-2xl border border-[#1E293B] bg-[#0F172A] p-5 flex flex-col gap-2">
       <div class="flex items-center gap-2 text-emerald-500">
-        <UIcon name="i-heroicons-bolt" class="w-6 h-6" />
+        <UIcon
+          name="i-heroicons-bolt"
+          class="w-6 h-6"
+        />
         <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Supply</span>
         <UTooltip text="MWh = MW × hours. A 100 MW plant running 24h produces 2,400 MWh.">
-          <UIcon name="i-heroicons-question-mark-circle" class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0" />
+          <UIcon
+            name="i-heroicons-question-mark-circle"
+            class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0"
+          />
         </UTooltip>
       </div>
       <p class="text-3xl font-bold font-mono text-emerald-400">
         {{ result.status === 'error' ? '—' : fmtShort(result.total_supply_mwh) }}
       </p>
-      <p class="text-xs text-gray-600">MWh</p>
+      <p class="text-xs text-gray-600">
+        MWh
+      </p>
     </div>
 
     <!-- Demand -->
     <div class="rounded-2xl border border-[#1E293B] bg-[#0F172A] p-5 flex flex-col gap-2">
       <div class="flex items-center gap-2 text-red-500">
-        <UIcon name="i-heroicons-home" class="w-6 h-6" />
+        <UIcon
+          name="i-heroicons-home"
+          class="w-6 h-6"
+        />
         <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Demand</span>
         <UTooltip text="MWh = MW × hours. A 100 MW plant running 24h produces 2,400 MWh.">
-          <UIcon name="i-heroicons-question-mark-circle" class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0" />
+          <UIcon
+            name="i-heroicons-question-mark-circle"
+            class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0"
+          />
         </UTooltip>
       </div>
       <p class="text-3xl font-bold font-mono text-red-400">
         {{ result.status === 'error' ? '—' : fmtShort(result.total_demand_mwh) }}
       </p>
-      <p class="text-xs text-gray-600">MWh</p>
+      <p class="text-xs text-gray-600">
+        MWh
+      </p>
     </div>
   </div>
 </template>

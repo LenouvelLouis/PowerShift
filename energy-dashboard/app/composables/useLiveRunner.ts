@@ -4,22 +4,22 @@ import { useHistoryStore } from '~/stores/history'
 import { useSimulationStore } from '~/stores/simulation'
 
 /** Extract a human-readable message from any thrown error (FetchError, Error, unknown). */
-function _extractErrorMessage(error: unknown): { title: string; description: string } {
+function _extractErrorMessage(error: unknown): { title: string, description: string } {
   // $fetch throws a FetchError with a `data` field containing the backend JSON body
   if (error && typeof error === 'object' && 'data' in error) {
-    const data = (error as { data?: unknown; status?: number }).data
+    const data = (error as { data?: unknown, status?: number }).data
     const status = (error as { status?: number }).status
 
     // Pydantic 422 — detail is an array of validation errors
     if (status === 422 && Array.isArray((data as { detail?: unknown })?.detail)) {
-      const detail = (data as { detail: Array<{ msg: string; loc?: string[] }> }).detail
-      const messages = detail.map(d => {
+      const detail = (data as { detail: Array<{ msg: string, loc?: string[] }> }).detail
+      const messages = detail.map((d) => {
         const field = d.loc?.slice(1).join(' → ') ?? 'field'
         return `${field}: ${d.msg}`
       })
       return {
         title: 'Validation error (422)',
-        description: messages.join('\n'),
+        description: messages.join('\n')
       }
     }
 
@@ -27,7 +27,7 @@ function _extractErrorMessage(error: unknown): { title: string; description: str
     if (status === 422 && typeof (data as { detail?: unknown })?.detail === 'string') {
       return {
         title: 'Validation error (422)',
-        description: (data as { detail: string }).detail,
+        description: (data as { detail: string }).detail
       }
     }
 
@@ -35,7 +35,7 @@ function _extractErrorMessage(error: unknown): { title: string; description: str
     if ((data as { detail?: unknown })?.detail) {
       return {
         title: `Request error (${status ?? '?'})`,
-        description: String((data as { detail: unknown }).detail),
+        description: String((data as { detail: unknown }).detail)
       }
     }
 
@@ -43,7 +43,7 @@ function _extractErrorMessage(error: unknown): { title: string; description: str
     if (status) {
       return {
         title: `HTTP ${status}`,
-        description: typeof data === 'string' ? data : JSON.stringify(data ?? {}),
+        description: typeof data === 'string' ? data : JSON.stringify(data ?? {})
       }
     }
   }
@@ -78,18 +78,16 @@ export function useLiveRunner() {
       const response = await previewSimulation(payload)
       simStore.currentLiveResult = response
       historyStore.currentResult = response
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       const { title, description } = _extractErrorMessage(error)
       simStore.liveError = `${title}: ${description}`
       toast.add({
         title,
         description,
         color: 'error',
-        duration: 6000,
+        duration: 6000
       })
-    }
-    finally {
+    } finally {
       simStore.isLiveRunning = false
     }
   }
@@ -114,17 +112,16 @@ export function useLiveRunner() {
         network_ids: payload.network_ids,
         total_supply_mwh: response.total_supply_mwh,
         total_demand_mwh: response.total_demand_mwh,
-        created_at: response.created_at,
+        created_at: response.created_at
       })
       return response
-    }
-    finally {
+    } finally {
       simStore.isSaving = false
     }
   }
 
   return {
     runPreview: useDebounceFn(runPreview, 400),
-    saveSimulation,
+    saveSimulation
   }
 }

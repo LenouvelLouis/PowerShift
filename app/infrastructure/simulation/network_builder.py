@@ -387,7 +387,7 @@ class PyPSANetworkBuilder(ISimulationRepository):
         demands: list,
         network_components: list,
     ) -> SimulationRunOutput:
-        _log.info(
+        _log.debug(
             "PyPSANetworkBuilder.run(): %d supplies, %d demands, %d network_components, "
             "network_ids=%s, objective=%s",
             len(supplies), len(demands), len(network_components),

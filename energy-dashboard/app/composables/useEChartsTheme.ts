@@ -22,7 +22,7 @@ const BG = '#0F172A'
 const BORDER = '#1E293B'
 const TEXT_DIM = '#64748B'
 const TEXT_MID = '#94A3B8'
-const TEXT_BRIGHT = '#E2E8F0'
+const _TEXT_BRIGHT = '#E2E8F0'
 
 export function useEChartsTheme() {
   const baseGrid = { left: 48, right: 16, top: 16, bottom: 48, containLabel: false }
@@ -58,7 +58,7 @@ export function useEChartsTheme() {
 
   function lineOption(opts: {
     labels: string[]
-    series: { name: string; data: number[]; color: string }[]
+    series: { name: string, data: number[], color: string }[]
     yTitle?: string
     axisLabelFormatter?: (v: string) => string
     tooltipLabelFormatter?: (v: string) => string
@@ -75,10 +75,10 @@ export function useEChartsTheme() {
         ...baseTooltip,
         trigger: 'axis',
         formatter: opts.tooltipLabelFormatter
-          ? (params: any) => {
+          ? (params: unknown) => {
               const items = Array.isArray(params) ? params : [params]
               const title = opts.tooltipLabelFormatter!(items[0]?.name ?? '')
-              const lines = items.map((p: any) =>
+              const lines = items.map((p: Record<string, unknown>) =>
                 `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};margin-right:4px"></span>${p.seriesName}: ${Number(p.value).toFixed(2)}`
               )
               return `<div style="font-size:11px">${title}<br/>${lines.join('<br/>')}</div>`
@@ -137,7 +137,7 @@ export function useEChartsTheme() {
 
   function barOption(opts: {
     labels: string[]
-    series: { name: string; data: number[]; colors?: string[]; color?: string }[]
+    series: { name: string, data: number[], colors?: string[], color?: string }[]
     yTitle?: string
     yMax?: number
     stacked?: boolean
@@ -154,11 +154,11 @@ export function useEChartsTheme() {
         ...baseTooltip,
         trigger: 'axis',
         formatter: opts.tooltipSuffix
-          ? (params: any) => {
+          ? (params: unknown) => {
               const lines = (Array.isArray(params) ? params : [params]).map(
-                (p: any) => `<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color};margin-right:4px"></span>${p.seriesName}: ${Number(p.value).toFixed(2)}${opts.tooltipSuffix}`
+                (p: Record<string, unknown>) => `<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color};margin-right:4px"></span>${p.seriesName}: ${Number(p.value).toFixed(2)}${opts.tooltipSuffix}`
               )
-              const title = Array.isArray(params) ? (params[0]?.name ?? '') : (params as any).name
+              const title = Array.isArray(params) ? (params[0]?.name ?? '') : (params as Record<string, unknown>).name
               return `<div style="font-size:11px">${title}<br/>${lines.join('<br/>')}</div>`
             }
           : undefined

@@ -6,14 +6,18 @@
       </h2>
       <span class="text-xs text-gray-500">pu</span>
     </div>
-    <BaseChart :option="chartOption" height="h-48" title="Bus Voltages" />
+    <BaseChart
+      :option="chartOption"
+      height="h-48"
+      title="Bus Voltages"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SimulationResult } from '~/composables/api'
 
-const props = defineProps<{ result: SimulationResult; startDate?: string | null }>()
+const props = defineProps<{ result: SimulationResult, startDate?: string | null }>()
 const { lineOption } = useEChartsTheme()
 const { buildLabels, axisLabelFormatter, tooltipLabelFormatter } = useTimeLabels(() => props.startDate)
 
@@ -26,11 +30,11 @@ const chartOption = computed(() =>
     series: Object.entries(busesT.value).map(([bus, data], i) => ({
       name: bus,
       data: (data as { v_mag_pu: number[] }).v_mag_pu,
-      color: PALETTE[i % PALETTE.length] as string,
+      color: PALETTE[i % PALETTE.length] as string
     })),
     yTitle: 'pu',
     axisLabelFormatter,
-    tooltipLabelFormatter,
+    tooltipLabelFormatter
   })
 )
 </script>

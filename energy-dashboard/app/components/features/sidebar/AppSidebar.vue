@@ -34,7 +34,7 @@ import { useReferentialStore } from '~/stores/referential'
 import type { Supply, Demand, NetworkComponent } from '~/composables/api'
 import type { AssetSectionConfig } from './AssetSection.vue'
 
-const emit = defineEmits<{
+const _emit = defineEmits<{
   'delete-asset': [target: { id: string, name: string, group: string }]
 }>()
 
@@ -62,7 +62,7 @@ const supplyConfig: AssetSectionConfig = {
     typeOptions: [
       { label: 'Wind Turbine', value: 'wind_turbine' },
       { label: 'Solar Panel', value: 'solar_panel' },
-      { label: 'Nuclear Plant', value: 'nuclear_plant' },
+      { label: 'Nuclear Plant', value: 'nuclear_plant' }
     ],
     fields: [
       { key: 'capacity_mw', label: 'Capacity (MW)', tooltip: 'Installed power capacity in MW. Wind/solar are further scaled by a KNMI weather profile (0–1).' },
@@ -82,7 +82,7 @@ const storageConfig: AssetSectionConfig = {
     title: 'New Battery Storage',
     namePlaceholder: 'e.g. Grid Battery 100 MW',
     typeOptions: [
-      { label: 'Battery Storage', value: 'battery_storage' },
+      { label: 'Battery Storage', value: 'battery_storage' }
     ],
     fields: [
       { key: 'capacity_mw', label: 'Power (MW)', tooltip: 'Max charge/discharge rate in MW.' },

@@ -16,7 +16,6 @@
 
         <!-- Tutorial card -->
         <div class="relative pointer-events-auto w-[380px] bg-[#0B1220] border border-[#334155] rounded-2xl shadow-2xl overflow-hidden">
-
           <!-- Progress bar -->
           <div class="h-0.5 bg-[#1E293B]">
             <div
@@ -39,15 +38,21 @@
 
           <!-- Content -->
           <div class="px-5 pt-3 pb-5">
-            <Transition :name="direction === 'next' ? 'slide-left' : 'slide-right'" mode="out-in">
+            <Transition
+              :name="direction === 'next' ? 'slide-left' : 'slide-right'"
+              mode="out-in"
+            >
               <div :key="step">
-
                 <!-- Icon -->
                 <div
                   class="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
                   :class="current.iconBg"
                 >
-                  <UIcon :name="current.icon" class="w-5 h-5" :class="current.iconColor" />
+                  <UIcon
+                    :name="current.icon"
+                    class="w-5 h-5"
+                    :class="current.iconColor"
+                  />
                 </div>
 
                 <!-- Title -->
@@ -70,22 +75,38 @@
                     :key="row.label"
                     class="flex items-start gap-2.5"
                   >
-                    <div class="w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5" :class="row.bg">
-                      <UIcon :name="row.icon" class="w-3 h-3" :class="row.color" />
+                    <div
+                      class="w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5"
+                      :class="row.bg"
+                    >
+                      <UIcon
+                        :name="row.icon"
+                        class="w-3 h-3"
+                        :class="row.color"
+                      />
                     </div>
                     <div class="min-w-0">
-                      <p class="text-xs font-semibold text-white leading-tight">{{ row.label }}</p>
-                      <p class="text-[11px] text-gray-500 leading-tight mt-0.5">{{ row.desc }}</p>
+                      <p class="text-xs font-semibold text-white leading-tight">
+                        {{ row.label }}
+                      </p>
+                      <p class="text-[11px] text-gray-500 leading-tight mt-0.5">
+                        {{ row.desc }}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <!-- Highlight hint (where to look) -->
-                <div v-if="current.hint" class="mt-3 flex items-center gap-2 text-[11px] text-gray-500">
-                  <UIcon name="i-heroicons-cursor-arrow-rays" class="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                <div
+                  v-if="current.hint"
+                  class="mt-3 flex items-center gap-2 text-[11px] text-gray-500"
+                >
+                  <UIcon
+                    name="i-heroicons-cursor-arrow-rays"
+                    class="w-3.5 h-3.5 text-blue-500 shrink-0"
+                  />
                   <span>{{ current.hint }}</span>
                 </div>
-
               </div>
             </Transition>
           </div>
@@ -145,17 +166,38 @@ onMounted(() => {
   }
 })
 
-function next() { direction.value = 'next'; step.value = Math.min(step.value + 1, steps.length - 1) }
-function prev() { direction.value = 'prev'; step.value = Math.max(step.value - 1, 0) }
-function finish() { localStorage.setItem(STORAGE_KEY, '1'); visible.value = false }
+function next() {
+  direction.value = 'next'
+  step.value = Math.min(step.value + 1, steps.length - 1)
+}
+function prev() {
+  direction.value = 'prev'
+  step.value = Math.max(step.value - 1, 0)
+}
+function finish() {
+  localStorage.setItem(STORAGE_KEY, '1')
+  visible.value = false
+}
 
 // Expose so parent can re-open
-defineExpose({ open: () => { step.value = 0; visible.value = true } })
+defineExpose({ open: () => {
+  step.value = 0
+  visible.value = true
+} })
 
-interface DetailRow { icon: string; label: string; desc: string; bg: string; color: string }
+interface DetailRow {
+  icon: string
+  label: string
+  desc: string
+  bg: string
+  color: string
+}
 interface Step {
-  icon: string; iconBg: string; iconColor: string
-  title: string; description: string
+  icon: string
+  iconBg: string
+  iconColor: string
+  title: string
+  description: string
   detail?: DetailRow[]
   hint?: string
 }
@@ -170,8 +212,8 @@ const steps: Step[] = [
     detail: [
       { icon: 'i-heroicons-bolt', label: 'You configure assets', desc: 'Generators, batteries, loads, and network components with real parameters (MW, efficiency…)', bg: 'bg-amber-950', color: 'text-amber-400' },
       { icon: 'i-heroicons-cpu-chip', label: 'PyPSA optimises the grid', desc: 'A Linear Optimal Power Flow (LOPF) finds the cheapest dispatch across all hours simultaneously', bg: 'bg-blue-950', color: 'text-blue-400' },
-      { icon: 'i-heroicons-chart-bar', label: 'You read the results', desc: 'Production per generator, consumption per load, balance, and capacity factors', bg: 'bg-emerald-950', color: 'text-emerald-400' },
-    ],
+      { icon: 'i-heroicons-chart-bar', label: 'You read the results', desc: 'Production per generator, consumption per load, balance, and capacity factors', bg: 'bg-emerald-950', color: 'text-emerald-400' }
+    ]
   },
   {
     icon: 'i-heroicons-squares-plus',
@@ -182,9 +224,9 @@ const steps: Step[] = [
     detail: [
       { icon: 'i-heroicons-bolt', label: 'Supply — generators', desc: 'Wind turbines, solar panels, or nuclear plants. Each injects power into the grid.', bg: 'bg-amber-950', color: 'text-amber-400' },
       { icon: 'i-heroicons-home', label: 'Demand — loads', desc: 'Houses and EVs that consume power. Their hourly demand varies via a normalised profile.', bg: 'bg-emerald-950', color: 'text-emerald-400' },
-      { icon: 'i-heroicons-share', label: 'Network — components', desc: 'Transformers and cables that link buses. Their MVA rating limits how much power can flow.', bg: 'bg-blue-950', color: 'text-blue-400' },
+      { icon: 'i-heroicons-share', label: 'Network — components', desc: 'Transformers and cables that link buses. Their MVA rating limits how much power can flow.', bg: 'bg-blue-950', color: 'text-blue-400' }
     ],
-    hint: 'Look left → open the sidebar to browse and add assets from the catalogue.',
+    hint: 'Look left → open the sidebar to browse and add assets from the catalogue.'
   },
   {
     icon: 'i-heroicons-adjustments-horizontal',
@@ -195,9 +237,9 @@ const steps: Step[] = [
     detail: [
       { icon: 'i-heroicons-signal', label: 'Capacity (MW)', desc: 'The maximum instantaneous power this asset can deliver or consume. Think of it as the upper bound.', bg: 'bg-violet-950', color: 'text-violet-400' },
       { icon: 'i-heroicons-arrow-trending-up', label: 'Efficiency (0–1)', desc: 'For nuclear: fraction of thermal energy converted to electricity (e.g. 0.33). Wind/solar: already in the weather data.', bg: 'bg-violet-950', color: 'text-violet-400' },
-      { icon: 'i-heroicons-cloud', label: 'Weather (wind & solar)', desc: 'Real KNMI data from Groningen Eelde (2025). Select a date range to use it — without one, generators run at full capacity.', bg: 'bg-sky-950', color: 'text-sky-400' },
+      { icon: 'i-heroicons-cloud', label: 'Weather (wind & solar)', desc: 'Real KNMI data from Groningen Eelde (2025). Select a date range to use it — without one, generators run at full capacity.', bg: 'bg-sky-950', color: 'text-sky-400' }
     ],
-    hint: 'Select an asset in the sidebar → a parameter panel appears below it.',
+    hint: 'Select an asset in the sidebar → a parameter panel appears below it.'
   },
   {
     icon: 'i-heroicons-clock',
@@ -208,9 +250,9 @@ const steps: Step[] = [
     detail: [
       { icon: 'i-heroicons-bolt', label: '1 hour', desc: 'A single snapshot — good for testing extreme peak scenarios.', bg: 'bg-teal-950', color: 'text-teal-400' },
       { icon: 'i-heroicons-sun', label: '24 hours', desc: 'One day — captures the solar day/night cycle and the daily demand curve.', bg: 'bg-teal-950', color: 'text-teal-400' },
-      { icon: 'i-heroicons-calendar', label: '168 h / 8760 h', desc: 'One week or a full year — reveals multi-day wind lulls and seasonal patterns.', bg: 'bg-teal-950', color: 'text-teal-400' },
+      { icon: 'i-heroicons-calendar', label: '168 h / 8760 h', desc: 'One week or a full year — reveals multi-day wind lulls and seasonal patterns.', bg: 'bg-teal-950', color: 'text-teal-400' }
     ],
-    hint: 'Look at the second header bar → Hours / Date range selector.',
+    hint: 'Look at the second header bar → Hours / Date range selector.'
   },
   {
     icon: 'i-heroicons-chart-bar-square',
@@ -222,10 +264,10 @@ const steps: Step[] = [
       { icon: 'i-heroicons-bolt', label: 'Local production (MWh)', desc: 'Total energy injected by your generators. Broken down per asset in the Energy Flow panel.', bg: 'bg-emerald-950', color: 'text-emerald-400' },
       { icon: 'i-heroicons-arrows-right-left', label: 'Grid import / export', desc: 'The slack generator bridges any gap. Import = demand > local supply. Export = surplus production.', bg: 'bg-blue-950', color: 'text-blue-400' },
       { icon: 'i-heroicons-scale', label: 'Balance (MWh)', desc: 'Production minus consumption. Near zero = well-balanced grid. Large surplus or deficit = revisit your asset mix.', bg: 'bg-slate-800', color: 'text-slate-300' },
-      { icon: 'i-heroicons-arrow-trending-up', label: 'Capacity factor (%)', desc: 'Actual output ÷ theoretical maximum. A wind farm at 30% CF produced 30% of its rated capacity on average.', bg: 'bg-violet-950', color: 'text-violet-400' },
+      { icon: 'i-heroicons-arrow-trending-up', label: 'Capacity factor (%)', desc: 'Actual output ÷ theoretical maximum. A wind farm at 30% CF produced 30% of its rated capacity on average.', bg: 'bg-violet-950', color: 'text-violet-400' }
     ],
-    hint: 'Click "Save" to run the full simulation → check the Results and Energy Flow tabs.',
-  },
+    hint: 'Click "Save" to run the full simulation → check the Results and Energy Flow tabs.'
+  }
 ]
 
 const current = computed(() => steps[step.value])

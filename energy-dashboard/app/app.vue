@@ -1,7 +1,6 @@
 <template>
   <UApp>
-    <NuxtLayout>
-    </NuxtLayout>
+    <NuxtLayout />
   </UApp>
 </template>
 
@@ -13,6 +12,6 @@ useHead({
 
 useSeoMeta({
   title: 'Energy Network Simulator 2026',
-  description: 'Outil de simulation énergétique PyPSA',
+  description: 'Outil de simulation énergétique PyPSA'
 })
 </script>

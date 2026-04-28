@@ -9,28 +9,89 @@
   >
     <defs>
       <!-- Supply arrowhead (green, points toward bus) -->
-      <marker id="arr-supply" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-        <path d="M0,1 L7,4 L0,7 Z" fill="#22c55e" opacity="0.9" />
+      <marker
+        id="arr-supply"
+        markerWidth="8"
+        markerHeight="8"
+        refX="7"
+        refY="4"
+        orient="auto"
+      >
+        <path
+          d="M0,1 L7,4 L0,7 Z"
+          fill="#22c55e"
+          opacity="0.9"
+        />
       </marker>
       <!-- Demand arrowhead (red, points toward card) -->
-      <marker id="arr-demand" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-        <path d="M0,1 L7,4 L0,7 Z" fill="#ef4444" opacity="0.9" />
+      <marker
+        id="arr-demand"
+        markerWidth="8"
+        markerHeight="8"
+        refX="7"
+        refY="4"
+        orient="auto"
+      >
+        <path
+          d="M0,1 L7,4 L0,7 Z"
+          fill="#ef4444"
+          opacity="0.9"
+        />
       </marker>
       <!-- Bus-to-bus arrowhead (gray) -->
-      <marker id="arr-bus" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-        <path d="M0,1 L7,4 L0,7 Z" fill="#64748b" opacity="0.9" />
+      <marker
+        id="arr-bus"
+        markerWidth="8"
+        markerHeight="8"
+        refX="7"
+        refY="4"
+        orient="auto"
+      >
+        <path
+          d="M0,1 L7,4 L0,7 Z"
+          fill="#64748b"
+          opacity="0.9"
+        />
       </marker>
 
       <!-- Glow filter for supply -->
-      <filter id="glow-s" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      <filter
+        id="glow-s"
+        x="-50%"
+        y="-50%"
+        width="200%"
+        height="200%"
+      >
+        <feGaussianBlur
+          in="SourceGraphic"
+          stdDeviation="3"
+          result="blur"
+        />
+        <feComposite
+          in="SourceGraphic"
+          in2="blur"
+          operator="over"
+        />
       </filter>
 
       <!-- Glow filter for demand -->
-      <filter id="glow-d" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      <filter
+        id="glow-d"
+        x="-50%"
+        y="-50%"
+        width="200%"
+        height="200%"
+      >
+        <feGaussianBlur
+          in="SourceGraphic"
+          stdDeviation="3"
+          result="blur"
+        />
+        <feComposite
+          in="SourceGraphic"
+          in2="blur"
+          operator="over"
+        />
       </filter>
     </defs>
 
@@ -38,7 +99,10 @@
     <line
       v-for="(ln, i) in lines"
       :key="`glow-${i}`"
-      :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
+      :x1="ln.x1"
+      :y1="ln.y1"
+      :x2="ln.x2"
+      :y2="ln.y2"
       :stroke="ln.isBusCable ? '#64748b' : ln.isSupply ? '#22c55e' : '#ef4444'"
       :stroke-width="ln.isBusCable ? 18 : 12"
       stroke-linecap="round"
@@ -49,7 +113,10 @@
     <line
       v-for="(ln, i) in lines"
       :key="`base-${i}`"
-      :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
+      :x1="ln.x1"
+      :y1="ln.y1"
+      :x2="ln.x2"
+      :y2="ln.y2"
       :stroke="ln.isBusCable ? '#334155' : ln.isSupply ? '#166534' : '#7f1d1d'"
       :stroke-width="ln.isBusCable ? 4 : 2"
       stroke-linecap="round"
@@ -60,7 +127,10 @@
     <line
       v-for="(ln, i) in lines"
       :key="`cable-${i}`"
-      :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
+      :x1="ln.x1"
+      :y1="ln.y1"
+      :x2="ln.x2"
+      :y2="ln.y2"
       :stroke="ln.isBusCable ? '#64748b' : ln.isSupply ? '#22c55e' : '#ef4444'"
       :stroke-width="ln.isBusCable ? 5 : 3"
       stroke-linecap="round"
@@ -72,7 +142,10 @@
     />
 
     <!-- ── Power labels at cable midpoints ───────────────────────────────── -->
-    <template v-for="(ln, i) in lines" :key="`label-${i}`">
+    <template
+      v-for="(ln, i) in lines"
+      :key="`label-${i}`"
+    >
       <template v-if="ln.label">
         <!-- Badge background -->
         <rect
@@ -102,10 +175,12 @@
 
 <script setup lang="ts">
 export interface CableLine {
-  x1: number; y1: number
-  x2: number; y2: number
+  x1: number
+  y1: number
+  x2: number
+  y2: number
   isSupply: boolean
-  isBusCable: boolean   // true = inter-bus line (thick, neutral gray)
+  isBusCable: boolean // true = inter-bus line (thick, neutral gray)
   power: number
   label: string
 }
@@ -116,11 +191,17 @@ defineProps<{
   canvasH: number
 }>()
 
-function mx(ln: CableLine) { return (ln.x1 + ln.x2) / 2 }
-function my(ln: CableLine) { return (ln.y1 + ln.y2) / 2 }
+function mx(ln: CableLine) {
+  return (ln.x1 + ln.x2) / 2
+}
+function my(ln: CableLine) {
+  return (ln.y1 + ln.y2) / 2
+}
 
 // Label badge width: ~6.4px per character + 14px horizontal padding
-function lblW(label: string) { return label.length * 6.4 + 14 }
+function lblW(label: string) {
+  return label.length * 6.4 + 14
+}
 
 // Higher power → faster animation (min 0.4s, max 3s)
 function animDur(power: number) {
@@ -137,5 +218,4 @@ function animDur(power: number) {
 .flow-anim {
   animation: flow var(--dur, 1.4s) linear infinite;
 }
-
 </style>

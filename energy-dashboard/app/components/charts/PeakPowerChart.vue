@@ -6,7 +6,10 @@
       </h2>
       <span class="text-xs text-gray-500">MW max</span>
     </div>
-    <BaseChart :option="chartOption" title="Peak Power" />
+    <BaseChart
+      :option="chartOption"
+      title="Peak Power"
+    />
   </div>
 </template>
 

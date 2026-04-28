@@ -18,7 +18,7 @@ export function useSimulationUrl() {
         const { sim: _removed, ...rest } = route.query
         router.replace({ query: rest })
       }
-    },
+    }
   )
 
   onMounted(async () => {

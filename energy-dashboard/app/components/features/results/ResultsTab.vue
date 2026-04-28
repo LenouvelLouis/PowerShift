@@ -3,7 +3,10 @@
     <!-- Data sources banner -->
     <div class="flex flex-wrap items-start gap-3 rounded-xl border border-[#1E293B] bg-[#0F172A] px-4 py-3">
       <div class="flex items-center gap-1.5 text-gray-400">
-        <UIcon name="i-heroicons-information-circle" class="w-4 h-4 shrink-0" />
+        <UIcon
+          name="i-heroicons-information-circle"
+          class="w-4 h-4 shrink-0"
+        />
         <span class="text-xs font-semibold uppercase tracking-wider">Data sources</span>
       </div>
       <div class="flex flex-wrap gap-2 text-[11px]">
@@ -23,41 +26,41 @@
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-    <!-- LEFT: energy flow + summary table + capacity factors + energy bar -->
-    <div class="flex flex-col gap-6">
-      <EnergyFlowPanel :result="result" />
-      <SimulationSummary :result="result" />
-      <CapacityFactorBars
-        v-if="capacityFactors.length"
-        :factors="capacityFactors"
-      />
-      <EnergySummaryChart
-        v-if="hasChartData"
-        :result="result"
-        height="h-52"
-      />
-    </div>
-
-    <!-- RIGHT: production + consumption + storage line charts -->
-    <div class="flex flex-col gap-6">
-      <template v-if="(result.status === 'converged' || result.status === 'optimized') && hasChartData">
-        <ProductionChart :result="result" />
-        <ConsumptionChart
-          v-if="hasConsumptionData"
-          :result="result"
+      <!-- LEFT: energy flow + summary table + capacity factors + energy bar -->
+      <div class="flex flex-col gap-6">
+        <EnergyFlowPanel :result="result" />
+        <SimulationSummary :result="result" />
+        <CapacityFactorBars
+          v-if="capacityFactors.length"
+          :factors="capacityFactors"
         />
-        <BatteryStorageChart
-          v-if="hasStorageData"
+        <EnergySummaryChart
+          v-if="hasChartData"
           :result="result"
+          height="h-52"
         />
-      </template>
-      <div
-        v-else
-        class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 flex items-center justify-center h-72 text-gray-600 text-sm"
-      >
-        {{ result.status === 'error' ? 'No power flow data — simulation error' : result.status === 'non_converged' ? 'Power flow did not converge' : 'No time-series data available' }}
       </div>
-    </div>
+
+      <!-- RIGHT: production + consumption + storage line charts -->
+      <div class="flex flex-col gap-6">
+        <template v-if="(result.status === 'converged' || result.status === 'optimized') && hasChartData">
+          <ProductionChart :result="result" />
+          <ConsumptionChart
+            v-if="hasConsumptionData"
+            :result="result"
+          />
+          <BatteryStorageChart
+            v-if="hasStorageData"
+            :result="result"
+          />
+        </template>
+        <div
+          v-else
+          class="bg-[#0F172A] rounded-xl border border-[#1E293B] p-8 flex items-center justify-center h-72 text-gray-600 text-sm"
+        >
+          {{ result.status === 'error' ? 'No power flow data — simulation error' : result.status === 'non_converged' ? 'Power flow did not converge' : 'No time-series data available' }}
+        </div>
+      </div>
     </div>
   </div>
 </template>

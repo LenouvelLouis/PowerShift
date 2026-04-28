@@ -103,5 +103,5 @@ defineEmits<{
 
 const store = useSimulationStore()
 const referential = useReferentialStore()
-const history = useHistoryStore()
+const _history = useHistoryStore()
 </script>

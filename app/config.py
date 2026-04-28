@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     # Environment: development | staging | production
     ENVIRONMENT: str = "development"
 
+    # CORS — comma-separated allowed origins
+    CORS_ORIGINS: str = "http://localhost:80,http://localhost:3000"
+    # Optional frontend URL appended to the origins list when non-empty
+    FRONTEND_URL: str = ""
+
     # Database (PostgreSQL — Docker local or NeonDB cloud)
     DATABASE_URL: str = "postgresql+asyncpg://powershift:powershift@localhost:5432/powershift"
 

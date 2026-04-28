@@ -1,25 +1,40 @@
 <template>
-  <div :class="height ?? 'h-72'" class="relative group">
+  <div
+    :class="height ?? 'h-72'"
+    class="relative group"
+  >
     <VChart
       v-if="!isFullscreen"
       :option="option"
       :autoresize="true"
       class="w-full h-full"
     />
-    <div v-else class="w-full h-full" />
+    <div
+      v-else
+      class="w-full h-full"
+    />
     <button
       class="absolute top-2 right-2 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity bg-[#1E293B] hover:bg-[#334155] text-gray-400 hover:text-white z-10"
       title="Fullscreen"
       @click="isFullscreen = true"
     >
-      <UIcon name="i-heroicons-arrows-pointing-out" class="w-3.5 h-3.5" />
+      <UIcon
+        name="i-heroicons-arrows-pointing-out"
+        class="w-3.5 h-3.5"
+      />
     </button>
   </div>
 
   <Teleport to="body">
-    <div v-if="isFullscreen" class="fixed inset-0 z-[9999] bg-[#020617] flex flex-col p-6">
+    <div
+      v-if="isFullscreen"
+      class="fixed inset-0 z-[9999] bg-[#020617] flex flex-col p-6"
+    >
       <div class="flex items-center justify-between mb-4 shrink-0">
-        <h2 v-if="title" class="text-sm font-semibold text-white uppercase tracking-wider">
+        <h2
+          v-if="title"
+          class="text-sm font-semibold text-white uppercase tracking-wider"
+        >
           {{ title }}
         </h2>
         <div v-else />
@@ -28,10 +43,17 @@
           title="Exit fullscreen"
           @click="isFullscreen = false"
         >
-          <UIcon name="i-heroicons-arrows-pointing-in" class="w-4 h-4" />
+          <UIcon
+            name="i-heroicons-arrows-pointing-in"
+            class="w-4 h-4"
+          />
         </button>
       </div>
-      <VChart :option="option" :autoresize="true" class="w-full flex-1" />
+      <VChart
+        :option="option"
+        :autoresize="true"
+        class="w-full flex-1"
+      />
     </div>
   </Teleport>
 </template>

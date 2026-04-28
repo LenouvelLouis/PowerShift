@@ -1,5 +1,5 @@
-import { defineStore } from "pinia";
-import { watch } from "vue";
+import { defineStore } from 'pinia'
+import { watch } from 'vue'
 import {
   saveSimulation,
   type SimulationResult,
@@ -8,8 +8,10 @@ import {
   type NetworkCreate,
   type ScenarioExport,
   type SupplyCreate,
-  type SupplyUpdate,
-} from "~/composables/api";
+  type SupplyUpdate
+} from '~/composables/api'
+import { useHistoryStore } from '~/stores/history'
+import { useReferentialStore } from '~/stores/referential'
 
 /** Normalize a payload for equality comparison (sort IDs, ignore name). */
 function _payloadKey(p: SimulationRunRequest): string {
@@ -22,153 +24,151 @@ function _payloadKey(p: SimulationRunRequest): string {
     optimization_objective: p.optimization_objective ?? null,
     start_date: p.start_date ?? null,
     end_date: p.end_date ?? null,
-    asset_overrides: p.asset_overrides ?? null,
-  });
+    asset_overrides: p.asset_overrides ?? null
+  })
 }
-import { useHistoryStore } from "~/stores/history";
-import { useReferentialStore } from "~/stores/referential";
 
 interface AssetEntry {
-  id: string;
-  assetOverrides: Record<string, number>;
+  id: string
+  assetOverrides: Record<string, number>
 }
 
-export const useSimulationStore = defineStore("simulation", () => {
-  const referential = useReferentialStore();
-  const historyStore = useHistoryStore();
+export const useSimulationStore = defineStore('simulation', () => {
+  const referential = useReferentialStore()
+  const historyStore = useHistoryStore()
 
   // ─── Sélection courante avec overrides ──────────────────────────────────────
-  const _supplyEntries = ref<AssetEntry[]>([]);
-  const _demandEntries = ref<AssetEntry[]>([]);
-  const _networkEntries = ref<AssetEntry[]>([]);
+  const _supplyEntries = ref<AssetEntry[]>([])
+  const _demandEntries = ref<AssetEntry[]>([])
+  const _networkEntries = ref<AssetEntry[]>([])
 
   const selectedSupplyIds = computed(() =>
-    _supplyEntries.value.map((e) => e.id),
-  );
+    _supplyEntries.value.map(e => e.id)
+  )
   const selectedDemandIds = computed(() =>
-    _demandEntries.value.map((e) => e.id),
-  );
+    _demandEntries.value.map(e => e.id)
+  )
   const selectedNetworkIds = computed(() =>
-    _networkEntries.value.map((e) => e.id),
-  );
+    _networkEntries.value.map(e => e.id)
+  )
 
   // ─── Computed : objets sélectionnés ─────────────────────────────────────────
   const selectedSupplies = computed(() =>
-    referential.availableSupplies.filter((s) =>
-      selectedSupplyIds.value.includes(s.id),
-    ),
-  );
+    referential.availableSupplies.filter(s =>
+      selectedSupplyIds.value.includes(s.id)
+    )
+  )
   const selectedDemands = computed(() =>
-    referential.availableDemands.filter((d) =>
-      selectedDemandIds.value.includes(d.id),
-    ),
-  );
+    referential.availableDemands.filter(d =>
+      selectedDemandIds.value.includes(d.id)
+    )
+  )
   const selectedNetwork = computed(() =>
-    referential.availableNetwork.filter((n) =>
-      selectedNetworkIds.value.includes(n.id),
-    ),
-  );
+    referential.availableNetwork.filter(n =>
+      selectedNetworkIds.value.includes(n.id)
+    )
+  )
 
   // ─── Computed : objets sélectionnés avec overrides appliqués ─────────────────
   // Ces versions reflètent immédiatement les valeurs éditées dans le panel,
   // sans attendre un save/run. Utilisées par le NetworkCanvas.
   const selectedSuppliesWithOverrides = computed(() =>
     referential.availableSupplies
-      .filter((s) => selectedSupplyIds.value.includes(s.id))
+      .filter(s => selectedSupplyIds.value.includes(s.id))
       .map((s) => {
-        const ov = _supplyEntries.value.find((e) => e.id === s.id)?.assetOverrides ?? {}
+        const ov = _supplyEntries.value.find(e => e.id === s.id)?.assetOverrides ?? {}
         return Object.keys(ov).length > 0 ? { ...s, ...ov } : s
       })
-  );
+  )
   const selectedDemandsWithOverrides = computed(() =>
     referential.availableDemands
-      .filter((d) => selectedDemandIds.value.includes(d.id))
+      .filter(d => selectedDemandIds.value.includes(d.id))
       .map((d) => {
-        const ov = _demandEntries.value.find((e) => e.id === d.id)?.assetOverrides ?? {}
+        const ov = _demandEntries.value.find(e => e.id === d.id)?.assetOverrides ?? {}
         return Object.keys(ov).length > 0 ? { ...d, ...ov } : d
       })
-  );
+  )
   const selectedNetworkWithOverrides = computed(() =>
     referential.availableNetwork
-      .filter((n) => selectedNetworkIds.value.includes(n.id))
+      .filter(n => selectedNetworkIds.value.includes(n.id))
       .map((n) => {
-        const ov = _networkEntries.value.find((e) => e.id === n.id)?.assetOverrides ?? {}
+        const ov = _networkEntries.value.find(e => e.id === n.id)?.assetOverrides ?? {}
         return Object.keys(ov).length > 0 ? { ...n, ...ov } : n
       })
-  );
+  )
 
   // ─── État simulation ─────────────────────────────────────────────────────────
-  const isRunning = ref(false);
-  const isLiveRunning = ref(false);
-  const isSaving = ref(false);
-  const isLoadingScenario = ref(false);
-  const error = ref<string | null>(null);
-  const liveError = ref<string | null>(null);
+  const isRunning = ref(false)
+  const isLiveRunning = ref(false)
+  const isSaving = ref(false)
+  const isLoadingScenario = ref(false)
+  const error = ref<string | null>(null)
+  const liveError = ref<string | null>(null)
 
   // ─── Results ───────────────────────────────────────────────────────────────
   // currentLiveResult — the result from the latest live preview (not saved)
-  const currentLiveResult = ref<SimulationResult | null>(null);
+  const currentLiveResult = ref<SimulationResult | null>(null)
 
   // selectedHistoryId — null = live mode, string = viewing a saved simulation
-  const selectedHistoryId = ref<string | null>(null);
+  const selectedHistoryId = ref<string | null>(null)
 
   // displayedResult — always shows the most recent result available:
   //   currentLiveResult if set (latest preview/save), otherwise historyStore.currentResult
   const displayedResult = computed<SimulationResult | null>(() =>
-    currentLiveResult.value ?? historyStore.currentResult,
-  );
+    currentLiveResult.value ?? historyStore.currentResult
+  )
 
   // ─── Paramètres ──────────────────────────────────────────────────────────────
-  const snapshotHours = ref(24);
-  const solver = ref("highs");
-  const scenarioName = ref("");
-  const optimizationObjective = ref<"min_cost" | "min_emissions" | "max_renewable">("min_cost");
-  const startDate = ref<string>("");
-  const endDate = ref<string>("");
+  const snapshotHours = ref(24)
+  const solver = ref('highs')
+  const scenarioName = ref('')
+  const optimizationObjective = ref<'min_cost' | 'min_emissions' | 'max_renewable'>('min_cost')
+  const startDate = ref<string>('')
+  const endDate = ref<string>('')
 
   // Auto-compute snapshotHours from date range when both dates are filled.
   // Backend uses inclusive bounds: (end - start).days + 1 days total.
   // e.g. June 1 → June 8 = 8 days = 192h (not 7 days).
   watch([startDate, endDate], ([start, end]) => {
-    if (!start || !end) return;
+    if (!start || !end) return
     const diffDays = Math.round(
       (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)
-    );
-    const hours = (diffDays + 1) * 24;
-    if (hours > 0) snapshotHours.value = hours;
-  });
+    )
+    const hours = (diffDays + 1) * 24
+    if (hours > 0) snapshotHours.value = hours
+  })
 
   // ─── Référence de simulation sauvegardée ─────────────────────────────────────
   // Tracks the last saved/loaded simulation so we can detect parameter changes.
-  const referenceSimId = ref<string | null>(null);
-  const referencePayload = ref<SimulationRunRequest | null>(null);
+  const referenceSimId = ref<string | null>(null)
+  const referencePayload = ref<SimulationRunRequest | null>(null)
 
   /** True when the current parameters match the last saved/loaded simulation. */
   const paramsMatchSaved = computed(() => {
-    if (!referencePayload.value) return false;
-    return _payloadKey(buildPayload()) === _payloadKey(referencePayload.value);
-  });
+    if (!referencePayload.value) return false
+    return _payloadKey(buildPayload()) === _payloadKey(referencePayload.value)
+  })
 
   function setReference(id: string | null, payload: SimulationRunRequest | null) {
-    referenceSimId.value = id;
-    referencePayload.value = payload ? { ...payload } : null;
+    referenceSimId.value = id
+    referencePayload.value = payload ? { ...payload } : null
   }
 
   // ─── Live simulation helpers ──────────────────────────────────────────────────
 
   const hasMinimumAssets = computed(() =>
-    _supplyEntries.value.length > 0 && _demandEntries.value.length > 0,
-  );
+    _supplyEntries.value.length > 0 && _demandEntries.value.length > 0
+  )
 
   function buildPayload(): SimulationRunRequest {
-    const assetOverrides: Record<string, Record<string, number>> = {};
+    const assetOverrides: Record<string, Record<string, number>> = {}
     for (const e of [
       ..._supplyEntries.value,
       ..._demandEntries.value,
-      ..._networkEntries.value,
+      ..._networkEntries.value
     ]) {
       if (Object.keys(e.assetOverrides).length > 0)
-        assetOverrides[e.id] = { ...e.assetOverrides };
+        assetOverrides[e.id] = { ...e.assetOverrides }
     }
     return {
       supply_ids: selectedSupplyIds.value,
@@ -180,95 +180,95 @@ export const useSimulationStore = defineStore("simulation", () => {
       start_date: startDate.value || undefined,
       end_date: endDate.value || undefined,
       asset_overrides:
-        Object.keys(assetOverrides).length > 0 ? assetOverrides : undefined,
-    };
+        Object.keys(assetOverrides).length > 0 ? assetOverrides : undefined
+    }
   }
 
   // ─── Gestion de la sélection ─────────────────────────────────────────────────
 
   function addSupplyToSelection(id: string) {
     if (!selectedSupplyIds.value.includes(id))
-      _supplyEntries.value.push({ id, assetOverrides: {} });
+      _supplyEntries.value.push({ id, assetOverrides: {} })
   }
   function removeSupplyFromSelection(id: string) {
-    _supplyEntries.value = _supplyEntries.value.filter((e) => e.id !== id);
+    _supplyEntries.value = _supplyEntries.value.filter(e => e.id !== id)
   }
   function addDemandToSelection(id: string) {
     if (!selectedDemandIds.value.includes(id))
-      _demandEntries.value.push({ id, assetOverrides: {} });
+      _demandEntries.value.push({ id, assetOverrides: {} })
   }
   function removeDemandFromSelection(id: string) {
-    _demandEntries.value = _demandEntries.value.filter((e) => e.id !== id);
+    _demandEntries.value = _demandEntries.value.filter(e => e.id !== id)
   }
   function addNetworkToSelection(id: string) {
     if (!selectedNetworkIds.value.includes(id))
-      _networkEntries.value.push({ id, assetOverrides: {} });
+      _networkEntries.value.push({ id, assetOverrides: {} })
   }
   function removeNetworkFromSelection(id: string) {
-    _networkEntries.value = _networkEntries.value.filter((e) => e.id !== id);
+    _networkEntries.value = _networkEntries.value.filter(e => e.id !== id)
   }
 
   // ─── Overrides ───────────────────────────────────────────────────────────────
 
-  function _entries(type: "supply" | "demand" | "network") {
-    if (type === "supply") return _supplyEntries;
-    if (type === "demand") return _demandEntries;
-    return _networkEntries;
+  function _entries(type: 'supply' | 'demand' | 'network') {
+    if (type === 'supply') return _supplyEntries
+    if (type === 'demand') return _demandEntries
+    return _networkEntries
   }
 
   function getOverrides(
-    type: "supply" | "demand" | "network",
-    id: string,
+    type: 'supply' | 'demand' | 'network',
+    id: string
   ): Record<string, number> {
-    return _entries(type).value.find((e) => e.id === id)?.assetOverrides ?? {};
+    return _entries(type).value.find(e => e.id === id)?.assetOverrides ?? {}
   }
 
   function setOverride(
-    type: "supply" | "demand" | "network",
+    type: 'supply' | 'demand' | 'network',
     id: string,
     field: string,
-    value: number,
+    value: number
   ) {
-    const entry = _entries(type).value.find((e) => e.id === id);
-    if (entry) entry.assetOverrides[field] = value;
+    const entry = _entries(type).value.find(e => e.id === id)
+    if (entry) entry.assetOverrides[field] = value
   }
 
-  function clearOverrides(type: "supply" | "demand" | "network", id: string) {
-    const entry = _entries(type).value.find((e) => e.id === id);
-    if (entry) entry.assetOverrides = {};
+  function clearOverrides(type: 'supply' | 'demand' | 'network', id: string) {
+    const entry = _entries(type).value.find(e => e.id === id)
+    if (entry) entry.assetOverrides = {}
   }
 
   function hasOverrides(
-    type: "supply" | "demand" | "network",
-    id: string,
+    type: 'supply' | 'demand' | 'network',
+    id: string
   ): boolean {
-    return Object.keys(getOverrides(type, id)).length > 0;
+    return Object.keys(getOverrides(type, id)).length > 0
   }
 
   // ─── Simulation (full run — saves to DB) ─────────────────────────────────────
 
   async function runFullSimulation() {
-    isRunning.value = true;
-    error.value = null;
+    isRunning.value = true
+    error.value = null
     try {
       // If a scenario with the same name already exists, delete it first (unique named scenarios)
       if (scenarioName.value) {
         const existing = historyStore.simulationHistory.find(
-          (s) => s.name === scenarioName.value,
-        );
+          s => s.name === scenarioName.value
+        )
         if (existing) {
-          await historyStore.deleteEntry(existing.id);
+          await historyStore.deleteEntry(existing.id)
         }
       }
 
       const result = await saveSimulation({
         ...buildPayload(),
-        name: scenarioName.value || undefined,
-      });
+        name: scenarioName.value || undefined
+      })
 
-      historyStore.currentResult = result;
-      currentLiveResult.value = result;
-      referential.backendAvailable = true;
+      historyStore.currentResult = result
+      currentLiveResult.value = result
+      referential.backendAvailable = true
       historyStore.simulationHistory.unshift({
         id: result.id,
         request_id: result.request_id,
@@ -280,90 +280,90 @@ export const useSimulationStore = defineStore("simulation", () => {
         network_ids: selectedNetworkIds.value.slice(),
         total_supply_mwh: result.total_supply_mwh,
         total_demand_mwh: result.total_demand_mwh,
-        created_at: result.created_at,
-      });
-      return result;
+        created_at: result.created_at
+      })
+      return result
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Simulation failed";
-      error.value = msg;
-      throw e;
+      const msg = e instanceof Error ? e.message : 'Simulation failed'
+      error.value = msg
+      throw e
     } finally {
-      isRunning.value = false;
+      isRunning.value = false
     }
   }
 
   // ─── Scenario management ─────────────────────────────────────────────────────
 
   function clearScenario() {
-    scenarioName.value = "";
-    startDate.value = "";
-    endDate.value = "";
-    _supplyEntries.value = [];
-    _demandEntries.value = [];
-    _networkEntries.value = [];
-    referenceSimId.value = null;
-    referencePayload.value = null;
+    scenarioName.value = ''
+    startDate.value = ''
+    endDate.value = ''
+    _supplyEntries.value = []
+    _demandEntries.value = []
+    _networkEntries.value = []
+    referenceSimId.value = null
+    referencePayload.value = null
   }
 
   function loadFromScenario(scenario: ScenarioExport, name: string) {
-    clearScenario();
-    scenarioName.value = name;
-    snapshotHours.value = scenario.snapshot_hours;
-    startDate.value = scenario.start_date ?? "";
-    endDate.value = scenario.end_date ?? "";
-    const overrides = scenario.asset_overrides ?? {};
+    clearScenario()
+    scenarioName.value = name
+    snapshotHours.value = scenario.snapshot_hours
+    startDate.value = scenario.start_date ?? ''
+    endDate.value = scenario.end_date ?? ''
+    const overrides = scenario.asset_overrides ?? {}
     for (const id of scenario.supply_ids)
       _supplyEntries.value.push({
         id,
-        assetOverrides: { ...(overrides[id] ?? {}) },
-      });
+        assetOverrides: { ...(overrides[id] ?? {}) }
+      })
     for (const id of scenario.demand_ids)
       _demandEntries.value.push({
         id,
-        assetOverrides: { ...(overrides[id] ?? {}) },
-      });
+        assetOverrides: { ...(overrides[id] ?? {}) }
+      })
     for (const id of scenario.network_ids)
       _networkEntries.value.push({
         id,
-        assetOverrides: { ...(overrides[id] ?? {}) },
-      });
+        assetOverrides: { ...(overrides[id] ?? {}) }
+      })
   }
 
   // ─── Wrapper CRUD : Supply ────────────────────────────────────────────────────
 
   async function addSupply(data: SupplyCreate) {
-    return referential.addSupply(data);
+    return referential.addSupply(data)
   }
 
   async function editSupply(id: string, data: SupplyUpdate) {
-    return referential.editSupply(id, data);
+    return referential.editSupply(id, data)
   }
 
   async function removeSupply(id: string) {
-    await referential.removeSupply(id);
-    removeSupplyFromSelection(id);
+    await referential.removeSupply(id)
+    removeSupplyFromSelection(id)
   }
 
   // ─── Wrapper CRUD : Demand ────────────────────────────────────────────────────
 
   async function addDemand(data: DemandCreate) {
-    return referential.addDemand(data);
+    return referential.addDemand(data)
   }
 
   async function removeDemand(id: string) {
-    await referential.removeDemand(id);
-    removeDemandFromSelection(id);
+    await referential.removeDemand(id)
+    removeDemandFromSelection(id)
   }
 
   // ─── Wrapper CRUD : Network ───────────────────────────────────────────────────
 
   async function addNetworkComponent(data: NetworkCreate) {
-    return referential.addNetworkComponent(data);
+    return referential.addNetworkComponent(data)
   }
 
   async function removeNetworkComponent(id: string) {
-    await referential.removeNetworkComponent(id);
-    removeNetworkFromSelection(id);
+    await referential.removeNetworkComponent(id)
+    removeNetworkFromSelection(id)
   }
 
   return {
@@ -422,6 +422,6 @@ export const useSimulationStore = defineStore("simulation", () => {
     addDemand,
     removeDemand,
     addNetworkComponent,
-    removeNetworkComponent,
-  };
-});
+    removeNetworkComponent
+  }
+})

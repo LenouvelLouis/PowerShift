@@ -16,15 +16,6 @@ export default defineNuxtConfig({
     ]
   },
 
-  icon: {
-    collections: [
-      'heroicons',
-      'lucide'
-    ],
-    // @ts-expect-error do not delete or VS Code will consider it as an error
-    provider: 'unjs'
-  },
-
   devtools: { enabled: true },
 
   css: ['~/assets/css/main.css'],
@@ -35,10 +26,6 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2025-01-15',
 
-  pinia: {
-    storesDirs: ['./app/stores/**']
-  },
-
   eslint: {
     config: {
       stylistic: {
@@ -46,5 +33,18 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+
+  icon: {
+    collections: [
+      'heroicons',
+      'lucide'
+    ],
+    // @ts-expect-error do not delete or VS Code will consider it as an error
+    provider: 'unjs'
+  },
+
+  pinia: {
+    storesDirs: ['./app/stores/**']
   }
 })

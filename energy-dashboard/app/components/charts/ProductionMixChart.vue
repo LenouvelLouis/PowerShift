@@ -6,7 +6,10 @@
       </h2>
       <span class="text-xs text-gray-500">MWh stacked</span>
     </div>
-    <BaseChart :option="chartOption" title="Production Mix" />
+    <BaseChart
+      :option="chartOption"
+      title="Production Mix"
+    />
   </div>
 </template>
 

@@ -35,7 +35,10 @@
         size="xs"
       />
       <UTooltip text="Number of hourly snapshots. The LOPF optimises all hours simultaneously — batteries can shift energy across the whole period. Total energy (MWh) = installed capacity (MW) × hours × capacity factor. More hours = more realistic averaging.">
-        <UIcon name="i-heroicons-information-circle" class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0" />
+        <UIcon
+          name="i-heroicons-information-circle"
+          class="w-3.5 h-3.5 text-gray-600 cursor-help shrink-0"
+        />
       </UTooltip>
     </div>
 
@@ -187,7 +190,6 @@ const { solverSelectItems, solverAvailabilityLoading, selectedSolverTitle } = us
 const objectiveSelectItems = [
   { label: 'Minimize cost', value: 'min_cost' },
   { label: 'Minimize emissions', value: 'min_emissions' },
-  { label: 'Maximize renewable', value: 'max_renewable' },
+  { label: 'Maximize renewable', value: 'max_renewable' }
 ]
-
 </script>
